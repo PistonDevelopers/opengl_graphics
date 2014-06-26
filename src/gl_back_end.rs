@@ -125,6 +125,16 @@ impl TriListXYRGBA {
             }
         }
     }
+    
+    fn enable_attributes(&self) {
+        gl::EnableVertexAttribArray(self.a_v4Position as GLuint);
+        gl::EnableVertexAttribArray(self.a_v4FillColor as GLuint);
+    }
+
+    fn disable_attributes(&self) {
+        gl::DisableVertexAttribArray(self.a_v4Position as GLuint);
+        gl::DisableVertexAttribArray(self.a_v4FillColor as GLuint);
+    }
 }
 
 struct TriListXYRGBAUV {
@@ -187,6 +197,18 @@ impl TriListXYRGBAUV {
                 a_v2TexCoord: a_v2TexCoord as GLuint,
             }
         }
+    }
+
+    fn enable_attributes(&self) {
+        gl::EnableVertexAttribArray(self.a_v4Position as GLuint);
+        gl::EnableVertexAttribArray(self.a_v4FillColor as GLuint);
+        gl::EnableVertexAttribArray(self.a_v2TexCoord as GLuint);
+    }
+
+    fn disable_attributes(&self) {
+        gl::DisableVertexAttribArray(self.a_v4Position as GLuint);
+        gl::DisableVertexAttribArray(self.a_v4FillColor as GLuint);
+        gl::DisableVertexAttribArray(self.a_v2TexCoord as GLuint);
     }
 }
 
@@ -294,6 +316,8 @@ impl BackEnd<Texture> for Gl {
             self.use_program(shader_program);
         }
         let shader = &self.tri_list_xy_rgba;
+        shader.enable_attributes();        
+
         // xy makes two floats.
         let size_vertices: i32 = 2;
         let vertices_byte_len = (
@@ -358,6 +382,7 @@ impl BackEnd<Texture> for Gl {
 
         let items: i32 = vertices.len() as i32 / size_vertices;
         gl::DrawArrays(gl::TRIANGLES, 0, items);
+        shader.disable_attributes();
     }
 
     fn supports_tri_list_xy_f32_rgba_f32_uv_f32(&self) -> bool { true }
@@ -374,6 +399,8 @@ impl BackEnd<Texture> for Gl {
             self.use_program(shader_program);
         }
         let shader = &self.tri_list_xy_rgba_uv;
+        shader.enable_attributes();
+
         let size_vertices: i32 = 2;
         let normalize_vertices = gl::FALSE;
         let vertices_byte_len = (
@@ -437,7 +464,6 @@ impl BackEnd<Texture> for Gl {
         let normalize_texture_coords = gl::FALSE;
         // The data is tightly packed.
         let stride_texture_coords = 0;
-        gl::EnableVertexAttribArray(shader.a_v2TexCoord as GLuint);
         unsafe {
             gl::BindBuffer(
                 gl::ARRAY_BUFFER, 
@@ -465,7 +491,7 @@ impl BackEnd<Texture> for Gl {
 
         let items: i32 = vertices.len() as i32 / size_vertices;
         gl::DrawArrays(gl::TRIANGLES, 0, items);
-        gl::DisableVertexAttribArray(shader.a_v2TexCoord as GLuint);
+        shader.disable_attributes();
     }
 }
 
