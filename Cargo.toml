@@ -1,0 +1,34 @@
+[package]
+
+name = "opengl_graphics"
+version = "0.0.0"
+readme = "README.md"
+authors = [
+    "bvssvni <bvssvni@gmail.com>",
+    "Coeuvre <coeuvre@gmail.com>",
+    "gmorenz",
+    "leonkunert <info@leonkunert.de>",
+    "mitchmindtree <me@michellnordine.com>",
+    "Christiandh",
+    "Apointos",
+    "ccgn",
+    "reem",
+    "TyOverby <ty@pre-alpha.com>"]
+
+[dependencies.image]
+
+git = "https://github.com/pistondevelopers/rust-image"
+
+[dependencies.gl]
+
+git = "https://github.com/bjz/gl-rs"
+
+[dependencies.graphics]
+
+git = "https://github.com/bvssvni/rust-graphics"
+
+[[lib]]
+
+name = "opengl_graphics"
+path = "src/lib.rs"
+
