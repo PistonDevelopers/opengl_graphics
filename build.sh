@@ -52,6 +52,7 @@ function build_deps {
 
         # Remember git directory to not build it twice
         git_dir[i]=$current_git_dir
+        let i+=1
 
         # Visit the symlinks and build the dependencies
         build_deps
@@ -59,7 +60,6 @@ function build_deps {
         # First check for a 'build.sh' script with default settings.
         # Check for additional 'rust-empty.mk' file. # Compile with the settings flags. # If no other options, build with make.
         ( test -e build.sh && ./build.sh ) || ( test -e rust-empty.mk && $MAKE -f rust-empty.mk clean && $MAKE -f rust-empty.mk ) || ( echo "--- Building $current_git_dir" && $MAKE clean && $MAKE )
-        let i+=1
     done
     cd $current
 }
