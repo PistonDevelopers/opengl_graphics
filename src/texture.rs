@@ -34,7 +34,7 @@ impl Texture {
         self.id
     }
 
-    /// Loads image from memroy, the format is 8-bit greyscale.
+    /// Loads image from memory, the format is 8-bit greyscale.
     pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32) -> Result<Texture, String> {
         let mut pixels = Vec::new();
         for alpha in buf.iter() {
