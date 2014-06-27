@@ -34,13 +34,53 @@ impl Texture {
         self.id
     }
 
+    /// Loads image from memroy, the format is 8-bit greyscale.
+    pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32) -> Result<Texture, String> {
+        let mut pixels = Vec::new();
+        for alpha in buf.iter() {
+            pixels.push(255);
+            pixels.push(255);
+            pixels.push(255);
+            pixels.push(*alpha);
+        }
+
+        let mut id: GLuint = 0;
+        unsafe {
+            gl::GenTextures(1, &mut id);
+            gl::BindTexture(gl::TEXTURE_2D, id);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MAG_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                width as i32,
+                height as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                pixels.as_ptr() as *c_void
+            );
+        }
+
+        Ok(Texture::new(id, width, height))
+    }
+
     /// Loads image by relative file name to the asset root.
     pub fn from_path(path: &Path) -> Result<Texture, String> {
         let fin = File::open(path).unwrap();
 
         let img = match Image::load(fin, image::PNG) {
             Ok(img) => img,
-            Err(e)  => return Err(format!("Could not load '{}': {}", 
+            Err(e)  => return Err(format!("Could not load '{}': {}",
                 path.filename_str().unwrap(), e)),
         };
 
@@ -56,13 +96,13 @@ impl Texture {
             gl::GenTextures(1, &mut id);
             gl::BindTexture(gl::TEXTURE_2D, id);
             gl::TexParameteri(
-                gl::TEXTURE_2D, 
-                gl::TEXTURE_MIN_FILTER, 
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
                 gl::LINEAR as i32
             );
             gl::TexParameteri(
-                gl::TEXTURE_2D, 
-                gl::TEXTURE_MAG_FILTER, 
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MAG_FILTER,
                 gl::LINEAR as i32
             );
             gl::TexImage2D(
