@@ -25,7 +25,7 @@ git = "https://github.com/bjz/gl-rs"
 
 [dependencies.graphics]
 
-git = "https://github.com/bvssvni/rust-graphics"
+git = "https://github.com/PistonDevelopers/rust-graphics"
 
 [[lib]]
 
