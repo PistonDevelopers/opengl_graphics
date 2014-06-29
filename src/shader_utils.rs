@@ -55,4 +55,15 @@ pub fn compile_shader(
     }
 }
 
+/// Gets the attribute location from a program.
+///
+/// Returns `None` if there is no attribute with such name.
+pub fn attribute_location(program: GLuint, name: &'static str) -> Option<GLuint> {
+    unsafe {
+        name.with_c_str(|ptr| {
+            let id = gl::GetAttribLocation(program, ptr);
+            if gl::GetError() != 0 { None } else { Some(id as GLuint) }
+        })
+    }
+}
 
