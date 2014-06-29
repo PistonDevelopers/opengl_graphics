@@ -4,15 +4,14 @@
 use graphics::BackEnd;
 use gl;
 use gl::types::{
-    GLfloat,
     GLint,
     GLsizei,
-    GLsizeiptr,
     GLuint,
 };
-use std::ptr;
-use std::mem;
-use shader_utils::{compile_shader};
+use shader_utils::{
+    compile_shader,
+    DynamicAttribute,
+};
 
 // Local crate.
 use Texture;
@@ -77,15 +76,19 @@ void main()
 ";
 
 struct TriListXYRGBA {
+    vao: GLuint,
     vertex_shader: GLuint,
     fragment_shader: GLuint,
     program: GLuint,
-    a_v4Position: GLuint,
-    a_v4FillColor: GLuint,
+    a_v4Position: DynamicAttribute,
+    a_v4FillColor: DynamicAttribute,
 }
 
 impl Drop for TriListXYRGBA {
     fn drop(&mut self) {
+        unsafe {
+            gl::DeleteVertexArrays(1, &self.vao);
+        }
         gl::DeleteProgram(self.program);
         gl::DeleteShader(self.vertex_shader);
         gl::DeleteShader(self.fragment_shader);
@@ -119,33 +122,23 @@ impl TriListXYRGBA {
             );
         }
 
-        gl::LinkProgram(program);
+        let mut vao = 0;
         unsafe {
-            let a_v4Position = "a_v4Position".with_c_str(
-                |ptr| gl::GetAttribLocation(program, ptr)
-            );
-            let a_v4FillColor = "a_v4FillColor".with_c_str(
-                |ptr| gl::GetAttribLocation(program, ptr)
-            );
-    
-            TriListXYRGBA {
-                vertex_shader: vertex_shader,
-                fragment_shader: fragment_shader,
-                program: program,
-                a_v4Position: a_v4Position as GLuint,
-                a_v4FillColor: a_v4FillColor as GLuint,
-            }
+            gl::GenVertexArrays(1, &mut vao);
         }
-    }
-    
-    fn enable_attributes(&self) {
-        gl::EnableVertexAttribArray(self.a_v4Position as GLuint);
-        gl::EnableVertexAttribArray(self.a_v4FillColor as GLuint);
-    }
-
-    fn disable_attributes(&self) {
-        gl::DisableVertexAttribArray(self.a_v4Position as GLuint);
-        gl::DisableVertexAttribArray(self.a_v4FillColor as GLuint);
+        gl::LinkProgram(program);
+        let a_v4Position = DynamicAttribute::xy(program, "a_v4Position").unwrap();
+        let a_v4FillColor = DynamicAttribute::rgba(program, "a_v4FillColor").unwrap();
+        a_v4Position.bind_vao(vao);
+        a_v4FillColor.bind_vao(vao);
+        TriListXYRGBA {
+            vao: vao,
+            vertex_shader: vertex_shader,
+            fragment_shader: fragment_shader,
+            program: program,
+            a_v4Position: a_v4Position,
+            a_v4FillColor: a_v4FillColor,
+        }
     }
 }
 
@@ -153,13 +146,17 @@ struct TriListXYRGBAUV {
     vertex_shader: GLuint,
     fragment_shader: GLuint,
     program: GLuint,
-    a_v4Position: GLuint,
-    a_v4FillColor: GLuint,
-    a_v2TexCoord: GLuint,
+    vao: GLuint,
+    a_v4Position: DynamicAttribute,
+    a_v4FillColor: DynamicAttribute,
+    a_v2TexCoord: DynamicAttribute,
 }
 
 impl Drop for TriListXYRGBAUV {
     fn drop(&mut self) {
+        unsafe {
+            gl::DeleteVertexArrays(1, &self.vao);
+        }
         gl::DeleteProgram(self.program);
         gl::DeleteShader(self.vertex_shader);
         gl::DeleteShader(self.fragment_shader);
@@ -192,40 +189,27 @@ impl TriListXYRGBAUV {
                 |ptr| gl::BindFragDataLocation(program, 0, ptr)
             );
         }
-        
-        gl::LinkProgram(program);
+       
+        let mut vao = 0;
         unsafe {
-            let a_v4Position = "a_v4Position".with_c_str(
-                |ptr| gl::GetAttribLocation(program, ptr)
-            );
-            let a_v4FillColor = "a_v4FillColor".with_c_str(
-                |ptr| gl::GetAttribLocation(program, ptr)
-            );
-            let a_v2TexCoord = "a_v2TexCoord".with_c_str(
-                |ptr| gl::GetAttribLocation(program, ptr)
-            );
-         
-            TriListXYRGBAUV {
-                vertex_shader: vertex_shader,
-                fragment_shader: fragment_shader,
-                program: program,
-                a_v4Position: a_v4Position as GLuint,
-                a_v4FillColor: a_v4FillColor as GLuint,
-                a_v2TexCoord: a_v2TexCoord as GLuint,
-            }
+            gl::GenVertexArrays(1, &mut vao);
         }
-    }
-
-    fn enable_attributes(&self) {
-        gl::EnableVertexAttribArray(self.a_v4Position as GLuint);
-        gl::EnableVertexAttribArray(self.a_v4FillColor as GLuint);
-        gl::EnableVertexAttribArray(self.a_v2TexCoord as GLuint);
-    }
-
-    fn disable_attributes(&self) {
-        gl::DisableVertexAttribArray(self.a_v4Position as GLuint);
-        gl::DisableVertexAttribArray(self.a_v4FillColor as GLuint);
-        gl::DisableVertexAttribArray(self.a_v2TexCoord as GLuint);
+        gl::LinkProgram(program);
+        let a_v4Position = DynamicAttribute::xy(program, "a_v4Position").unwrap();
+        let a_v4FillColor = DynamicAttribute::rgba(program, "a_v4FillColor").unwrap();
+        let a_v2TexCoord = DynamicAttribute::uv(program, "a_v2TexCoord").unwrap();
+        a_v4Position.bind_vao(vao);
+        a_v4FillColor.bind_vao(vao);
+        a_v2TexCoord.bind_vao(vao);
+        TriListXYRGBAUV {
+            vao: vao,
+            vertex_shader: vertex_shader,
+            fragment_shader: fragment_shader,
+            program: program,
+            a_v4Position: a_v4Position,
+            a_v4FillColor: a_v4FillColor,
+            a_v2TexCoord: a_v2TexCoord,
+        }
     }
 }
 
@@ -233,12 +217,6 @@ impl TriListXYRGBAUV {
 pub struct Gl {
     tri_list_xy_rgba: TriListXYRGBA,
     tri_list_xy_rgba_uv: TriListXYRGBAUV,
-    // id of buffer for xy positions.
-    position_id: GLuint,
-    // id of buffer for rgba colors.
-    fill_color_id: GLuint,
-    // id of buffer for uv texture coords.
-    tex_coord_id: GLuint,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
 }
@@ -248,23 +226,11 @@ impl<'a> Gl {
     /// Creates a new OpenGl back-end.
     pub fn new() -> Gl {
         // Load the vertices, color and texture coord buffers.
-        unsafe {
-            let mut vbo : [GLuint, ..3] = [0, ..3];
-            gl::GenBuffers(3, vbo.as_mut_ptr());
-            gl::GenVertexArrays(3, vbo.as_mut_ptr());
-            let position_id = vbo[0];
-            let fill_color_id = vbo[1];
-            let tex_coord_id = vbo[2];
-        
-            Gl {
-                tri_list_xy_rgba: TriListXYRGBA::new(),
-                tri_list_xy_rgba_uv: TriListXYRGBAUV::new(),
-                position_id: position_id,
-                fill_color_id: fill_color_id,
-                tex_coord_id: tex_coord_id,
-                current_program: None,
-            }
-        }
+        Gl {
+            tri_list_xy_rgba: TriListXYRGBA::new(),
+            tri_list_xy_rgba_uv: TriListXYRGBAUV::new(),
+            current_program: None,
+       }
     }
 
     /// Sets viewport with normalized coordinates and center as origin.
@@ -333,69 +299,15 @@ impl BackEnd<Texture> for Gl {
             let shader_program = self.tri_list_xy_rgba.program;
             self.use_program(shader_program);
         }
-        let shader = &self.tri_list_xy_rgba;
-        
-        gl::BindVertexArray(self.position_id);
-        gl::BindVertexArray(self.fill_color_id);
-        
-        shader.enable_attributes();        
+        let ref mut shader = self.tri_list_xy_rgba;
+        gl::BindVertexArray(shader.vao);
 
         // xy makes two floats.
         let size_vertices: i32 = 2;
-        let vertices_byte_len = (
-                vertices.len() * mem::size_of::<GLfloat>()
-            ) as GLsizeiptr;
-        let normalize_vertices = gl::FALSE;
-        // The data is tightly packed.
-        let stride_vertices = 0;
-        gl::BindBuffer(
-            gl::ARRAY_BUFFER,   // buffer type
-            self.position_id    // position buffer for xy coordinates
-        );
-        unsafe {
-            gl::BufferData(
-                gl::ARRAY_BUFFER, 
-                vertices_byte_len, 
-                mem::transmute(&vertices[0]), 
-                gl::DYNAMIC_DRAW
-            );
-            gl::VertexAttribPointer(
-                shader.a_v4Position as GLuint, 
-                size_vertices,
-                gl::FLOAT,
-                normalize_vertices,
-                stride_vertices, 
-                ptr::null()
-            );
-        }
 
-        // rgba makes 4 floats.
-        let size_fill_colors = 4;
-        let normalize_colors = gl::FALSE;
-        let fill_colors_byte_len = (
-                colors.len() * mem::size_of::<GLfloat>()
-            ) as GLsizeiptr;
-        // The data is tightly packed.
-        let stride_fill_colors = 0;
         unsafe {
-            gl::BindBuffer(
-                gl::ARRAY_BUFFER, 
-                self.fill_color_id
-            );
-            gl::BufferData(
-                gl::ARRAY_BUFFER, 
-                fill_colors_byte_len, 
-                mem::transmute(&colors[0]), 
-                gl::DYNAMIC_DRAW
-            );
-            gl::VertexAttribPointer(
-                shader.a_v4FillColor as GLuint, 
-                size_fill_colors, 
-                gl::FLOAT, 
-                normalize_colors, 
-                stride_fill_colors, 
-                ptr::null()
-            );
+            shader.a_v4Position.set(vertices);
+            shader.a_v4FillColor.set(colors);
         }
         
         // Render triangles whether they are facing 
@@ -404,7 +316,8 @@ impl BackEnd<Texture> for Gl {
 
         let items: i32 = vertices.len() as i32 / size_vertices;
         gl::DrawArrays(gl::TRIANGLES, 0, items);
-        shader.disable_attributes();
+        
+        gl::BindVertexArray(0);
     }
 
     fn supports_tri_list_xy_f32_rgba_f32_uv_f32(&self) -> bool { true }
@@ -420,96 +333,15 @@ impl BackEnd<Texture> for Gl {
             let shader_program = self.tri_list_xy_rgba_uv.program;
             self.use_program(shader_program);
         }
-        let shader = &self.tri_list_xy_rgba_uv;
-            
-        gl::BindVertexArray(self.position_id);
-        gl::BindVertexArray(self.fill_color_id);
-        gl::BindVertexArray(self.tex_coord_id);
-        
-        shader.enable_attributes();
-            
+        let ref mut shader = self.tri_list_xy_rgba_uv;
+        gl::BindVertexArray(shader.vao);
+         
         let size_vertices: i32 = 2;
-        let normalize_vertices = gl::FALSE;
-        let vertices_byte_len = (
-                vertices.len() * mem::size_of::<GLfloat>()
-            ) as GLsizeiptr;
-        // The data is tightly packed.
-        let stride_vertices = 0;
-        unsafe {
-            gl::BindBuffer(
-                gl::ARRAY_BUFFER, self.position_id);
-            gl::BufferData(
-                gl::ARRAY_BUFFER, 
-                vertices_byte_len, 
-                mem::transmute(&vertices[0]), 
-                gl::DYNAMIC_DRAW
-            );
-            gl::VertexAttribPointer(
-                shader.a_v4Position as GLuint, 
-                size_vertices, 
-                gl::FLOAT, 
-                normalize_vertices,
-                stride_vertices, 
-                ptr::null()
-            );
-        }
-
-        // rgba makes 4 floats.
-        let size_fill_color = 4;
-        let normalize_fill_color = gl::FALSE;
-        let fill_colors_byte_len = (
-                colors.len() * mem::size_of::<GLfloat>()
-            ) as GLsizeiptr;
-        // The data is tightly packed.
-        let stride_fill_colors = 0;
-        unsafe {
-            gl::BindBuffer(
-                gl::ARRAY_BUFFER, 
-                self.fill_color_id
-            );
-            gl::BufferData(
-                gl::ARRAY_BUFFER, 
-                fill_colors_byte_len, 
-                mem::transmute(&colors[0]), 
-                gl::DYNAMIC_DRAW
-            );
-            gl::VertexAttribPointer(
-                shader.a_v4FillColor as GLuint, 
-                size_fill_color, 
-                gl::FLOAT, 
-                normalize_fill_color,
-                stride_fill_colors, 
-                ptr::null()
-            );
-        }
-
-        // uv makes two floats.
-        let size_tex_coord = 2;
-        let texture_coords_byte_len = (
-                texture_coords.len() * mem::size_of::<GLfloat>()
-            ) as GLsizeiptr;
-        let normalize_texture_coords = gl::FALSE;
-        // The data is tightly packed.
-        let stride_texture_coords = 0;
-        unsafe {
-            gl::BindBuffer(
-                gl::ARRAY_BUFFER, 
-                self.tex_coord_id
-            );
-            gl::BufferData(
-                gl::ARRAY_BUFFER, 
-                texture_coords_byte_len, 
-                mem::transmute(&texture_coords[0]), 
-                gl::DYNAMIC_DRAW
-            );
-            gl::VertexAttribPointer(
-                shader.a_v2TexCoord as GLuint, 
-                size_tex_coord, 
-                gl::FLOAT, 
-                normalize_texture_coords,
-                stride_texture_coords, 
-                ptr::null()
-            );
+       
+        unsafe { 
+            shader.a_v4Position.set(vertices);
+            shader.a_v4FillColor.set(colors);
+            shader.a_v2TexCoord.set(texture_coords);
         }
         
         // Render triangles whether they are facing 
@@ -519,7 +351,7 @@ impl BackEnd<Texture> for Gl {
         let items: i32 = vertices.len() as i32 / size_vertices;
         gl::DrawArrays(gl::TRIANGLES, 0, items);
 
-        shader.disable_attributes();
+        gl::BindVertexArray(0);
     }
 }
 
