@@ -8,5 +8,5 @@ install:
   - make && sudo make install
   - cd -
 script:
-  - rustc --version 
+  - rustc --version verbose 
   - cargo build
