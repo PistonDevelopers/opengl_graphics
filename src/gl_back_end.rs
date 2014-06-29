@@ -18,10 +18,11 @@ use shader_utils::{compile_shader};
 use Texture;
 
 static VERTEX_SHADER_TRI_LIST_XY_RGBA: &'static str = "
-attribute vec4 a_v4Position;
-attribute vec4 a_v4FillColor;
+#version 330
+in vec4 a_v4Position;
+in vec4 a_v4FillColor;
 
-varying vec4 v_v4FillColor;
+out vec4 v_v4FillColor;
 
 void main()
 {
@@ -31,41 +32,47 @@ void main()
 ";
 
 static FRAGMENT_SHADER_TRI_LIST_XY_RGBA: &'static str = "
-varying vec4 v_v4FillColor;
+#version 330
+out vec4 out_color;
+in vec4 v_v4FillColor;
 
 void main()
 {
-        gl_FragColor = v_v4FillColor;
+    out_color = v_v4FillColor;
 }
 ";
 
 static VERTEX_SHADER_TRI_LIST_XY_RGBA_UV: &'static str = "
-attribute vec4 a_v4Position;
-attribute vec4 a_v4FillColor;
-attribute vec2 a_v2TexCoord;
+#version 330
+in vec4 a_v4Position;
+in vec4 a_v4FillColor;
+in vec2 a_v2TexCoord;
 
 uniform sampler2D s_texture;
 
-varying vec2 v_v2TexCoord;
-varying vec4 v_v4FillColor;
+out vec2 v_v2TexCoord;
+out vec4 v_v4FillColor;
 
 void main()
 {
-        v_v2TexCoord = a_v2TexCoord;
-        v_v4FillColor = a_v4FillColor;
-        gl_Position = a_v4Position;
+    v_v2TexCoord = a_v2TexCoord;
+    v_v4FillColor = a_v4FillColor;
+    gl_Position = a_v4Position;
 }
 ";
 
 static FRAGMENT_SHADER_TRI_LIST_XY_RGBA_UV: &'static str = "
+#version 330
+out vec4 out_color;
+
 uniform sampler2D s_texture;
 
-varying vec2 v_v2TexCoord;
-varying vec4 v_v4FillColor;
+in vec2 v_v2TexCoord;
+in vec4 v_v4FillColor;
 
 void main()
 {
-        gl_FragColor = texture2D(s_texture, v_v2TexCoord) * v_v4FillColor;
+    out_color = texture(s_texture, v_v2TexCoord) * v_v4FillColor;
 }
 ";
 
@@ -105,17 +112,22 @@ impl TriListXYRGBA {
 
         gl::AttachShader(program, vertex_shader);
         gl::AttachShader(program, fragment_shader);
+            
+        unsafe {
+            "out_color".with_c_str(
+                |ptr| gl::BindFragDataLocation(program, 0, ptr)
+            );
+        }
+
         gl::LinkProgram(program);
-        gl::UseProgram(program);
         unsafe {
             let a_v4Position = "a_v4Position".with_c_str(
                 |ptr| gl::GetAttribLocation(program, ptr)
             );
-            gl::EnableVertexAttribArray(a_v4Position as GLuint);
             let a_v4FillColor = "a_v4FillColor".with_c_str(
                 |ptr| gl::GetAttribLocation(program, ptr)
             );
-            gl::EnableVertexAttribArray(a_v4FillColor as GLuint);
+    
             TriListXYRGBA {
                 vertex_shader: vertex_shader,
                 fragment_shader: fragment_shader,
@@ -174,20 +186,25 @@ impl TriListXYRGBAUV {
         let program = gl::CreateProgram();
         gl::AttachShader(program, vertex_shader);
         gl::AttachShader(program, fragment_shader);
+       
+        unsafe { 
+            "out_color".with_c_str(
+                |ptr| gl::BindFragDataLocation(program, 0, ptr)
+            );
+        }
+        
         gl::LinkProgram(program);
-        gl::UseProgram(program);
         unsafe {
             let a_v4Position = "a_v4Position".with_c_str(
                 |ptr| gl::GetAttribLocation(program, ptr)
             );
-            gl::EnableVertexAttribArray(a_v4Position as GLuint);
             let a_v4FillColor = "a_v4FillColor".with_c_str(
                 |ptr| gl::GetAttribLocation(program, ptr)
             );
-            gl::EnableVertexAttribArray(a_v4FillColor as GLuint);
             let a_v2TexCoord = "a_v2TexCoord".with_c_str(
                 |ptr| gl::GetAttribLocation(program, ptr)
             );
+         
             TriListXYRGBAUV {
                 vertex_shader: vertex_shader,
                 fragment_shader: fragment_shader,
@@ -234,10 +251,11 @@ impl<'a> Gl {
         unsafe {
             let mut vbo : [GLuint, ..3] = [0, ..3];
             gl::GenBuffers(3, vbo.as_mut_ptr());
+            gl::GenVertexArrays(3, vbo.as_mut_ptr());
             let position_id = vbo[0];
             let fill_color_id = vbo[1];
             let tex_coord_id = vbo[2];
-
+        
             Gl {
                 tri_list_xy_rgba: TriListXYRGBA::new(),
                 tri_list_xy_rgba_uv: TriListXYRGBAUV::new(),
@@ -316,6 +334,10 @@ impl BackEnd<Texture> for Gl {
             self.use_program(shader_program);
         }
         let shader = &self.tri_list_xy_rgba;
+        
+        gl::BindVertexArray(self.position_id);
+        gl::BindVertexArray(self.fill_color_id);
+        
         shader.enable_attributes();        
 
         // xy makes two floats.
@@ -399,8 +421,13 @@ impl BackEnd<Texture> for Gl {
             self.use_program(shader_program);
         }
         let shader = &self.tri_list_xy_rgba_uv;
+            
+        gl::BindVertexArray(self.position_id);
+        gl::BindVertexArray(self.fill_color_id);
+        gl::BindVertexArray(self.tex_coord_id);
+        
         shader.enable_attributes();
-
+            
         let size_vertices: i32 = 2;
         let normalize_vertices = gl::FALSE;
         let vertices_byte_len = (
@@ -488,9 +515,10 @@ impl BackEnd<Texture> for Gl {
         // Render triangles whether they are facing 
         // clockwise or counter clockwise.
         gl::CullFace(gl::FRONT_AND_BACK);
-
+        
         let items: i32 = vertices.len() as i32 / size_vertices;
         gl::DrawArrays(gl::TRIANGLES, 0, items);
+
         shader.disable_attributes();
     }
 }
