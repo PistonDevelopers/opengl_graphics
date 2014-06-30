@@ -7,6 +7,7 @@ use gl::types::{
     GLchar,
     GLenum,
     GLint,
+    GLsizeiptr,
     GLuint,
 };
 
@@ -107,7 +108,7 @@ impl DynamicAttribute {
         gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
         gl::BufferData(
             gl::ARRAY_BUFFER,
-            data.len() as i64 * mem::size_of::<T>() as i64,
+            data.len() as GLsizeiptr * mem::size_of::<T>() as GLsizeiptr,
             mem::transmute(data.as_ptr()),
             gl::DYNAMIC_DRAW
         );
