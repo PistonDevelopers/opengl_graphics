@@ -40,7 +40,7 @@ impl DynamicAttribute {
     /// Binds to a vertex array object.
     ///
     /// The vertex array object remembers the format for later.
-    pub fn bind_vao(&self, vao: GLuint) {
+    fn bind_vao(&self, vao: GLuint) {
         gl::BindVertexArray(vao);
         gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
         let stride = 0;
@@ -61,45 +61,48 @@ impl DynamicAttribute {
         name: &str, 
         size: i32, 
         normalize: GLboolean,
-        ty: GLenum
+        ty: GLenum,
+        vao: GLuint
     ) -> Result<DynamicAttribute, String> {
         let location = try!(attribute_location(program, name));
         let mut vbo = 0;
         unsafe {
             gl::GenBuffers(1, &mut vbo);
         }
-        Ok(DynamicAttribute {
-            vbo: vbo,
-            size: size,
-            location: location,
-            normalize: normalize,
-            ty: ty,
-        })
+        let res = DynamicAttribute {
+                vbo: vbo,
+                size: size,
+                location: location,
+                normalize: normalize,
+                ty: ty,
+            };
+        res.bind_vao(vao);
+        Ok(res)
     }
 
     /// Create XYZ vertex attribute.
-    pub fn xyz(program: GLuint, name: &str) -> Result<DynamicAttribute, String> {
-        DynamicAttribute::new(program, name, 3, gl::FALSE, gl::FLOAT)
+    pub fn xyz(program: GLuint, name: &str, vao: GLuint) -> Result<DynamicAttribute, String> {
+        DynamicAttribute::new(program, name, 3, gl::FALSE, gl::FLOAT, vao)
     }
     
     /// Create XY vertex attribute.
-    pub fn xy(program: GLuint, name: &str) -> Result<DynamicAttribute, String> {
-        DynamicAttribute::new(program, name, 2, gl::FALSE, gl::FLOAT)
+    pub fn xy(program: GLuint, name: &str, vao: GLuint) -> Result<DynamicAttribute, String> {
+        DynamicAttribute::new(program, name, 2, gl::FALSE, gl::FLOAT, vao)
     }
 
     /// Create RGB color attribute.
-    pub fn rgb(program: GLuint, name: &str) -> Result<DynamicAttribute, String> {
-        DynamicAttribute::new(program, name, 3, gl::FALSE, gl::FLOAT)
+    pub fn rgb(program: GLuint, name: &str, vao: GLuint) -> Result<DynamicAttribute, String> {
+        DynamicAttribute::new(program, name, 3, gl::FALSE, gl::FLOAT, vao)
     }
     
     /// Create RGBA color attribute.
-    pub fn rgba(program: GLuint, name: &str) -> Result<DynamicAttribute, String> {
-        DynamicAttribute::new(program, name, 4, gl::FALSE, gl::FLOAT)
+    pub fn rgba(program: GLuint, name: &str, vao: GLuint) -> Result<DynamicAttribute, String> {
+        DynamicAttribute::new(program, name, 4, gl::FALSE, gl::FLOAT, vao)
     }
 
     /// Create texture coordinate attribute.
-    pub fn uv(program: GLuint, name: &str) -> Result<DynamicAttribute, String> {
-        DynamicAttribute::new(program, name, 2, gl::FALSE, gl::FLOAT)
+    pub fn uv(program: GLuint, name: &str, vao: GLuint) -> Result<DynamicAttribute, String> {
+        DynamicAttribute::new(program, name, 2, gl::FALSE, gl::FLOAT, vao)
     }
 
     /// Sets attribute data.
