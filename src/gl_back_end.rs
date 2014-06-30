@@ -127,10 +127,16 @@ impl TriListXYRGBA {
             gl::GenVertexArrays(1, &mut vao);
         }
         gl::LinkProgram(program);
-        let a_v4Position = DynamicAttribute::xy(program, "a_v4Position").unwrap();
-        let a_v4FillColor = DynamicAttribute::rgba(program, "a_v4FillColor").unwrap();
-        a_v4Position.bind_vao(vao);
-        a_v4FillColor.bind_vao(vao);
+        let a_v4Position = DynamicAttribute::xy(
+                program, 
+                "a_v4Position", 
+                vao
+            ).unwrap();
+        let a_v4FillColor = DynamicAttribute::rgba(
+                program, 
+                "a_v4FillColor", 
+                vao
+            ).unwrap();
         TriListXYRGBA {
             vao: vao,
             vertex_shader: vertex_shader,
@@ -195,12 +201,21 @@ impl TriListXYRGBAUV {
             gl::GenVertexArrays(1, &mut vao);
         }
         gl::LinkProgram(program);
-        let a_v4Position = DynamicAttribute::xy(program, "a_v4Position").unwrap();
-        let a_v4FillColor = DynamicAttribute::rgba(program, "a_v4FillColor").unwrap();
-        let a_v2TexCoord = DynamicAttribute::uv(program, "a_v2TexCoord").unwrap();
-        a_v4Position.bind_vao(vao);
-        a_v4FillColor.bind_vao(vao);
-        a_v2TexCoord.bind_vao(vao);
+        let a_v4Position = DynamicAttribute::xy(
+                program, 
+                "a_v4Position", 
+                vao
+            ).unwrap();
+        let a_v4FillColor = DynamicAttribute::rgba(
+                program, 
+                "a_v4FillColor", 
+                vao
+            ).unwrap();
+        let a_v2TexCoord = DynamicAttribute::uv(
+                program, 
+                "a_v2TexCoord", 
+                vao
+            ).unwrap();
         TriListXYRGBAUV {
             vao: vao,
             vertex_shader: vertex_shader,
