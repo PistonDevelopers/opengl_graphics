@@ -76,7 +76,11 @@ impl Texture {
 
     /// Loads image by relative file name to the asset root.
     pub fn from_path(path: &Path) -> Result<Texture, String> {
-        let fin = File::open(path).unwrap();
+        let fin = match File::open(path) {
+            Ok(fin) => fin,
+            Err(e)  => return Err(format!("Could not load '{}': {}",
+                path.filename_str().unwrap(), e)),
+        };
 
         let img = match Image::load(fin, image::PNG) {
             Ok(img) => img,
