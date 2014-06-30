@@ -67,7 +67,7 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                pixels.as_ptr() as *c_void
+                pixels.as_ptr() as *const c_void
             );
         }
 
@@ -114,7 +114,7 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                img.raw_pixels().as_ptr() as *c_void
+                img.raw_pixels().as_ptr() as *const c_void
             );
         }
 
