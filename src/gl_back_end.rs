@@ -271,6 +271,11 @@ impl<'a> Gl {
         gl::UseProgram(program);
         self.current_program = Some(program);
     }
+
+    /// Unset the current program.
+    pub fn clear_shader(&mut self) {
+        self.current_program = None
+    }
 }
 
 impl BackEnd<Texture> for Gl {
