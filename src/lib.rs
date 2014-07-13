@@ -1,4 +1,4 @@
-#![crate_id = "opengl_graphics"]
+#![crate_name = "opengl_graphics"]
 #![deny(missing_doc)]
 
 //! An OpenGL back-end for Rust-Graphics
