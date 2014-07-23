@@ -1,11 +1,9 @@
-use std::io::fs::File;
-
 use gl;
 use gl::types::GLuint;
 use libc::c_void;
 
 use image;
-use image::Image;
+use image::GenericImage;
 
 use graphics::ImageSize;
 
@@ -76,19 +74,13 @@ impl Texture {
 
     /// Loads image by relative file name to the asset root.
     pub fn from_path(path: &Path) -> Result<Texture, String> {
-        let fin = match File::open(path) {
-            Ok(fin) => fin,
-            Err(e)  => return Err(format!("Could not load '{}': {}",
-                path.filename_str().unwrap(), e)),
-        };
-
-        let img = match Image::load(fin, image::PNG) {
+        let img = match image::open(path) {
             Ok(img) => img,
             Err(e)  => return Err(format!("Could not load '{}': {}",
                 path.filename_str().unwrap(), e)),
         };
 
-        match img.colortype() {
+        match img.color() {
             image::RGBA(8) => {},
             c => fail!("Unsupported color type {} in png", c),
         };
