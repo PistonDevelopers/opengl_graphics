@@ -9,6 +9,9 @@ use graphics::ImageSize;
 
 /// Wraps OpenGL texture data.
 /// The texture gets deleted when running out of scope.
+///
+/// In order to create a texture the function `GenTextures` must be loaded.
+/// This is done automatically by the window back-ends in Piston.
 pub struct Texture {
     id: GLuint,
     width: u32,
