@@ -26,7 +26,7 @@ git = "https://github.com/bjz/gl-rs"
 
 git = "https://github.com/PistonDevelopers/rust-graphics"
 
-[[lib]]
+[lib]
 
 name = "opengl_graphics"
 path = "src/lib.rs"
