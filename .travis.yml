@@ -1,12 +1,13 @@
-language: c
-install:
-  - curl -O http://static.rust-lang.org/dist/rust-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - tar xfz rust-nightly-x86_64-unknown-linux-gnu.tar.gz
-  - (cd rust-nightly-x86_64-unknown-linux-gnu/ && sudo ./install.sh)
-  - git clone --recursive https://github.com/rust-lang/cargo
-  - cd cargo
-  - make && sudo make install
-  - cd -
+language: rust
+os:
+    - linux
+    - osx
+env:
+    global:
+        - LD_LIBRARY_PATH: /usr/local/lib
+before_script:
+    - rustc -v
+    - cargo -V
 script:
-  - rustc --version verbose 
-  - cargo build
+    - cargo build -v
+    - cargo test -v
