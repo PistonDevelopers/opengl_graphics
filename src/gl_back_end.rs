@@ -49,12 +49,12 @@ in vec2 uv;
 
 uniform sampler2D s_texture;
 
-out vec2 v_v2TexCoord;
+out vec2 v_uv;
 out vec4 v_color;
 
 void main()
 {
-    v_v2TexCoord = uv;
+    v_uv = uv;
     v_color = color;
     gl_Position = pos;
 }
@@ -66,12 +66,12 @@ out vec4 out_color;
 
 uniform sampler2D s_texture;
 
-in vec2 v_v2TexCoord;
+in vec2 v_uv;
 in vec4 v_color;
 
 void main()
 {
-    out_color = texture(s_texture, v_v2TexCoord) * v_color;
+    out_color = texture(s_texture, v_uv) * v_color;
 }
 ";
 
