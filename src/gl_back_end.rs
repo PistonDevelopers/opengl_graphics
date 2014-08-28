@@ -16,7 +16,7 @@ use shader_utils::{
 // Local crate.
 use Texture;
 
-static VERTEX_SHADER_TRI_LIST_XY_RGBA: &'static str = "
+static VERTEX_SHADER_XY_RGBA: &'static str = "
 #version 330
 in vec4 pos;
 in vec4 color;
@@ -30,7 +30,7 @@ void main()
 }
 ";
 
-static FRAGMENT_SHADER_TRI_LIST_XY_RGBA: &'static str = "
+static FRAGMENT_SHADER_XY_RGBA: &'static str = "
 #version 330
 out vec4 out_color;
 in vec4 v_color;
@@ -41,7 +41,7 @@ void main()
 }
 ";
 
-static VERTEX_SHADER_TRI_LIST_XY_RGBA_UV: &'static str = "
+static VERTEX_SHADER_XY_RGBA_UV: &'static str = "
 #version 330
 in vec4 pos;
 in vec4 color;
@@ -60,7 +60,7 @@ void main()
 }
 ";
 
-static FRAGMENT_SHADER_TRI_LIST_XY_RGBA_UV: &'static str = "
+static FRAGMENT_SHADER_XY_RGBA_UV: &'static str = "
 #version 330
 out vec4 out_color;
 
@@ -75,7 +75,7 @@ void main()
 }
 ";
 
-struct TriListXYRGBA {
+struct XYRGBA {
     vao: GLuint,
     vertex_shader: GLuint,
     fragment_shader: GLuint,
@@ -84,7 +84,7 @@ struct TriListXYRGBA {
     color: DynamicAttribute,
 }
 
-impl Drop for TriListXYRGBA {
+impl Drop for XYRGBA {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteVertexArrays(1, &self.vao);
@@ -95,18 +95,18 @@ impl Drop for TriListXYRGBA {
     }
 }
 
-impl TriListXYRGBA {
-    fn new() -> TriListXYRGBA {
+impl XYRGBA {
+    fn new() -> XYRGBA {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            VERTEX_SHADER_TRI_LIST_XY_RGBA      // shader source
+            VERTEX_SHADER_XY_RGBA      // shader source
         ) {
             Ok(id) => id,
             Err(s) => fail!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            FRAGMENT_SHADER_TRI_LIST_XY_RGBA    // shader source
+            FRAGMENT_SHADER_XY_RGBA    // shader source
         ) {
             Ok(id) => id,
             Err(s) => fail!("compile_shader: {}", s)
@@ -137,7 +137,7 @@ impl TriListXYRGBA {
                 "color", 
                 vao
             ).unwrap();
-        TriListXYRGBA {
+        XYRGBA {
             vao: vao,
             vertex_shader: vertex_shader,
             fragment_shader: fragment_shader,
@@ -148,7 +148,7 @@ impl TriListXYRGBA {
     }
 }
 
-struct TriListXYRGBAUV {
+struct XYRGBAUV {
     vertex_shader: GLuint,
     fragment_shader: GLuint,
     program: GLuint,
@@ -158,7 +158,7 @@ struct TriListXYRGBAUV {
     uv: DynamicAttribute,
 }
 
-impl Drop for TriListXYRGBAUV {
+impl Drop for XYRGBAUV {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteVertexArrays(1, &self.vao);
@@ -169,18 +169,18 @@ impl Drop for TriListXYRGBAUV {
     }
 }
 
-impl TriListXYRGBAUV {
-    fn new() -> TriListXYRGBAUV {
+impl XYRGBAUV {
+    fn new() -> XYRGBAUV {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            VERTEX_SHADER_TRI_LIST_XY_RGBA_UV   // shader type
+            VERTEX_SHADER_XY_RGBA_UV   // shader type
         ) {
             Ok(id) => id,
             Err(s) => fail!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            FRAGMENT_SHADER_TRI_LIST_XY_RGBA_UV // shader source
+            FRAGMENT_SHADER_XY_RGBA_UV // shader source
         ) {
             Ok(id) => id,
             Err(s) => fail!("compile_shader: {}", s)
@@ -216,7 +216,7 @@ impl TriListXYRGBAUV {
                 "uv", 
                 vao
             ).unwrap();
-        TriListXYRGBAUV {
+        XYRGBAUV {
             vao: vao,
             vertex_shader: vertex_shader,
             fragment_shader: fragment_shader,
@@ -230,8 +230,8 @@ impl TriListXYRGBAUV {
 
 /// Contains OpenGL data.
 pub struct Gl {
-    tri_list_xy_rgba: TriListXYRGBA,
-    tri_list_xy_rgba_uv: TriListXYRGBAUV,
+    tri_list_xy_rgba: XYRGBA,
+    tri_list_xy_rgba_uv: XYRGBAUV,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
 }
@@ -242,8 +242,8 @@ impl<'a> Gl {
     pub fn new() -> Gl {
         // Load the vertices, color and texture coord buffers.
         Gl {
-            tri_list_xy_rgba: TriListXYRGBA::new(),
-            tri_list_xy_rgba_uv: TriListXYRGBAUV::new(),
+            tri_list_xy_rgba: XYRGBA::new(),
+            tri_list_xy_rgba_uv: XYRGBAUV::new(),
             current_program: None,
        }
     }
