@@ -273,7 +273,9 @@ impl<'a> Gl {
     }
 
     /// Unset the current program.
-    pub fn clear_shader(&mut self) {
+    ///
+    /// This forces the current program to be set on next drawing call.
+    pub fn clear_program(&mut self) {
         self.current_program = None
     }
 }
