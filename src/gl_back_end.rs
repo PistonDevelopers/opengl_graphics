@@ -230,8 +230,8 @@ impl XYRGBAUV {
 
 /// Contains OpenGL data.
 pub struct Gl {
-    tri_list_xy_rgba: XYRGBA,
-    tri_list_xy_rgba_uv: XYRGBAUV,
+    xy_rgba: XYRGBA,
+    xy_rgba_uv: XYRGBAUV,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
 }
@@ -242,8 +242,8 @@ impl<'a> Gl {
     pub fn new() -> Gl {
         // Load the vertices, color and texture coord buffers.
         Gl {
-            tri_list_xy_rgba: XYRGBA::new(),
-            tri_list_xy_rgba_uv: XYRGBAUV::new(),
+            xy_rgba: XYRGBA::new(),
+            xy_rgba_uv: XYRGBAUV::new(),
             current_program: None,
        }
     }
@@ -318,10 +318,10 @@ impl BackEnd<Texture> for Gl {
     ) {
         {
             // Set shader program.
-            let shader_program = self.tri_list_xy_rgba.program;
+            let shader_program = self.xy_rgba.program;
             self.use_program(shader_program);
         }
-        let ref mut shader = self.tri_list_xy_rgba;
+        let ref mut shader = self.xy_rgba;
         gl::BindVertexArray(shader.vao);
 
         // xy makes two floats.
@@ -352,10 +352,10 @@ impl BackEnd<Texture> for Gl {
     ) {
         {
             // Set shader program.
-            let shader_program = self.tri_list_xy_rgba_uv.program;
+            let shader_program = self.xy_rgba_uv.program;
             self.use_program(shader_program);
         }
-        let ref mut shader = self.tri_list_xy_rgba_uv;
+        let ref mut shader = self.xy_rgba_uv;
         gl::BindVertexArray(shader.vao);
          
         let size_vertices: i32 = 2;
