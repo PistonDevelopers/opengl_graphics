@@ -18,45 +18,45 @@ use Texture;
 
 static VERTEX_SHADER_TRI_LIST_XY_RGBA: &'static str = "
 #version 330
-in vec4 a_v4Position;
-in vec4 a_v4FillColor;
+in vec4 pos;
+in vec4 color;
 
-out vec4 v_v4FillColor;
+out vec4 v_color;
 
 void main()
 {
-    v_v4FillColor = a_v4FillColor;
-    gl_Position = a_v4Position;
+    v_color = color;
+    gl_Position = pos;
 }
 ";
 
 static FRAGMENT_SHADER_TRI_LIST_XY_RGBA: &'static str = "
 #version 330
 out vec4 out_color;
-in vec4 v_v4FillColor;
+in vec4 v_color;
 
 void main()
 {
-    out_color = v_v4FillColor;
+    out_color = v_color;
 }
 ";
 
 static VERTEX_SHADER_TRI_LIST_XY_RGBA_UV: &'static str = "
 #version 330
-in vec4 a_v4Position;
-in vec4 a_v4FillColor;
-in vec2 a_v2TexCoord;
+in vec4 pos;
+in vec4 color;
+in vec2 uv;
 
 uniform sampler2D s_texture;
 
 out vec2 v_v2TexCoord;
-out vec4 v_v4FillColor;
+out vec4 v_color;
 
 void main()
 {
-    v_v2TexCoord = a_v2TexCoord;
-    v_v4FillColor = a_v4FillColor;
-    gl_Position = a_v4Position;
+    v_v2TexCoord = uv;
+    v_color = color;
+    gl_Position = pos;
 }
 ";
 
@@ -67,11 +67,11 @@ out vec4 out_color;
 uniform sampler2D s_texture;
 
 in vec2 v_v2TexCoord;
-in vec4 v_v4FillColor;
+in vec4 v_color;
 
 void main()
 {
-    out_color = texture(s_texture, v_v2TexCoord) * v_v4FillColor;
+    out_color = texture(s_texture, v_v2TexCoord) * v_color;
 }
 ";
 
@@ -80,8 +80,8 @@ struct TriListXYRGBA {
     vertex_shader: GLuint,
     fragment_shader: GLuint,
     program: GLuint,
-    a_v4Position: DynamicAttribute,
-    a_v4FillColor: DynamicAttribute,
+    pos: DynamicAttribute,
+    color: DynamicAttribute,
 }
 
 impl Drop for TriListXYRGBA {
@@ -127,14 +127,14 @@ impl TriListXYRGBA {
             gl::GenVertexArrays(1, &mut vao);
         }
         gl::LinkProgram(program);
-        let a_v4Position = DynamicAttribute::xy(
+        let pos = DynamicAttribute::xy(
                 program, 
-                "a_v4Position", 
+                "pos", 
                 vao
             ).unwrap();
-        let a_v4FillColor = DynamicAttribute::rgba(
+        let color = DynamicAttribute::rgba(
                 program, 
-                "a_v4FillColor", 
+                "color", 
                 vao
             ).unwrap();
         TriListXYRGBA {
@@ -142,8 +142,8 @@ impl TriListXYRGBA {
             vertex_shader: vertex_shader,
             fragment_shader: fragment_shader,
             program: program,
-            a_v4Position: a_v4Position,
-            a_v4FillColor: a_v4FillColor,
+            pos: pos,
+            color: color,
         }
     }
 }
@@ -153,9 +153,9 @@ struct TriListXYRGBAUV {
     fragment_shader: GLuint,
     program: GLuint,
     vao: GLuint,
-    a_v4Position: DynamicAttribute,
-    a_v4FillColor: DynamicAttribute,
-    a_v2TexCoord: DynamicAttribute,
+    pos: DynamicAttribute,
+    color: DynamicAttribute,
+    uv: DynamicAttribute,
 }
 
 impl Drop for TriListXYRGBAUV {
@@ -201,19 +201,19 @@ impl TriListXYRGBAUV {
             gl::GenVertexArrays(1, &mut vao);
         }
         gl::LinkProgram(program);
-        let a_v4Position = DynamicAttribute::xy(
+        let pos = DynamicAttribute::xy(
                 program, 
-                "a_v4Position", 
+                "pos", 
                 vao
             ).unwrap();
-        let a_v4FillColor = DynamicAttribute::rgba(
+        let color = DynamicAttribute::rgba(
                 program, 
-                "a_v4FillColor", 
+                "color", 
                 vao
             ).unwrap();
-        let a_v2TexCoord = DynamicAttribute::uv(
+        let uv = DynamicAttribute::uv(
                 program, 
-                "a_v2TexCoord", 
+                "uv", 
                 vao
             ).unwrap();
         TriListXYRGBAUV {
@@ -221,9 +221,9 @@ impl TriListXYRGBAUV {
             vertex_shader: vertex_shader,
             fragment_shader: fragment_shader,
             program: program,
-            a_v4Position: a_v4Position,
-            a_v4FillColor: a_v4FillColor,
-            a_v2TexCoord: a_v2TexCoord,
+            pos: pos,
+            color: color,
+            uv: uv,
         }
     }
 }
@@ -328,8 +328,8 @@ impl BackEnd<Texture> for Gl {
         let size_vertices: i32 = 2;
 
         unsafe {
-            shader.a_v4Position.set(vertices);
-            shader.a_v4FillColor.set(colors);
+            shader.pos.set(vertices);
+            shader.color.set(colors);
         }
         
         // Render triangles whether they are facing 
@@ -361,9 +361,9 @@ impl BackEnd<Texture> for Gl {
         let size_vertices: i32 = 2;
        
         unsafe { 
-            shader.a_v4Position.set(vertices);
-            shader.a_v4FillColor.set(colors);
-            shader.a_v2TexCoord.set(texture_coords);
+            shader.pos.set(vertices);
+            shader.color.set(colors);
+            shader.uv.set(texture_coords);
         }
         
         // Render triangles whether they are facing 
