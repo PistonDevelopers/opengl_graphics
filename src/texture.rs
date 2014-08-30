@@ -120,8 +120,44 @@ impl Texture {
         Ok(Texture::new(id, width, height))
     }
 
+    /// Creates a texture from image.
+    pub fn from_image(img: &image::ImageBuf<image::Rgba<u8>>) -> Texture {
+        let (width, height) = img.dimensions();
+
+        let mut id: GLuint = 0;
+        unsafe {
+            gl::GenTextures(1, &mut id);
+            gl::BindTexture(gl::TEXTURE_2D, id);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MAG_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                width as i32,
+                height as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                img.pixelbuf().as_ptr() as *const c_void
+            );
+        }
+
+        Texture::new(id, width, height)
+    }
+
     /// Updates image with a new one.
-    pub fn update(&mut self, img: &image::ImageBuf<image::Rgba<u8>>, width: u32, height: u32) {
+    pub fn update(&mut self, img: &image::ImageBuf<image::Rgba<u8>>) {
+        let (width, height) = img.dimensions();
+        
         gl::BindTexture(gl::TEXTURE_2D, self.id);
         unsafe {
             gl::TexImage2D(
