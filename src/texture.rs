@@ -119,6 +119,24 @@ impl Texture {
 
         Ok(Texture::new(id, width, height))
     }
+
+    /// Updates image with a new one.
+    pub fn update(&mut self, img: &image::ImageBuf<image::Rgba<u8>>, width: u32, height: u32) {
+        gl::BindTexture(gl::TEXTURE_2D, self.id);
+        unsafe {
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                width as i32,
+                height as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                img.pixelbuf().as_ptr() as *const c_void
+            );
+        }
+    }
 }
 
 impl Drop for Texture {
