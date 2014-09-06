@@ -26,6 +26,10 @@ git = "https://github.com/bjz/gl-rs"
 
 git = "https://github.com/PistonDevelopers/rust-graphics"
 
+[dependencies.shader_version]
+
+git = "https://github.com/pistondevelopers/shader_version"
+
 [lib]
 
 name = "opengl_graphics"

@@ -1,6 +1,7 @@
 //! OpenGL back-end for Rust-Graphics.
 
 // External crates.
+use shader_version::{opengl, glsl};
 use graphics::BackEnd;
 use gl;
 use gl::types::{
@@ -16,7 +17,21 @@ use shader_utils::{
 // Local crate.
 use Texture;
 
-static VERTEX_SHADER_XY_RGBA: &'static str = "
+static VERTEX_SHADER_XY_RGBA_120: &'static str = "
+#version 120
+attribute vec4 pos;
+attribute vec4 color;
+
+varying vec4 v_color;
+
+void main()
+{
+    v_color = color;
+    gl_Position = pos;
+}
+";
+
+static VERTEX_SHADER_XY_RGBA_150_CORE: &'static str = "
 #version 150 core
 in vec4 pos;
 in vec4 color;
@@ -30,7 +45,17 @@ void main()
 }
 ";
 
-static FRAGMENT_SHADER_XY_RGBA: &'static str = "
+static FRAGMENT_SHADER_XY_RGBA_120: &'static str = "
+#version 120
+varying vec4 v_color;
+
+void main()
+{
+    gl_FragColor = v_color;
+}
+";
+
+static FRAGMENT_SHADER_XY_RGBA_150_CORE: &'static str = "
 #version 150 core
 out vec4 out_color;
 in vec4 v_color;
@@ -41,7 +66,26 @@ void main()
 }
 ";
 
-static VERTEX_SHADER_XY_RGBA_UV: &'static str = "
+static VERTEX_SHADER_XY_RGBA_UV_120: &'static str = "
+#version 120
+attribute vec4 pos;
+attribute vec4 color;
+attribute vec2 uv;
+
+uniform sampler2D s_texture;
+
+varying vec2 v_uv;
+varying vec4 v_color;
+
+void main()
+{
+    v_uv = uv;
+    v_color = color;
+    gl_Position = pos;
+}
+";
+
+static VERTEX_SHADER_XY_RGBA_UV_150_CORE: &'static str = "
 #version 150 core
 in vec4 pos;
 in vec4 color;
@@ -60,7 +104,20 @@ void main()
 }
 ";
 
-static FRAGMENT_SHADER_XY_RGBA_UV: &'static str = "
+static FRAGMENT_SHADER_XY_RGBA_UV_120: &'static str = "
+#version 120
+uniform sampler2D s_texture;
+
+varying vec2 v_uv;
+varying vec4 v_color;
+
+void main()
+{
+    gl_FragColor = texture2D(s_texture, v_uv) * v_color;
+}
+";
+
+static FRAGMENT_SHADER_XY_RGBA_UV_150_CORE: &'static str = "
 #version 150 core
 out vec4 out_color;
 
@@ -74,6 +131,16 @@ void main()
     out_color = texture(s_texture, v_uv) * v_color;
 }
 ";
+
+fn pick_120_150<T>(glsl: glsl::GLSL, for_120: T, for_150: T) -> T {
+    match glsl {
+        glsl::GLSL_1_10 => fail!("GLSL 1.10 not supported"),
+        glsl::GLSL_1_20
+      | glsl::GLSL_1_30
+      | glsl::GLSL_1_40 => for_120,
+        _ => for_150,
+    }
+}
 
 struct XYRGBA {
     vao: GLuint,
@@ -96,17 +163,17 @@ impl Drop for XYRGBA {
 }
 
 impl XYRGBA {
-    fn new() -> XYRGBA {
+    fn new(glsl: glsl::GLSL) -> XYRGBA {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            VERTEX_SHADER_XY_RGBA      // shader source
+            pick_120_150(glsl, VERTEX_SHADER_XY_RGBA_120, VERTEX_SHADER_XY_RGBA_150_CORE)
         ) {
             Ok(id) => id,
             Err(s) => fail!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            FRAGMENT_SHADER_XY_RGBA    // shader source
+            pick_120_150(glsl, FRAGMENT_SHADER_XY_RGBA_120, FRAGMENT_SHADER_XY_RGBA_150_CORE)
         ) {
             Ok(id) => id,
             Err(s) => fail!("compile_shader: {}", s)
@@ -170,17 +237,17 @@ impl Drop for XYRGBAUV {
 }
 
 impl XYRGBAUV {
-    fn new() -> XYRGBAUV {
+    fn new(glsl: glsl::GLSL) -> XYRGBAUV {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            VERTEX_SHADER_XY_RGBA_UV   // shader type
+            pick_120_150(glsl, VERTEX_SHADER_XY_RGBA_UV_120, VERTEX_SHADER_XY_RGBA_UV_150_CORE)
         ) {
             Ok(id) => id,
             Err(s) => fail!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            FRAGMENT_SHADER_XY_RGBA_UV // shader source
+            pick_120_150(glsl, FRAGMENT_SHADER_XY_RGBA_UV_120, FRAGMENT_SHADER_XY_RGBA_UV_150_CORE)
         ) {
             Ok(id) => id,
             Err(s) => fail!("compile_shader: {}", s)
@@ -239,11 +306,12 @@ pub struct Gl {
 
 impl<'a> Gl {
     /// Creates a new OpenGl back-end.
-    pub fn new() -> Gl {
+    pub fn new(opengl: opengl::OpenGL) -> Gl {
+        let glsl = opengl.to_GLSL();
         // Load the vertices, color and texture coord buffers.
         Gl {
-            xy_rgba: XYRGBA::new(),
-            xy_rgba_uv: XYRGBAUV::new(),
+            xy_rgba: XYRGBA::new(glsl),
+            xy_rgba_uv: XYRGBAUV::new(glsl),
             current_program: None,
        }
     }

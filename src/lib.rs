@@ -3,6 +3,7 @@
 
 //! An OpenGL back-end for Rust-Graphics
 
+extern crate shader_version;
 extern crate image;
 extern crate gl;
 extern crate libc;
