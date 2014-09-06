@@ -17,7 +17,7 @@ use shader_utils::{
 use Texture;
 
 static VERTEX_SHADER_XY_RGBA: &'static str = "
-#version 330
+#version 150 core
 in vec4 pos;
 in vec4 color;
 
@@ -31,7 +31,7 @@ void main()
 ";
 
 static FRAGMENT_SHADER_XY_RGBA: &'static str = "
-#version 330
+#version 150 core
 out vec4 out_color;
 in vec4 v_color;
 
@@ -42,7 +42,7 @@ void main()
 ";
 
 static VERTEX_SHADER_XY_RGBA_UV: &'static str = "
-#version 330
+#version 150 core
 in vec4 pos;
 in vec4 color;
 in vec2 uv;
@@ -61,7 +61,7 @@ void main()
 ";
 
 static FRAGMENT_SHADER_XY_RGBA_UV: &'static str = "
-#version 330
+#version 150 core
 out vec4 out_color;
 
 uniform sampler2D s_texture;
