@@ -16,7 +16,7 @@ authors = [
 
 [dependencies.image]
 
-git = "https://github.com/PistonDevelopers/rust-image"
+git = "https://github.com/pistondevelopers/image"
 
 [dependencies.gl]
 
@@ -24,7 +24,7 @@ git = "https://github.com/bjz/gl-rs"
 
 [dependencies.graphics]
 
-git = "https://github.com/PistonDevelopers/rust-graphics"
+git = "https://github.com/pistondevelopers/graphics"
 
 [dependencies.shader_version]
 
