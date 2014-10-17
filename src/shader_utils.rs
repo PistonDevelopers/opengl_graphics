@@ -148,7 +148,7 @@ pub fn compile_shader(
                 gl::GetShaderInfoLog(
                     shader, 
                     len, 
-                    ptr::mut_null(), 
+                    ptr::null_mut(), 
                     buf.as_mut_ptr() as *mut GLchar
                 );
                 

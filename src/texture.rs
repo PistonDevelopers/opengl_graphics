@@ -85,7 +85,7 @@ impl Texture {
 
         match img.color() {
             image::RGBA(8) => {},
-            c => fail!("Unsupported color type {} in png", c),
+            c => return Err(format!("Unsupported color type {}", c)),
         };
 
         let (width, height) = img.dimensions();
