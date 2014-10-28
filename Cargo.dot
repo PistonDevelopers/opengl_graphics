@@ -1,0 +1,19 @@
+digraph example3 {
+    N0[label="opengl_graphics"];
+    N1[label="shader_version"];
+    N2[label="gl"];
+    N3[label="gl_generator"];
+    N4[label="khronos_api"];
+    N5[label="graphics"];
+    N6[label="vecmath"];
+    N7[label="rust-xml"];
+    N8[label="image"];
+    N2 -> N3[label=""];
+    N5 -> N6[label=""];
+    N3 -> N4[label=""];
+    N3 -> N7[label=""];
+    N0 -> N5[label=""];
+    N0 -> N2[label=""];
+    N0 -> N8[label=""];
+    N0 -> N1[label=""];
+}
