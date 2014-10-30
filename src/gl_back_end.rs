@@ -134,7 +134,7 @@ void main()
 
 fn pick_120_150<T>(glsl: glsl::GLSL, for_120: T, for_150: T) -> T {
     match glsl {
-        glsl::GLSL_1_10 => fail!("GLSL 1.10 not supported"),
+        glsl::GLSL_1_10 => panic!("GLSL 1.10 not supported"),
         glsl::GLSL_1_20
       | glsl::GLSL_1_30
       | glsl::GLSL_1_40 => for_120,
@@ -169,14 +169,14 @@ impl XYRGBA {
             pick_120_150(glsl, VERTEX_SHADER_XY_RGBA_120, VERTEX_SHADER_XY_RGBA_150_CORE)
         ) {
             Ok(id) => id,
-            Err(s) => fail!("compile_shader: {}", s)
+            Err(s) => panic!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
             pick_120_150(glsl, FRAGMENT_SHADER_XY_RGBA_120, FRAGMENT_SHADER_XY_RGBA_150_CORE)
         ) {
             Ok(id) => id,
-            Err(s) => fail!("compile_shader: {}", s)
+            Err(s) => panic!("compile_shader: {}", s)
         };
         let program = gl::CreateProgram();
 
@@ -243,14 +243,14 @@ impl XYRGBAUV {
             pick_120_150(glsl, VERTEX_SHADER_XY_RGBA_UV_120, VERTEX_SHADER_XY_RGBA_UV_150_CORE)
         ) {
             Ok(id) => id,
-            Err(s) => fail!("compile_shader: {}", s)
+            Err(s) => panic!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
             pick_120_150(glsl, FRAGMENT_SHADER_XY_RGBA_UV_120, FRAGMENT_SHADER_XY_RGBA_UV_150_CORE)
         ) {
             Ok(id) => id,
-            Err(s) => fail!("compile_shader: {}", s)
+            Err(s) => panic!("compile_shader: {}", s)
         };
 
         let program = gl::CreateProgram();
