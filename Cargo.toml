@@ -22,6 +22,10 @@ git = "https://github.com/pistondevelopers/image"
 
 git = "https://github.com/bjz/gl-rs"
 
+[dependencies.texture]
+
+git = "https://github.com/pistondevelopers/texture"
+
 [dependencies.graphics]
 
 git = "https://github.com/pistondevelopers/graphics"
