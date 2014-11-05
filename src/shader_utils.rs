@@ -41,10 +41,10 @@ impl DynamicAttribute {
     ///
     /// The vertex array object remembers the format for later.
     fn bind_vao(&self, vao: GLuint) {
-        gl::BindVertexArray(vao);
-        gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
         let stride = 0;
         unsafe {
+            gl::BindVertexArray(vao);
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
             gl::VertexAttribPointer(
                 self.location,
                 self.size,
@@ -125,8 +125,8 @@ pub fn compile_shader(
     shader_type: GLenum,
     source: &str
 ) -> Result<GLuint, String> {
-    let shader = gl::CreateShader(shader_type);
     unsafe {
+        let shader = gl::CreateShader(shader_type);
         source.with_c_str(
             |ptr| gl::ShaderSource(shader, 1, &ptr, ptr::null())
         );

@@ -155,10 +155,10 @@ impl Drop for XYRGBA {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteVertexArrays(1, &self.vao);
+            gl::DeleteProgram(self.program);
+            gl::DeleteShader(self.vertex_shader);
+            gl::DeleteShader(self.fragment_shader);
         }
-        gl::DeleteProgram(self.program);
-        gl::DeleteShader(self.vertex_shader);
-        gl::DeleteShader(self.fragment_shader);
     }
 }
 
@@ -178,12 +178,13 @@ impl XYRGBA {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
         };
-        let program = gl::CreateProgram();
 
-        gl::AttachShader(program, vertex_shader);
-        gl::AttachShader(program, fragment_shader);
-            
+        let program;
         unsafe {
+            program = gl::CreateProgram();
+            gl::AttachShader(program, vertex_shader);
+            gl::AttachShader(program, fragment_shader);
+
             "out_color".with_c_str(
                 |ptr| gl::BindFragDataLocation(program, 0, ptr)
             );
@@ -192,16 +193,16 @@ impl XYRGBA {
         let mut vao = 0;
         unsafe {
             gl::GenVertexArrays(1, &mut vao);
+            gl::LinkProgram(program);
         }
-        gl::LinkProgram(program);
         let pos = DynamicAttribute::xy(
-                program, 
-                "pos", 
+                program,
+                "pos",
                 vao
             ).unwrap();
         let color = DynamicAttribute::rgba(
-                program, 
-                "color", 
+                program,
+                "color",
                 vao
             ).unwrap();
         XYRGBA {
@@ -229,10 +230,10 @@ impl Drop for XYRGBAUV {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteVertexArrays(1, &self.vao);
+            gl::DeleteProgram(self.program);
+            gl::DeleteShader(self.vertex_shader);
+            gl::DeleteShader(self.fragment_shader);
         }
-        gl::DeleteProgram(self.program);
-        gl::DeleteShader(self.vertex_shader);
-        gl::DeleteShader(self.fragment_shader);
     }
 }
 
@@ -253,34 +254,35 @@ impl XYRGBAUV {
             Err(s) => panic!("compile_shader: {}", s)
         };
 
-        let program = gl::CreateProgram();
-        gl::AttachShader(program, vertex_shader);
-        gl::AttachShader(program, fragment_shader);
-       
-        unsafe { 
+        let program;
+        unsafe {
+            program = gl::CreateProgram();
+            gl::AttachShader(program, vertex_shader);
+            gl::AttachShader(program, fragment_shader);
+
             "out_color".with_c_str(
                 |ptr| gl::BindFragDataLocation(program, 0, ptr)
             );
         }
-       
+
         let mut vao = 0;
         unsafe {
             gl::GenVertexArrays(1, &mut vao);
+            gl::LinkProgram(program);
         }
-        gl::LinkProgram(program);
         let pos = DynamicAttribute::xy(
-                program, 
-                "pos", 
+                program,
+                "pos",
                 vao
             ).unwrap();
         let color = DynamicAttribute::rgba(
-                program, 
-                "color", 
+                program,
+                "color",
                 vao
             ).unwrap();
         let uv = DynamicAttribute::uv(
-                program, 
-                "uv", 
+                program,
+                "uv",
                 vao
             ).unwrap();
         XYRGBAUV {
@@ -318,13 +320,15 @@ impl<'a> Gl {
 
     /// Sets viewport with normalized coordinates and center as origin.
     pub fn viewport(
-        &mut self, 
-        x: i32, 
-        y: i32, 
-        w: i32, 
+        &mut self,
+        x: i32,
+        y: i32,
+        w: i32,
         h: i32
     ) {
-        gl::Viewport(x as GLint, y as GLint, w as GLsizei, h as GLsizei);
+        unsafe {
+            gl::Viewport(x as GLint, y as GLint, w as GLsizei, h as GLsizei);
+        }
     }
 
     /// Sets the current program only if the program is not in use.
@@ -336,7 +340,9 @@ impl<'a> Gl {
             },
         }
 
-        gl::UseProgram(program);
+        unsafe {
+            gl::UseProgram(program);
+        }
         self.current_program = Some(program);
     }
 
@@ -352,24 +358,32 @@ impl BackEnd<Texture> for Gl {
     fn supports_clear_rgba(&self) -> bool { true }
 
     fn clear_rgba(&mut self, r: f32, g: f32, b: f32, a: f32) {
-        gl::ClearColor(r, g, b, a);
-        gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+        unsafe{
+            gl::ClearColor(r, g, b, a);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+        }
     }
 
     fn enable_alpha_blend(&mut self) {
-        gl::Enable(gl::BLEND);
-        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        unsafe{
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        }
     }
 
     fn disable_alpha_blend(&mut self) {
-        gl::Disable(gl::BLEND);
+        unsafe{
+            gl::Disable(gl::BLEND);
+        }
     }
 
     fn supports_single_texture(&self) -> bool { true }
 
     fn enable_single_texture(&mut self, texture: &Texture) {
         let texture = texture.get_id();
-        gl::BindTexture(gl::TEXTURE_2D, texture);
+        unsafe{
+            gl::BindTexture(gl::TEXTURE_2D, texture);
+        }
     }
 
     fn disable_single_texture(&mut self) {}
@@ -390,24 +404,24 @@ impl BackEnd<Texture> for Gl {
             self.use_program(shader_program);
         }
         let ref mut shader = self.xy_rgba;
-        gl::BindVertexArray(shader.vao);
 
         // xy makes two floats.
         let size_vertices: i32 = 2;
+        let items: i32 = vertices.len() as i32 / size_vertices;
 
         unsafe {
+            gl::BindVertexArray(shader.vao);
             shader.pos.set(vertices);
             shader.color.set(colors);
-        }
-        
-        // Render triangles whether they are facing 
-        // clockwise or counter clockwise.
-        gl::CullFace(gl::FRONT_AND_BACK);
 
-        let items: i32 = vertices.len() as i32 / size_vertices;
-        gl::DrawArrays(gl::TRIANGLES, 0, items);
-        
-        gl::BindVertexArray(0);
+            // Render triangles whether they are facing
+            // clockwise or counter clockwise.
+            gl::CullFace(gl::FRONT_AND_BACK);
+
+            gl::DrawArrays(gl::TRIANGLES, 0, items);
+
+            gl::BindVertexArray(0);
+        }
     }
 
     fn supports_tri_list_xy_f32_rgba_f32_uv_f32(&self) -> bool { true }
@@ -424,24 +438,23 @@ impl BackEnd<Texture> for Gl {
             self.use_program(shader_program);
         }
         let ref mut shader = self.xy_rgba_uv;
-        gl::BindVertexArray(shader.vao);
-         
+
         let size_vertices: i32 = 2;
-       
-        unsafe { 
+        let items: i32 = vertices.len() as i32 / size_vertices;
+
+        unsafe {
+            gl::BindVertexArray(shader.vao);
             shader.pos.set(vertices);
             shader.color.set(colors);
             shader.uv.set(texture_coords);
-        }
-        
-        // Render triangles whether they are facing 
-        // clockwise or counter clockwise.
-        gl::CullFace(gl::FRONT_AND_BACK);
-        
-        let items: i32 = vertices.len() as i32 / size_vertices;
-        gl::DrawArrays(gl::TRIANGLES, 0, items);
+            // Render triangles whether they are facing
+            // clockwise or counter clockwise.
+            gl::CullFace(gl::FRONT_AND_BACK);
 
-        gl::BindVertexArray(0);
+            gl::DrawArrays(gl::TRIANGLES, 0, items);
+
+            gl::BindVertexArray(0);
+        }
     }
 }
 
