@@ -159,8 +159,8 @@ impl Texture {
     pub fn update(&mut self, img: &image::ImageBuf<image::Rgba<u8>>) {
         let (width, height) = img.dimensions();
         
-        gl::BindTexture(gl::TEXTURE_2D, self.id);
         unsafe {
+            gl::BindTexture(gl::TEXTURE_2D, self.id);
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
