@@ -15,3 +15,4 @@ To do this manually, see the README in [gl-rs](https://github.com/bjz/gl-rs)
 
 ![dependencies](./Cargo.png)
 
+[How to contribute](https://github.com/PistonDevelopers/piston/blob/master/CONTRIBUTING.md)
