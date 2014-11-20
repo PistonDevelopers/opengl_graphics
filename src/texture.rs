@@ -2,7 +2,6 @@ use gl;
 use gl::types::GLuint;
 use libc::c_void;
 
-use texture_lib::FromMemoryAlpha;
 use image;
 use image::GenericImage;
 
@@ -190,49 +189,3 @@ impl ImageSize for Texture {
     }
 }
 
-impl FromMemoryAlpha<()> for Texture {
-    fn from_memory_alpha(
-        device: &mut (), 
-        buf: &[u8], 
-        width: u32,
-        height: u32,
-        f: |&mut (), Texture| -> Texture
-    ) -> Option<Texture> {
-        let mut pixels = Vec::new();
-        for alpha in buf.iter() {
-            pixels.push(255);
-            pixels.push(255);
-            pixels.push(255);
-            pixels.push(*alpha);
-        }
-
-        let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                pixels.as_ptr() as *const c_void
-            );
-        }
-
-        Some(f(device, Texture::new(id, width, height)))
-    }
-}

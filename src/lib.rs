@@ -3,7 +3,6 @@
 
 //! An OpenGL back-end for Rust-Graphics
 
-extern crate "texture" as texture_lib;
 extern crate shader_version;
 extern crate image;
 extern crate gl;
