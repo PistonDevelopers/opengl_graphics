@@ -19,116 +19,111 @@ use Texture;
 
 static VERTEX_SHADER_XY_RGBA_120: &'static str = "
 #version 120
-attribute vec4 pos;
-attribute vec4 color;
+uniform vec4 color;
 
-varying vec4 v_color;
+attribute vec4 pos;
 
 void main()
 {
-    v_color = color;
     gl_Position = pos;
 }
 ";
 
 static VERTEX_SHADER_XY_RGBA_150_CORE: &'static str = "
 #version 150 core
-in vec4 pos;
-in vec4 color;
+uniform vec4 color;
 
-out vec4 v_color;
+in vec4 pos;
 
 void main()
 {
-    v_color = color;
     gl_Position = pos;
 }
 ";
 
 static FRAGMENT_SHADER_XY_RGBA_120: &'static str = "
 #version 120
-varying vec4 v_color;
+uniform vec4 color;
 
 void main()
 {
-    gl_FragColor = v_color;
+    gl_FragColor = color;
 }
 ";
 
 static FRAGMENT_SHADER_XY_RGBA_150_CORE: &'static str = "
 #version 150 core
+uniform vec4 color;
+
 out vec4 out_color;
-in vec4 v_color;
 
 void main()
 {
-    out_color = v_color;
+    out_color = color;
 }
 ";
 
 static VERTEX_SHADER_XY_RGBA_UV_120: &'static str = "
 #version 120
+uniform vec4 color;
+
 attribute vec4 pos;
-attribute vec4 color;
 attribute vec2 uv;
 
 uniform sampler2D s_texture;
 
 varying vec2 v_uv;
-varying vec4 v_color;
 
 void main()
 {
     v_uv = uv;
-    v_color = color;
     gl_Position = pos;
 }
 ";
 
 static VERTEX_SHADER_XY_RGBA_UV_150_CORE: &'static str = "
 #version 150 core
+uniform vec4 color;
+
 in vec4 pos;
-in vec4 color;
 in vec2 uv;
 
 uniform sampler2D s_texture;
 
 out vec2 v_uv;
-out vec4 v_color;
 
 void main()
 {
     v_uv = uv;
-    v_color = color;
     gl_Position = pos;
 }
 ";
 
 static FRAGMENT_SHADER_XY_RGBA_UV_120: &'static str = "
 #version 120
+uniform vec4 color;
 uniform sampler2D s_texture;
 
 varying vec2 v_uv;
-varying vec4 v_color;
 
 void main()
 {
-    gl_FragColor = texture2D(s_texture, v_uv) * v_color;
+    gl_FragColor = texture2D(s_texture, v_uv) * color;
 }
 ";
 
 static FRAGMENT_SHADER_XY_RGBA_UV_150_CORE: &'static str = "
 #version 150 core
-out vec4 out_color;
-
+uniform vec4 color;
 uniform sampler2D s_texture;
 
+out vec4 out_color;
+
 in vec2 v_uv;
-in vec4 v_color;
 
 void main()
 {
-    out_color = texture(s_texture, v_uv) * v_color;
+    out_color = texture(s_texture, v_uv) * color;
 }
 ";
 
@@ -148,7 +143,7 @@ struct XYRGBA {
     fragment_shader: GLuint,
     program: GLuint,
     pos: DynamicAttribute,
-    color: DynamicAttribute,
+    color: GLint,
 }
 
 impl Drop for XYRGBA {
@@ -200,11 +195,12 @@ impl XYRGBA {
                 "pos",
                 vao
             ).unwrap();
-        let color = DynamicAttribute::rgba(
-                program,
-                "color",
-                vao
-            ).unwrap();
+        let color = unsafe {
+                "color".with_c_str(|name| gl::GetUniformLocation(program, name))
+            };
+        if color == -1 {
+            panic!("Could not find uniform `color`");
+        }
         XYRGBA {
             vao: vao,
             vertex_shader: vertex_shader,
@@ -221,8 +217,8 @@ struct XYRGBAUV {
     fragment_shader: GLuint,
     program: GLuint,
     vao: GLuint,
+    color: GLint,
     pos: DynamicAttribute,
-    color: DynamicAttribute,
     uv: DynamicAttribute,
 }
 
@@ -275,11 +271,12 @@ impl XYRGBAUV {
                 "pos",
                 vao
             ).unwrap();
-        let color = DynamicAttribute::rgba(
-                program,
-                "color",
-                vao
-            ).unwrap();
+        let color = unsafe {
+                "color".with_c_str(|name| gl::GetUniformLocation(program, name))
+            };
+        if color == -1 {
+            panic!("Could not find uniform `color`");
+        }
         let uv = DynamicAttribute::uv(
                 program,
                 "uv",
@@ -303,6 +300,7 @@ pub struct Gl {
     xy_rgba_uv: XYRGBAUV,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
+    color: [f32, ..4],
 }
 
 
@@ -315,6 +313,7 @@ impl<'a> Gl {
             xy_rgba: XYRGBA::new(glsl),
             xy_rgba_uv: XYRGBAUV::new(glsl),
             current_program: None,
+            color: [1.0, ..4],
        }
     }
 
@@ -355,10 +354,9 @@ impl<'a> Gl {
 }
 
 impl BackEnd<Texture> for Gl {
-    fn supports_clear_rgba(&self) -> bool { true }
-
-    fn clear_rgba(&mut self, r: f32, g: f32, b: f32, a: f32) {
-        unsafe{
+    fn clear(&mut self, color: [f32, ..4]) {
+        unsafe {
+            let [r, g, b, a] = color;
             gl::ClearColor(r, g, b, a);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
@@ -377,27 +375,23 @@ impl BackEnd<Texture> for Gl {
         }
     }
 
-    fn supports_single_texture(&self) -> bool { true }
-
-    fn enable_single_texture(&mut self, texture: &Texture) {
+    fn enable_texture(&mut self, texture: &Texture) {
         let texture = texture.get_id();
         unsafe{
             gl::BindTexture(gl::TEXTURE_2D, texture);
         }
     }
 
-    fn disable_single_texture(&mut self) {}
+    fn disable_texture(&mut self) {}
 
     // Assume all textures has alpha channel for now.
     fn has_texture_alpha(&self, _texture: &Texture) -> bool { true }
 
-    fn supports_tri_list_xy_f32_rgba_f32(&self) -> bool { true }
+    fn color(&mut self, color: [f32, ..4]) {
+        self.color = color;
+    }
 
-    fn tri_list_xy_f32_rgba_f32(
-        &mut self,
-        vertices: &[f32],
-        colors: &[f32]
-    ) {
+    fn tri_list(&mut self, vertices: &[f32]) {
         {
             // Set shader program.
             let shader_program = self.xy_rgba.program;
@@ -409,10 +403,11 @@ impl BackEnd<Texture> for Gl {
         let size_vertices: i32 = 2;
         let items: i32 = vertices.len() as i32 / size_vertices;
 
+        let color = self.color;
         unsafe {
             gl::BindVertexArray(shader.vao);
             shader.pos.set(vertices);
-            shader.color.set(colors);
+            gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
 
             // Render triangles whether they are facing
             // clockwise or counter clockwise.
@@ -424,14 +419,7 @@ impl BackEnd<Texture> for Gl {
         }
     }
 
-    fn supports_tri_list_xy_f32_rgba_f32_uv_f32(&self) -> bool { true }
-
-    fn tri_list_xy_f32_rgba_f32_uv_f32(
-        &mut self,
-        vertices: &[f32],
-        colors: &[f32],
-        texture_coords: &[f32]
-    ) {
+    fn tri_list_uv(&mut self, vertices: &[f32], texture_coords: &[f32]) {
         {
             // Set shader program.
             let shader_program = self.xy_rgba_uv.program;
@@ -442,10 +430,11 @@ impl BackEnd<Texture> for Gl {
         let size_vertices: i32 = 2;
         let items: i32 = vertices.len() as i32 / size_vertices;
 
+        let color = self.color;
         unsafe {
             gl::BindVertexArray(shader.vao);
             shader.pos.set(vertices);
-            shader.color.set(colors);
+            gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
             shader.uv.set(texture_coords);
             // Render triangles whether they are facing
             // clockwise or counter clockwise.
