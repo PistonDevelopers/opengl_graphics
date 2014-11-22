@@ -3,7 +3,7 @@ use gl::types::GLuint;
 use libc::c_void;
 
 use image;
-use image::GenericImage;
+use image::{ DynamicImage, GenericImage };
 
 use graphics::ImageSize;
 
@@ -83,9 +83,9 @@ impl Texture {
                 path.filename_str().unwrap(), e)),
         };
 
-        match img.color() {
-            image::RGBA(8) => {},
-            c => return Err(format!("Unsupported color type {}", c)),
+        let img = match img {
+            DynamicImage::ImageRgba8(img) => img,
+            x => x.to_rgba()
         };
 
         let (width, height) = img.dimensions();
@@ -113,7 +113,7 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                img.raw_pixels().as_ptr() as *const c_void
+                img.rawbuf().as_ptr() as *const c_void
             );
         }
 
