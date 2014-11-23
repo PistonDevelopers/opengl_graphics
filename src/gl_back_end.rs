@@ -17,7 +17,7 @@ use shader_utils::{
 // Local crate.
 use Texture;
 
-static VERTEX_SHADER_XY_RGBA_120: &'static str = "
+static VS_COLORED_120: &'static str = "
 #version 120
 uniform vec4 color;
 
@@ -29,7 +29,7 @@ void main()
 }
 ";
 
-static VERTEX_SHADER_XY_RGBA_150_CORE: &'static str = "
+static VS_COLORED_150_CORE: &'static str = "
 #version 150 core
 uniform vec4 color;
 
@@ -41,7 +41,7 @@ void main()
 }
 ";
 
-static FRAGMENT_SHADER_XY_RGBA_120: &'static str = "
+static FS_COLORED_120: &'static str = "
 #version 120
 uniform vec4 color;
 
@@ -51,7 +51,7 @@ void main()
 }
 ";
 
-static FRAGMENT_SHADER_XY_RGBA_150_CORE: &'static str = "
+static FS_COLORED_150_CORE: &'static str = "
 #version 150 core
 uniform vec4 color;
 
@@ -63,7 +63,7 @@ void main()
 }
 ";
 
-static VERTEX_SHADER_XY_RGBA_UV_120: &'static str = "
+static VS_TEXTURED_120: &'static str = "
 #version 120
 uniform vec4 color;
 
@@ -81,7 +81,7 @@ void main()
 }
 ";
 
-static VERTEX_SHADER_XY_RGBA_UV_150_CORE: &'static str = "
+static VS_TEXTURED_150_CORE: &'static str = "
 #version 150 core
 uniform vec4 color;
 
@@ -99,7 +99,7 @@ void main()
 }
 ";
 
-static FRAGMENT_SHADER_XY_RGBA_UV_120: &'static str = "
+static FS_TEXTURED_120: &'static str = "
 #version 120
 uniform vec4 color;
 uniform sampler2D s_texture;
@@ -112,7 +112,7 @@ void main()
 }
 ";
 
-static FRAGMENT_SHADER_XY_RGBA_UV_150_CORE: &'static str = "
+static FS_TEXTURED_150_CORE: &'static str = "
 #version 150 core
 uniform vec4 color;
 uniform sampler2D s_texture;
@@ -137,7 +137,7 @@ fn pick_120_150<T>(glsl: glsl::GLSL, for_120: T, for_150: T) -> T {
     }
 }
 
-struct XY {
+struct Colored {
     vao: GLuint,
     vertex_shader: GLuint,
     fragment_shader: GLuint,
@@ -146,7 +146,7 @@ struct XY {
     color: GLint,
 }
 
-impl Drop for XY {
+impl Drop for Colored {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteVertexArrays(1, &self.vao);
@@ -157,18 +157,18 @@ impl Drop for XY {
     }
 }
 
-impl XY {
-    fn new(glsl: glsl::GLSL) -> XY {
+impl Colored {
+    fn new(glsl: glsl::GLSL) -> Colored {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            pick_120_150(glsl, VERTEX_SHADER_XY_RGBA_120, VERTEX_SHADER_XY_RGBA_150_CORE)
+            pick_120_150(glsl, VS_COLORED_120, VS_COLORED_150_CORE)
         ) {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            pick_120_150(glsl, FRAGMENT_SHADER_XY_RGBA_120, FRAGMENT_SHADER_XY_RGBA_150_CORE)
+            pick_120_150(glsl, FS_COLORED_120, FS_COLORED_150_CORE)
         ) {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
@@ -201,7 +201,7 @@ impl XY {
         if color == -1 {
             panic!("Could not find uniform `color`");
         }
-        XY {
+        Colored {
             vao: vao,
             vertex_shader: vertex_shader,
             fragment_shader: fragment_shader,
@@ -212,7 +212,7 @@ impl XY {
     }
 }
 
-struct XYRGBAUV {
+struct Textured {
     vertex_shader: GLuint,
     fragment_shader: GLuint,
     program: GLuint,
@@ -222,7 +222,7 @@ struct XYRGBAUV {
     uv: DynamicAttribute,
 }
 
-impl Drop for XYRGBAUV {
+impl Drop for Textured {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteVertexArrays(1, &self.vao);
@@ -233,18 +233,18 @@ impl Drop for XYRGBAUV {
     }
 }
 
-impl XYRGBAUV {
-    fn new(glsl: glsl::GLSL) -> XYRGBAUV {
+impl Textured {
+    fn new(glsl: glsl::GLSL) -> Textured {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            pick_120_150(glsl, VERTEX_SHADER_XY_RGBA_UV_120, VERTEX_SHADER_XY_RGBA_UV_150_CORE)
+            pick_120_150(glsl, VS_TEXTURED_120, VS_TEXTURED_150_CORE)
         ) {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            pick_120_150(glsl, FRAGMENT_SHADER_XY_RGBA_UV_120, FRAGMENT_SHADER_XY_RGBA_UV_150_CORE)
+            pick_120_150(glsl, FS_TEXTURED_120, FS_TEXTURED_150_CORE)
         ) {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
@@ -282,7 +282,7 @@ impl XYRGBAUV {
                 "uv",
                 vao
             ).unwrap();
-        XYRGBAUV {
+        Textured {
             vao: vao,
             vertex_shader: vertex_shader,
             fragment_shader: fragment_shader,
@@ -296,8 +296,8 @@ impl XYRGBAUV {
 
 /// Contains OpenGL data.
 pub struct Gl {
-    xy: XY,
-    xy_rgba_uv: XYRGBAUV,
+    colored: Colored,
+    textured: Textured,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
     color: [f32, ..4],
@@ -310,8 +310,8 @@ impl<'a> Gl {
         let glsl = opengl.to_GLSL();
         // Load the vertices, color and texture coord buffers.
         Gl {
-            xy: XY::new(glsl),
-            xy_rgba_uv: XYRGBAUV::new(glsl),
+            colored: Colored::new(glsl),
+            textured: Textured::new(glsl),
             current_program: None,
             color: [1.0, ..4],
        }
@@ -394,10 +394,10 @@ impl BackEnd<Texture> for Gl {
     fn tri_list(&mut self, vertices: &[f32]) {
         {
             // Set shader program.
-            let shader_program = self.xy.program;
+            let shader_program = self.colored.program;
             self.use_program(shader_program);
         }
-        let ref mut shader = self.xy;
+        let ref mut shader = self.colored;
 
         // xy makes two floats.
         let size_vertices: i32 = 2;
@@ -422,10 +422,10 @@ impl BackEnd<Texture> for Gl {
     fn tri_list_uv(&mut self, vertices: &[f32], texture_coords: &[f32]) {
         {
             // Set shader program.
-            let shader_program = self.xy_rgba_uv.program;
+            let shader_program = self.textured.program;
             self.use_program(shader_program);
         }
-        let ref mut shader = self.xy_rgba_uv;
+        let ref mut shader = self.textured;
 
         let size_vertices: i32 = 2;
         let items: i32 = vertices.len() as i32 / size_vertices;
