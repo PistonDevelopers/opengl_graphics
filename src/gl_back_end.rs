@@ -137,7 +137,7 @@ fn pick_120_150<T>(glsl: glsl::GLSL, for_120: T, for_150: T) -> T {
     }
 }
 
-struct XYRGBA {
+struct XY {
     vao: GLuint,
     vertex_shader: GLuint,
     fragment_shader: GLuint,
@@ -146,7 +146,7 @@ struct XYRGBA {
     color: GLint,
 }
 
-impl Drop for XYRGBA {
+impl Drop for XY {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteVertexArrays(1, &self.vao);
@@ -157,8 +157,8 @@ impl Drop for XYRGBA {
     }
 }
 
-impl XYRGBA {
-    fn new(glsl: glsl::GLSL) -> XYRGBA {
+impl XY {
+    fn new(glsl: glsl::GLSL) -> XY {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
             pick_120_150(glsl, VERTEX_SHADER_XY_RGBA_120, VERTEX_SHADER_XY_RGBA_150_CORE)
@@ -201,7 +201,7 @@ impl XYRGBA {
         if color == -1 {
             panic!("Could not find uniform `color`");
         }
-        XYRGBA {
+        XY {
             vao: vao,
             vertex_shader: vertex_shader,
             fragment_shader: fragment_shader,
@@ -296,7 +296,7 @@ impl XYRGBAUV {
 
 /// Contains OpenGL data.
 pub struct Gl {
-    xy_rgba: XYRGBA,
+    xy: XY,
     xy_rgba_uv: XYRGBAUV,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
@@ -310,7 +310,7 @@ impl<'a> Gl {
         let glsl = opengl.to_GLSL();
         // Load the vertices, color and texture coord buffers.
         Gl {
-            xy_rgba: XYRGBA::new(glsl),
+            xy: XY::new(glsl),
             xy_rgba_uv: XYRGBAUV::new(glsl),
             current_program: None,
             color: [1.0, ..4],
@@ -363,21 +363,21 @@ impl BackEnd<Texture> for Gl {
     }
 
     fn enable_alpha_blend(&mut self) {
-        unsafe{
+        unsafe {
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         }
     }
 
     fn disable_alpha_blend(&mut self) {
-        unsafe{
+        unsafe {
             gl::Disable(gl::BLEND);
         }
     }
 
     fn enable_texture(&mut self, texture: &Texture) {
         let texture = texture.get_id();
-        unsafe{
+        unsafe {
             gl::BindTexture(gl::TEXTURE_2D, texture);
         }
     }
@@ -394,10 +394,10 @@ impl BackEnd<Texture> for Gl {
     fn tri_list(&mut self, vertices: &[f32]) {
         {
             // Set shader program.
-            let shader_program = self.xy_rgba.program;
+            let shader_program = self.xy.program;
             self.use_program(shader_program);
         }
-        let ref mut shader = self.xy_rgba;
+        let ref mut shader = self.xy;
 
         // xy makes two floats.
         let size_vertices: i32 = 2;
