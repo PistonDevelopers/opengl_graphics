@@ -2,7 +2,7 @@
 
 // External crates.
 use shader_version::{opengl, glsl};
-use graphics::BackEnd;
+use graphics::{ Context, BackEnd };
 use gl;
 use gl::types::{
     GLint,
@@ -350,6 +350,20 @@ impl<'a> Gl {
     /// This forces the current program to be set on next drawing call.
     pub fn clear_program(&mut self) {
         self.current_program = None
+    }
+
+    /// Draws graphics.
+    pub fn draw(&mut self, viewport: [i32, ..4], f: |c: Context, g: &mut Gl|) {
+        let [x, y, w, h] = viewport;
+        self.viewport(x, y, w, h);
+        self.clear_program();
+        self.enable_alpha_blend();
+        let c = Context::abs(
+            w as f64,
+            h as f64
+        );
+        f(c, self);
+        self.disable_alpha_blend();
     }
 }
 
