@@ -365,6 +365,24 @@ impl<'a> Gl {
         f(c, self);
         self.disable_alpha_blend();
     }
+    
+    /// Assume all textures has alpha channel for now.
+    pub fn has_texture_alpha(&self, _texture: &Texture) -> bool { true }
+    
+    /// Enabled alpha blending.
+    pub fn enable_alpha_blend(&mut self) {
+        unsafe {
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        }
+    }
+
+    /// Disables alpha blending.
+    pub fn disable_alpha_blend(&mut self) {
+        unsafe {
+            gl::Disable(gl::BLEND);
+        }
+    }
 }
 
 impl BackEnd<Texture> for Gl {
@@ -376,19 +394,6 @@ impl BackEnd<Texture> for Gl {
         }
     }
 
-    fn enable_alpha_blend(&mut self) {
-        unsafe {
-            gl::Enable(gl::BLEND);
-            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        }
-    }
-
-    fn disable_alpha_blend(&mut self) {
-        unsafe {
-            gl::Disable(gl::BLEND);
-        }
-    }
-
     fn enable_texture(&mut self, texture: &Texture) {
         let texture = texture.get_id();
         unsafe {
@@ -397,9 +402,6 @@ impl BackEnd<Texture> for Gl {
     }
 
     fn disable_texture(&mut self) {}
-
-    // Assume all textures has alpha channel for now.
-    fn has_texture_alpha(&self, _texture: &Texture) -> bool { true }
 
     fn color(&mut self, color: [f32, ..4]) {
         self.color = color;
