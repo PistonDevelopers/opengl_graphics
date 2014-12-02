@@ -29,7 +29,6 @@ git = "https://github.com/pistondevelopers/texture"
 [dependencies.graphics]
 
 git = "https://github.com/pistondevelopers/graphics"
-branch = "newdesign"
 
 [dependencies.shader_version]
 
