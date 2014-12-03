@@ -11,30 +11,35 @@ use std::collections::hash_map::{Occupied, Vacant};
 
 pub type FontSize = u32;
 
-/// Struct used to hold rendered character data.
+/// Holds rendered character data.
 pub struct Character {
-    /// The glyph.
-    pub glyph: freetype::Glyph,
-    /// The bitmap of the character.
-    pub bitmap_glyph: freetype::BitmapGlyph,
+    /// The offset of character to the left.
+    pub offset: [f64, ..2],
+    /// The size of character, including space.
+    pub size: [f64, ..2],
     /// The texture of the character.
     pub texture: Texture,
 }
 
 impl Character {
-    /// The top offset.
-    pub fn top(&self) -> i32 {
-        self.bitmap_glyph.top()
-    }
-
     /// The left offset.
-    pub fn left(&self) -> i32 {
-        self.bitmap_glyph.left()
+    pub fn left(&self) -> f64 {
+        self.offset[0]
     }
 
-    /// Advances to next character position.
-    pub fn advance(&self) -> freetype::Vector {
-        self.glyph.advance()
+    /// The top offset.
+    pub fn top(&self) -> f64 {
+        self.offset[1]
+    }
+
+    /// Gets width of character, including space to the next one.
+    pub fn width(&self) -> f64 {
+        self.size[0]
+    }
+
+    /// Sets height of character, including space to the next one.
+    pub fn height(&self) -> f64 {
+        self.size[1]
     }
 }
 
@@ -92,9 +97,16 @@ impl GlyphCache {
         let texture = Texture::from_memory_alpha(bitmap.buffer(),
                                                  bitmap.width() as u32,
                                                  bitmap.rows() as u32).unwrap();
+        let glyph_size = glyph.advance();
         self.data[size].insert(ch, Character {
-            glyph: glyph,
-            bitmap_glyph: bitmap_glyph,
+            offset: [
+                    bitmap_glyph.left() as f64, 
+                    bitmap_glyph.top() as f64
+                ],
+            size: [
+                    (glyph_size.x >> 16) as f64,
+                    (glyph_size.y >> 16) as f64
+                ],
             texture: texture,
         });
     }
