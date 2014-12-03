@@ -31,6 +31,11 @@ impl Character {
     pub fn left(&self) -> i32 {
         self.bitmap_glyph.left()
     }
+
+    /// Advances to next character position.
+    pub fn advance(&self) -> freetype::Vector {
+        self.glyph.advance()
+    }
 }
 
 /// A struct used for caching rendered font.
