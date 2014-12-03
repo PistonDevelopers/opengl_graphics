@@ -21,6 +21,18 @@ pub struct Character {
     pub texture: Texture,
 }
 
+impl Character {
+    /// The top offset.
+    pub fn top(&self) -> i32 {
+        self.bitmap_glyph.top()
+    }
+
+    /// The left offset.
+    pub fn left(&self) -> i32 {
+        self.bitmap_glyph.left()
+    }
+}
+
 /// A struct used for caching rendered font.
 pub struct GlyphCache {
     /// The font face.
