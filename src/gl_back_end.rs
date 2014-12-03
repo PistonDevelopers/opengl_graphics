@@ -128,11 +128,12 @@ void main()
 ";
 
 fn pick_120_150<T>(glsl: glsl::GLSL, for_120: T, for_150: T) -> T {
+    use shader_version::glsl::GLSL;
     match glsl {
-        glsl::GLSL_1_10 => panic!("GLSL 1.10 not supported"),
-        glsl::GLSL_1_20
-      | glsl::GLSL_1_30
-      | glsl::GLSL_1_40 => for_120,
+        GLSL::GLSL_1_10 => panic!("GLSL 1.10 not supported"),
+        GLSL::GLSL_1_20
+      | GLSL::GLSL_1_30
+      | GLSL::GLSL_1_40 => for_120,
         _ => for_150,
     }
 }
