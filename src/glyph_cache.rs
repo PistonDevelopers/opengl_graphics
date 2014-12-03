@@ -4,7 +4,7 @@
 use error::Error;
 use freetype::ffi;
 use freetype;
-use freetype::error::MissingFontField;
+use freetype::error::Error::MissingFontField;
 use Texture;
 use std::collections::HashMap;
 use std::collections::hash_map::{Occupied, Vacant};
@@ -69,7 +69,8 @@ impl GlyphCache {
         self.face.set_pixel_sizes(0, size).unwrap();
         self.face.load_char(ch as ffi::FT_ULong, freetype::face::DEFAULT).unwrap();
         let glyph = self.face.glyph().get_glyph().unwrap();
-        let bitmap_glyph = glyph.to_bitmap(freetype::render_mode::Normal, None).unwrap();
+        let bitmap_glyph = glyph.to_bitmap(freetype::render_mode::RenderMode::Normal, None)
+            .unwrap();
         let bitmap = bitmap_glyph.bitmap();
         let texture = Texture::from_memory_alpha(bitmap.buffer(),
                                                  bitmap.width() as u32,
