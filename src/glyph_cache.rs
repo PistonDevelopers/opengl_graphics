@@ -5,43 +5,15 @@ use error::Error;
 use freetype::ffi;
 use freetype;
 use freetype::error::Error::MissingFontField;
-use Texture;
 use std::collections::HashMap;
 use std::collections::hash_map::{Occupied, Vacant};
+use graphics;
+
+use Texture;
 
 pub type FontSize = u32;
 
-/// Holds rendered character data.
-pub struct Character {
-    /// The offset of character to the left.
-    pub offset: [f64, ..2],
-    /// The size of character, including space.
-    pub size: [f64, ..2],
-    /// The texture of the character.
-    pub texture: Texture,
-}
-
-impl Character {
-    /// The left offset.
-    pub fn left(&self) -> f64 {
-        self.offset[0]
-    }
-
-    /// The top offset.
-    pub fn top(&self) -> f64 {
-        self.offset[1]
-    }
-
-    /// Gets width of character, including space to the next one.
-    pub fn width(&self) -> f64 {
-        self.size[0]
-    }
-
-    /// Sets height of character, including space to the next one.
-    pub fn height(&self) -> f64 {
-        self.size[1]
-    }
-}
+pub type Character = graphics::character::Character<Texture>;
 
 /// A struct used for caching rendered font.
 pub struct GlyphCache {
