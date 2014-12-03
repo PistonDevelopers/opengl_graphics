@@ -44,20 +44,6 @@ impl GlyphCache {
         })
     }
 
-    /// Return a reference to a `Character`. If there is not yet a `Character` for
-    /// the given `FontSize` and `char`, load the `Character`.
-    pub fn get_character(&mut self, size: FontSize, ch: char) -> &Character {
-        match {
-            match self.data.entry(size) {
-                Vacant(entry) => entry.set(HashMap::new()),
-                Occupied(entry) => entry.into_mut(),
-            }
-        }.contains_key(&ch) {
-            true => &self.data[size][ch],
-            false => { self.load_character(size, ch); &self.data[size][ch] }
-        }
-    }
-
     /// Load a `Character` from a given `FontSize` and `char`.
     fn load_character(&mut self, size: FontSize, ch: char) {
         self.face.set_pixel_sizes(0, size).unwrap();
@@ -84,3 +70,18 @@ impl GlyphCache {
     }
 
 }
+
+impl graphics::character::CharacterCache<Texture> for GlyphCache {
+    fn character(&mut self, size: FontSize, ch: char) -> &Character {
+        match {
+            match self.data.entry(size) {
+                Vacant(entry) => entry.set(HashMap::new()),
+                Occupied(entry) => entry.into_mut(),
+            }
+        }.contains_key(&ch) {
+            true => &self.data[size][ch],
+            false => { self.load_character(size, ch); &self.data[size][ch] }
+        }
+    }
+}
+
