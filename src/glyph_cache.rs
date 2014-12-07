@@ -11,8 +11,10 @@ use graphics;
 
 use Texture;
 
+/// The type alias for the font size.
 pub type FontSize = u32;
 
+/// The type alias for font characters.
 pub type Character = graphics::character::Character<Texture>;
 
 /// A struct used for caching rendered font.
