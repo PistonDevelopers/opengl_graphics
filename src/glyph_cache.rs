@@ -7,6 +7,7 @@ use freetype;
 use freetype::error::Error::MissingFontField;
 use std::collections::HashMap;
 use std::collections::hash_map::{Occupied, Vacant};
+use std::iter::{Map, Range};
 use graphics;
 
 use Texture;
@@ -48,6 +49,10 @@ impl GlyphCache {
 
     /// Load a `Character` from a given `FontSize` and `char`.
     fn load_character(&mut self, size: FontSize, ch: char) {
+        if self.data.get(&size) // Don't load glyph twice
+            .map(|entry| entry.contains_key(&ch))
+            .unwrap_or(false) { return; }
+
         self.face.set_pixel_sizes(0, size).unwrap();
         self.face.load_char(ch as ffi::FT_ULong, freetype::face::DEFAULT).unwrap();
         let glyph = self.face.glyph().get_glyph().unwrap();
@@ -71,6 +76,18 @@ impl GlyphCache {
         });
     }
 
+    /// Load all characters in the `chars` iterator for `size`
+    pub fn preload_chars<I: Iterator<char>>(&mut self, size: FontSize, mut chars: I) {
+        for ch in chars {
+            self.load_character(size, ch);   
+        }
+    }
+
+    /// Load all the printable ASCII characters for `size`. Includes space.
+    pub fn preload_printable_ascii(&mut self, size: FontSize) {
+        // [0x20, 0x7F) contains all printable ASCII characters ([' ', '~'])
+        self.preload_chars(size, range(0x20u8, 0x7F).map(|ch| ch as char));    
+    }
 }
 
 impl graphics::character::CharacterCache<Texture> for GlyphCache {
@@ -86,4 +103,3 @@ impl graphics::character::CharacterCache<Texture> for GlyphCache {
         }
     }
 }
-
