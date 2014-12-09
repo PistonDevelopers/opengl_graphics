@@ -7,7 +7,6 @@ use freetype;
 use freetype::error::Error::MissingFontField;
 use std::collections::HashMap;
 use std::collections::hash_map::{Occupied, Vacant};
-use std::iter::{Map, Range};
 use graphics;
 
 use Texture;
@@ -49,7 +48,8 @@ impl GlyphCache {
 
     /// Load a `Character` from a given `FontSize` and `char`.
     fn load_character(&mut self, size: FontSize, ch: char) {
-        if self.data.get(&size) // Don't load glyph twice
+        // Don't load glyph twice
+        if self.data.get(&size)
             .map(|entry| entry.contains_key(&ch))
             .unwrap_or(false) { return; }
 
