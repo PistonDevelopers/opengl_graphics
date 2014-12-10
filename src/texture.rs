@@ -113,7 +113,7 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                img.rawbuf().as_ptr() as *const c_void
+                img.as_slice().as_ptr() as *const c_void
             );
         }
 
@@ -147,7 +147,7 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                img.pixelbuf().as_ptr() as *const c_void
+                img.as_slice().as_ptr() as *const c_void
             );
         }
 
@@ -169,7 +169,7 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                img.pixelbuf().as_ptr() as *const c_void
+                img.as_slice().as_ptr() as *const c_void
             );
         }
     }
