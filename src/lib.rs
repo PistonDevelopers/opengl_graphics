@@ -10,6 +10,7 @@ extern crate libc;
 extern crate graphics;
 extern crate freetype;
 
+pub use shader_version::OpenGL;
 pub use gl_back_end::Gl;
 pub use texture::Texture;
 
