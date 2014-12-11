@@ -3,7 +3,7 @@ use gl::types::GLuint;
 use libc::c_void;
 
 use image;
-use image::{ DynamicImage, GenericImage };
+use image::{ DynamicImage, GenericImage, RgbaImage };
 
 use graphics::ImageSize;
 
@@ -121,7 +121,7 @@ impl Texture {
     }
 
     /// Creates a texture from image.
-    pub fn from_image(img: &image::ImageBuf<image::Rgba<u8>>) -> Texture {
+    pub fn from_image(img: &RgbaImage) -> Texture {
         let (width, height) = img.dimensions();
 
         let mut id: GLuint = 0;
@@ -155,7 +155,7 @@ impl Texture {
     }
 
     /// Updates image with a new one.
-    pub fn update(&mut self, img: &image::ImageBuf<image::Rgba<u8>>) {
+    pub fn update(&mut self, img: &RgbaImage) {
         let (width, height) = img.dimensions();
         
         unsafe {

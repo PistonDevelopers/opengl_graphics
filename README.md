@@ -1,6 +1,6 @@
 # opengl_graphics [![Build Status](https://travis-ci.org/PistonDevelopers/opengl_graphics.svg)](https://travis-ci.org/PistonDevelopers/opengl_graphics)
 
-An OpenGL back-end for Rust-Graphics
+An OpenGL 2D back-end for the Piston game engine
 
 Maintainers: @TyOverby, @bvssvni, @Coeuvre
 

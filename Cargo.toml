@@ -1,6 +1,6 @@
 [package]
 
-name = "opengl_graphics"
+name = "piston2d-opengl_graphics"
 version = "0.0.0"
 authors = [
     "bvssvni <bvssvni@gmail.com>",
@@ -12,23 +12,26 @@ authors = [
     "Apointos",
     "ccgn",
     "reem",
-    "TyOverby <ty@pre-alpha.com>"]
+    "TyOverby <ty@pre-alpha.com>"
+]
+tags = ["opengl", "graphics", "2d", "piston"]
+description = "An OpenGL 2D back-end for the Piston game engine"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/PistonDevelopers/opengl_graphics.git"
+homepage = "https://github.com/PistonDevelopers/opengl_graphics"
+
+[dependencies.piston-texture]
+
+git = "https://github.com/pistondevelopers/texture"
+
+[dependencies.piston2d-graphics]
+
+git = "https://github.com/pistondevelopers/graphics"
 
 [dependencies.image]
 
 git = "https://github.com/pistondevelopers/image"
-
-[dependencies.gl]
-
-git = "https://github.com/bjz/gl-rs"
-
-[dependencies.texture]
-
-git = "https://github.com/pistondevelopers/texture"
-
-[dependencies.graphics]
-
-git = "https://github.com/pistondevelopers/graphics"
 
 [dependencies.shader_version]
 
@@ -37,6 +40,10 @@ git = "https://github.com/pistondevelopers/shader_version"
 [dependencies.freetype-rs]
 
 git = "https://github.com/PistonDevelopers/freetype-rs.git"
+
+[dependencies.gl]
+
+git = "https://github.com/bjz/gl-rs"
 
 [lib]
 
