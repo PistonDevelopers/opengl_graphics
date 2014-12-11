@@ -21,29 +21,14 @@ readme = "README.md"
 repository = "https://github.com/PistonDevelopers/opengl_graphics.git"
 homepage = "https://github.com/PistonDevelopers/opengl_graphics"
 
-[dependencies.piston-texture]
+[dependencies]
 
-git = "https://github.com/pistondevelopers/texture"
-
-[dependencies.piston2d-graphics]
-
-git = "https://github.com/pistondevelopers/graphics"
-
-[dependencies.image]
-
-git = "https://github.com/pistondevelopers/image"
-
-[dependencies.shader_version]
-
-git = "https://github.com/pistondevelopers/shader_version"
-
-[dependencies.freetype-rs]
-
-git = "https://github.com/PistonDevelopers/freetype-rs.git"
-
-[dependencies.gl]
-
-git = "https://github.com/bjz/gl-rs"
+piston-texture = "0.0.0"
+piston2d-graphics = "0.0.0"
+image = "~0.2.0"
+shader_version = "0.0.0"
+freetype-rs = "0.0.0"
+gl = "0.0.1"
 
 [lib]
 
