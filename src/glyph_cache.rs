@@ -88,6 +88,12 @@ impl GlyphCache {
         // [0x20, 0x7F) contains all printable ASCII characters ([' ', '~'])
         self.preload_chars(size, range(0x20u8, 0x7F).map(|ch| ch as char));    
     }
+
+    /// Return `ch` for `size` if it's already cached. Don't load.
+    /// See the `preload_*` functions.
+    pub fn opt_character(&self, size: FontSize, ch: char) -> Option<&Character> {
+        self.data.get(&size).and_then(|entry| entry.get(&ch)) 
+    }
 }
 
 impl graphics::character::CharacterCache<Texture> for GlyphCache {
