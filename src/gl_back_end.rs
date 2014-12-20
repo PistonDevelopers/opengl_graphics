@@ -295,6 +295,13 @@ impl Textured {
     }
 }
 
+// Newlines and indents for cleaner panic message.
+const GL_FUNC_NOT_LOADED: &'static str = "
+    OpenGL function pointers must be loaded before creating the `Gl` backend!
+    For more info, see the following issue on GitHub:
+    https://github.com/PistonDevelopers/opengl_graphics/issues/103
+";
+
 /// Contains OpenGL data.
 pub struct Gl {
     colored: Colored,
@@ -304,10 +311,15 @@ pub struct Gl {
     color: [f32, ..4],
 }
 
-
 impl<'a> Gl {
-    /// Creates a new OpenGl back-end.
+    /// Creates a new OpenGL back-end.
+    ///
+    /// # Panics
+    /// If the OpenGL function pointers have not been loaded yet.  
+    /// See https://github.com/PistonDevelopers/opengl_graphics/issues/103 for more info.
     pub fn new(opengl: opengl::OpenGL) -> Gl {
+        assert!(gl::Enable::is_loaded(), GL_FUNC_NOT_LOADED);
+
         let glsl = opengl.to_GLSL();
         // Load the vertices, color and texture coord buffers.
         Gl {
@@ -464,3 +476,9 @@ impl BackEnd<Texture> for Gl {
     }
 }
 
+// Might not fail if previous tests loaded functions.
+#[test]
+#[should_fail]
+fn test_gl_loaded() {
+    Gl::new(opengl::OpenGL::_3_2);
+}
