@@ -6,7 +6,7 @@ use freetype::ffi;
 use freetype;
 use freetype::error::Error::MissingFontField;
 use std::collections::HashMap;
-use std::collections::hash_map::{Occupied, Vacant};
+use std::collections::hash_map::Entry::{Occupied, Vacant};
 use graphics;
 
 use Texture;
