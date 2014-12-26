@@ -8,9 +8,6 @@ env:
     global:
         - secure: hWrSHu41/9TWaVMYlgkjBfdftSp2mRMdN/Zo+adxIv+dCJw3vOWAtjxDjhnKgQGHwXKEGTmCDqE+4unYKRfqPp3WCsVJvlbZu8c81veYrq2yVorEtRwyLd/NYFJcmQw8NzQaKyqXqHuCOQUzwQIecTcSh5ElPeITigapEWMu8M0=
         - LD_LIBRARY_PATH: /usr/local/lib
-before_script:
-    - rustc -v
-    - cargo -V
 script:
     - cargo build -v
     - cargo test -v
