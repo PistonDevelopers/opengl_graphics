@@ -1,6 +1,7 @@
 //! OpenGL back-end for Rust-Graphics.
 
 // External crates.
+use std::c_str::ToCStr;
 use shader_version::{opengl, glsl};
 use graphics::{ Context, BackEnd };
 use gl;
@@ -308,7 +309,7 @@ pub struct Gl {
     textured: Textured,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
-    color: [f32, ..4],
+    color: [f32; 4],
 }
 
 impl<'a> Gl {
@@ -326,7 +327,7 @@ impl<'a> Gl {
             colored: Colored::new(glsl),
             textured: Textured::new(glsl),
             current_program: None,
-            color: [1.0, ..4],
+            color: [1.0; 4],
        }
     }
 
@@ -366,7 +367,7 @@ impl<'a> Gl {
     }
 
     /// Draws graphics.
-    pub fn draw(&mut self, viewport: [i32, ..4], f: |c: Context, g: &mut Gl|) {
+    pub fn draw(&mut self, viewport: [i32; 4], f: |c: Context, g: &mut Gl|) {
         let [x, y, w, h] = viewport;
         self.viewport(x, y, w, h);
         self.clear_program();
@@ -399,7 +400,7 @@ impl<'a> Gl {
 }
 
 impl BackEnd<Texture> for Gl {
-    fn clear(&mut self, color: [f32, ..4]) {
+    fn clear(&mut self, color: [f32; 4]) {
         unsafe {
             let [r, g, b, a] = color;
             gl::ClearColor(r, g, b, a);
@@ -416,7 +417,7 @@ impl BackEnd<Texture> for Gl {
 
     fn disable_texture(&mut self) {}
 
-    fn color(&mut self, color: [f32, ..4]) {
+    fn color(&mut self, color: [f32; 4]) {
         self.color = color;
     }
 
