@@ -12,7 +12,9 @@ use gl::types::{
 };
 
 use std::ptr;
+use std::c_str::ToCStr;
 use std::mem;
+use std::iter::repeat;
 
 /// Describes a shader attribute.
 pub struct DynamicAttribute {
@@ -144,7 +146,7 @@ pub fn compile_shader(
             }
             else {
                 // Subtract 1 to skip the trailing null character.
-                let mut buf = Vec::from_elem(len as uint - 1, 0u8);
+                let mut buf: Vec<u8> = repeat(0u8).take(len as uint - 1).collect();
                 gl::GetShaderInfoLog(
                     shader, 
                     len, 
