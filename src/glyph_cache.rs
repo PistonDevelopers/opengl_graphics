@@ -77,7 +77,7 @@ impl GlyphCache {
     }
 
     /// Load all characters in the `chars` iterator for `size`
-    pub fn preload_chars<I: Iterator<char>>(&mut self, size: FontSize, mut chars: I) {
+    pub fn preload_chars<I: Iterator<Item = char>>(&mut self, size: FontSize, mut chars: I) {
         for ch in chars {
             self.load_character(size, ch);   
         }
@@ -99,8 +99,8 @@ impl GlyphCache {
 impl graphics::character::CharacterCache<Texture> for GlyphCache {
     fn character(&mut self, size: FontSize, ch: char) -> &Character {
         match {
-            match self.data.entry(size) {
-                Vacant(entry) => entry.set(HashMap::new()),
+            match self.data.entry(&size) {
+                Vacant(entry) => entry.insert(HashMap::new()),
                 Occupied(entry) => entry.into_mut(),
             }
         }.contains_key(&ch) {
