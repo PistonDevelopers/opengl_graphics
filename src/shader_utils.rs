@@ -11,8 +11,8 @@ use gl::types::{
     GLuint,
 };
 
+use std::ffi::CString;
 use std::ptr;
-use std::c_str::ToCStr;
 use std::mem;
 use std::iter::repeat;
 
@@ -129,9 +129,8 @@ pub fn compile_shader(
 ) -> Result<GLuint, String> {
     unsafe {
         let shader = gl::CreateShader(shader_type);
-        source.with_c_str(
-            |ptr| gl::ShaderSource(shader, 1, &ptr, ptr::null())
-        );
+        gl::ShaderSource(shader, 1, 
+            &CString::from_slice(source.as_bytes()).as_ptr(), ptr::null());
         gl::CompileShader(shader);
         let mut status = gl::FALSE as GLint;
         gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
@@ -146,7 +145,7 @@ pub fn compile_shader(
             }
             else {
                 // Subtract 1 to skip the trailing null character.
-                let mut buf: Vec<u8> = repeat(0u8).take(len as uint - 1).collect();
+                let mut buf: Vec<u8> = repeat(0u8).take(len as usize - 1).collect();
                 gl::GetShaderInfoLog(
                     shader, 
                     len, 
@@ -169,14 +168,13 @@ pub fn compile_shader(
 /// Returns `None` if there is no attribute with such name.
 pub fn attribute_location(program: GLuint, name: &str) -> Result<GLuint, String> {
     unsafe {
-        name.with_c_str(|ptr| {
-            let id = gl::GetAttribLocation(program, ptr);
-            if id < 0 { 
-                Err(format!("Attribute '{}' does not exists in shader", name))
-            } else {
-                Ok(id as GLuint) 
-            }
-        })
+        let id = gl::GetAttribLocation(program, 
+            CString::from_slice(name.as_bytes()).as_ptr());
+        if id < 0 { 
+            Err(format!("Attribute '{}' does not exists in shader", name))
+        } else {
+            Ok(id as GLuint) 
+        }
     }
 }
 

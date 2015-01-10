@@ -1,7 +1,7 @@
 //! OpenGL back-end for Rust-Graphics.
 
 // External crates.
-use std::c_str::ToCStr;
+use std::ffi::CString;
 use shader_version::{opengl, glsl};
 use graphics::{ Context, BackEnd };
 use gl;
@@ -182,9 +182,8 @@ impl Colored {
             gl::AttachShader(program, vertex_shader);
             gl::AttachShader(program, fragment_shader);
 
-            "out_color".with_c_str(
-                |ptr| gl::BindFragDataLocation(program, 0, ptr)
-            );
+            gl::BindFragDataLocation(program, 0, 
+                CString::from_slice("out_color".as_bytes()).as_ptr());
         }
 
         let mut vao = 0;
@@ -198,7 +197,8 @@ impl Colored {
                 vao
             ).unwrap();
         let color = unsafe {
-                "color".with_c_str(|name| gl::GetUniformLocation(program, name))
+                gl::GetUniformLocation(program, 
+                    CString::from_slice("color".as_bytes()).as_ptr())
             };
         if color == -1 {
             panic!("Could not find uniform `color`");
@@ -258,9 +258,8 @@ impl Textured {
             gl::AttachShader(program, vertex_shader);
             gl::AttachShader(program, fragment_shader);
 
-            "out_color".with_c_str(
-                |ptr| gl::BindFragDataLocation(program, 0, ptr)
-            );
+            gl::BindFragDataLocation(program, 0, 
+                CString::from_slice("out_color".as_bytes()).as_ptr());
         }
 
         let mut vao = 0;
@@ -274,7 +273,8 @@ impl Textured {
                 vao
             ).unwrap();
         let color = unsafe {
-                "color".with_c_str(|name| gl::GetUniformLocation(program, name))
+                gl::GetUniformLocation(program, 
+                    CString::from_slice("color".as_bytes()).as_ptr())
             };
         if color == -1 {
             panic!("Could not find uniform `color`");
@@ -367,7 +367,10 @@ impl<'a> Gl {
     }
 
     /// Draws graphics.
-    pub fn draw(&mut self, viewport: [i32; 4], f: |c: Context, g: &mut Gl|) {
+    pub fn draw<F>(&mut self, viewport: [i32; 4], f: F)
+        where
+            F: FnOnce(Context, &mut Gl)
+    {
         let [x, y, w, h] = viewport;
         self.viewport(x, y, w, h);
         self.clear_program();
