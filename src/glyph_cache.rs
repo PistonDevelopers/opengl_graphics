@@ -99,7 +99,7 @@ impl GlyphCache {
 impl graphics::character::CharacterCache<Texture> for GlyphCache {
     fn character(&mut self, size: FontSize, ch: char) -> &Character {
         match {
-            match self.data.entry(&size) {
+            match self.data.entry(size) {
                 Vacant(entry) => entry.insert(HashMap::new()),
                 Occupied(entry) => entry.into_mut(),
             }
