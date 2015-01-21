@@ -402,7 +402,9 @@ impl<'a> Gl {
     }
 }
 
-impl BackEnd<Texture> for Gl {
+impl BackEnd for Gl {
+    type Texture = Texture;
+
     fn clear(&mut self, color: [f32; 4]) {
         unsafe {
             let [r, g, b, a] = color;
