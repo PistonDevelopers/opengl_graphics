@@ -96,7 +96,9 @@ impl GlyphCache {
     }
 }
 
-impl graphics::character::CharacterCache<Texture> for GlyphCache {
+impl graphics::character::CharacterCache for GlyphCache {
+    type Texture = Texture;
+
     fn character(&mut self, size: FontSize, ch: char) -> &Character {
         match {
             match self.data.entry(size) {
