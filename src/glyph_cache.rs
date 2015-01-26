@@ -4,7 +4,6 @@
 use error::Error;
 use freetype::ffi;
 use freetype;
-use freetype::error::Error::MissingFontField;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use graphics;
@@ -32,11 +31,7 @@ impl GlyphCache {
             Ok(freetype) => freetype,
             Err(why) => return Err(Error::FreetypeError(why)),
         };
-        let font_str = match font.as_str() {
-            Some(font_str) => font_str,
-            None => return Err(Error::FreetypeError(MissingFontField)),
-        };
-        let face = match freetype.new_face(font_str, 0) {
+        let face = match freetype.new_face(font, 0) {
             Ok(face) => face,
             Err(why) => return Err(Error::FreetypeError(why)),
         };
