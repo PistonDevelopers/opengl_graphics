@@ -2,7 +2,6 @@
 //! Glyph caching
 
 use error::Error;
-use freetype::ffi;
 use freetype;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
@@ -49,7 +48,7 @@ impl GlyphCache {
             .unwrap_or(false) { return; }
 
         self.face.set_pixel_sizes(0, size).unwrap();
-        self.face.load_char(ch as ffi::FT_ULong, freetype::face::DEFAULT).unwrap();
+        self.face.load_char(ch as usize, freetype::face::DEFAULT).unwrap();
         let glyph = self.face.glyph().get_glyph().unwrap();
         let bitmap_glyph = glyph.to_bitmap(freetype::render_mode::RenderMode::Normal, None)
             .unwrap();
