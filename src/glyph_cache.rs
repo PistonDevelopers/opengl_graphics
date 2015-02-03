@@ -40,6 +40,22 @@ impl GlyphCache {
         })
     }
 
+    /// Creates a GlyphCache for a font stored in memory.
+    pub fn from_bytes(font: &[u8]) -> Result<GlyphCache, Error> {
+        let freetype = match freetype::Library::init() {
+            Ok(freetype) => freetype,
+            Err(why) => return Err(Error::FreetypeError(why))
+        };
+        let face = match freetype.new_memory_face(font, 0) {
+            Ok(face) => face,
+            Err(why) => return Err(Error::FreetypeError(why))
+        };
+        Ok(GlyphCache {
+            face: face,
+            data: HashMap::new()
+        })
+    }
+
     /// Load a `Character` from a given `FontSize` and `char`.
     fn load_character(&mut self, size: FontSize, ch: char) {
         // Don't load glyph twice
