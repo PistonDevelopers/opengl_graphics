@@ -48,6 +48,9 @@ git = "https://github.com/bjz/gl-rs"
 [build-dependencies]
 khronos_api = "*"
 
+[dependencies]
+libc = "*"
+
 [lib]
 
 name = "opengl_graphics"
