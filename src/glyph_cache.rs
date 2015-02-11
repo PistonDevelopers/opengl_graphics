@@ -87,7 +87,14 @@ impl GlyphCache {
     }
 
     /// Load all characters in the `chars` iterator for `size`
-    pub fn preload_chars<I: Iterator<Item = char>>(&mut self, size: FontSize, mut chars: I) {
+    pub fn preload_chars<I>(
+        &mut self, 
+        size: FontSize, 
+        chars: I
+    )
+        where
+            I: Iterator<Item = char>
+    {
         for ch in chars {
             self.load_character(size, ch);   
         }
