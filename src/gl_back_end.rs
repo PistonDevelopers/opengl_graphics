@@ -182,7 +182,7 @@ impl Colored {
             gl::AttachShader(program, vertex_shader);
             gl::AttachShader(program, fragment_shader);
 
-            gl::BindFragDataLocation(program, 0, 
+            gl::BindFragDataLocation(program, 0,
                 CString::from_slice("out_color".as_bytes()).as_ptr());
         }
 
@@ -197,7 +197,7 @@ impl Colored {
                 vao
             ).unwrap();
         let color = unsafe {
-                gl::GetUniformLocation(program, 
+                gl::GetUniformLocation(program,
                     CString::from_slice("color".as_bytes()).as_ptr())
             };
         if color == -1 {
@@ -258,7 +258,7 @@ impl Textured {
             gl::AttachShader(program, vertex_shader);
             gl::AttachShader(program, fragment_shader);
 
-            gl::BindFragDataLocation(program, 0, 
+            gl::BindFragDataLocation(program, 0,
                 CString::from_slice("out_color".as_bytes()).as_ptr());
         }
 
@@ -273,7 +273,7 @@ impl Textured {
                 vao
             ).unwrap();
         let color = unsafe {
-                gl::GetUniformLocation(program, 
+                gl::GetUniformLocation(program,
                     CString::from_slice("color".as_bytes()).as_ptr())
             };
         if color == -1 {
@@ -309,14 +309,13 @@ pub struct Gl {
     textured: Textured,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
-    color: [f32; 4],
 }
 
 impl<'a> Gl {
     /// Creates a new OpenGL back-end.
     ///
     /// # Panics
-    /// If the OpenGL function pointers have not been loaded yet.  
+    /// If the OpenGL function pointers have not been loaded yet.
     /// See https://github.com/PistonDevelopers/opengl_graphics/issues/103 for more info.
     pub fn new(opengl: opengl::OpenGL) -> Gl {
         assert!(gl::Enable::is_loaded(), GL_FUNC_NOT_LOADED);
@@ -327,7 +326,6 @@ impl<'a> Gl {
             colored: Colored::new(glsl),
             textured: Textured::new(glsl),
             current_program: None,
-            color: [1.0; 4],
        }
     }
 
@@ -382,10 +380,10 @@ impl<'a> Gl {
         f(c, self);
         self.disable_alpha_blend();
     }
-    
+
     /// Assume all textures has alpha channel for now.
     pub fn has_texture_alpha(&self, _texture: &Texture) -> bool { true }
-    
+
     /// Enabled alpha blending.
     pub fn enable_alpha_blend(&mut self) {
         unsafe {
@@ -413,20 +411,9 @@ impl BackEnd for Gl {
         }
     }
 
-    fn enable_texture(&mut self, texture: &Texture) {
-        let texture = texture.get_id();
-        unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, texture);
-        }
-    }
-
-    fn disable_texture(&mut self) {}
-
-    fn color(&mut self, color: [f32; 4]) {
-        self.color = color;
-    }
-
-    fn tri_list(&mut self, vertices: &[f32]) {
+    fn tri_list<F>(&mut self, color: &[f32; 4], mut f: F)
+        where F: FnMut(&mut FnMut(&[f32]))
+    {
         {
             // Set shader program.
             let shader_program = self.colored.program;
@@ -434,27 +421,33 @@ impl BackEnd for Gl {
         }
         let ref mut shader = self.colored;
 
-        // xy makes two floats.
-        let size_vertices: i32 = 2;
-        let items: i32 = vertices.len() as i32 / size_vertices;
-
-        let color = self.color;
         unsafe {
             gl::BindVertexArray(shader.vao);
-            shader.pos.set(vertices);
             gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
-
             // Render triangles whether they are facing
             // clockwise or counter clockwise.
             gl::CullFace(gl::FRONT_AND_BACK);
+        }
 
-            gl::DrawArrays(gl::TRIANGLES, 0, items);
+        f(&mut |vertices: &[f32]| {
+            // xy makes two floats.
+            let size_vertices: i32 = 2;
+            let items: i32 = vertices.len() as i32 / size_vertices;
 
+            unsafe {
+                shader.pos.set(vertices);
+                gl::DrawArrays(gl::TRIANGLES, 0, items);
+            }
+        });
+
+        unsafe {
             gl::BindVertexArray(0);
         }
     }
 
-    fn tri_list_uv(&mut self, vertices: &[f32], texture_coords: &[f32]) {
+    fn tri_list_uv<F>(&mut self, color: &[f32; 4], texture: &Texture, mut f: F)
+        where F: FnMut(&mut FnMut(&[f32], &[f32]))
+    {
         {
             // Set shader program.
             let shader_program = self.textured.program;
@@ -462,21 +455,28 @@ impl BackEnd for Gl {
         }
         let ref mut shader = self.textured;
 
-        let size_vertices: i32 = 2;
-        let items: i32 = vertices.len() as i32 / size_vertices;
-
-        let color = self.color;
+        let texture = texture.get_id();
         unsafe {
-            gl::BindVertexArray(shader.vao);
-            shader.pos.set(vertices);
-            gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
-            shader.uv.set(texture_coords);
+            gl::BindTexture(gl::TEXTURE_2D, texture);
             // Render triangles whether they are facing
             // clockwise or counter clockwise.
             gl::CullFace(gl::FRONT_AND_BACK);
+            gl::BindVertexArray(shader.vao);
+            gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
+        }
 
-            gl::DrawArrays(gl::TRIANGLES, 0, items);
+        f(&mut |vertices: &[f32], texture_coords: &[f32]| {
+            let size_vertices: i32 = 2;
+            let items: i32 = vertices.len() as i32 / size_vertices;
 
+            unsafe {
+                shader.pos.set(vertices);
+                shader.uv.set(texture_coords);
+                gl::DrawArrays(gl::TRIANGLES, 0, items);
+            }
+        });
+
+        unsafe {
             gl::BindVertexArray(0);
         }
     }
