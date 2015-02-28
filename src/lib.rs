@@ -15,7 +15,8 @@ extern crate graphics;
 extern crate freetype;
 
 pub use shader_version::OpenGL;
-pub use gl_back_end::Gl;
+pub use gl_back_end::GlGraphics;
+pub use gl_back_end::GlGraphics as Gl;
 pub use texture::Texture;
 
 pub mod shader_utils;
