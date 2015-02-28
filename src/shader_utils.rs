@@ -130,7 +130,10 @@ pub fn compile_shader(
     unsafe {
         let shader = gl::CreateShader(shader_type);
         gl::ShaderSource(shader, 1, 
-            &CString::from_slice(source.as_bytes()).as_ptr(), ptr::null());
+            &match CString::new(source.as_bytes()) {
+                Ok(x) => x.as_ptr(),
+                Err(err) => { return Err(format!("compile_shader: {}", err)); }
+            }, ptr::null());
         gl::CompileShader(shader);
         let mut status = gl::FALSE as GLint;
         gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
@@ -169,7 +172,10 @@ pub fn compile_shader(
 pub fn attribute_location(program: GLuint, name: &str) -> Result<GLuint, String> {
     unsafe {
         let id = gl::GetAttribLocation(program, 
-            CString::from_slice(name.as_bytes()).as_ptr());
+            match CString::new(name.as_bytes()) {
+                Ok(x) => x.as_ptr(),
+                Err(err) => { return Err(format!("attribute_location: {}", err)); }
+            });
         if id < 0 { 
             Err(format!("Attribute '{}' does not exists in shader", name))
         } else {
