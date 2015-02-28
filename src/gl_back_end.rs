@@ -3,7 +3,7 @@
 // External crates.
 use std::ffi::CString;
 use shader_version::{opengl, glsl};
-use graphics::{ Context, Graphics };
+use graphics::{ Context, DrawState, Graphics };
 use gl;
 use gl::types::{
     GLint,
@@ -411,7 +411,12 @@ impl Graphics for GlGraphics {
         }
     }
 
-    fn tri_list<F>(&mut self, color: &[f32; 4], mut f: F)
+    fn tri_list<F>(
+        &mut self,
+        _draw_state: &DrawState,
+        color: &[f32; 4],
+        mut f: F
+    )
         where F: FnMut(&mut FnMut(&[f32]))
     {
         {
@@ -445,7 +450,13 @@ impl Graphics for GlGraphics {
         }
     }
 
-    fn tri_list_uv<F>(&mut self, color: &[f32; 4], texture: &Texture, mut f: F)
+    fn tri_list_uv<F>(
+        &mut self,
+        _draw_state: &DrawState,
+        color: &[f32; 4],
+        texture: &Texture, 
+        mut f: F
+    )
         where F: FnMut(&mut FnMut(&[f32], &[f32]))
     {
         {
