@@ -3,7 +3,7 @@
 // External crates.
 use std::ffi::CString;
 use shader_version::{opengl, glsl};
-use graphics::{ Context, BackEnd };
+use graphics::{ Context, Graphics };
 use gl;
 use gl::types::{
     GLint,
@@ -304,25 +304,25 @@ const GL_FUNC_NOT_LOADED: &'static str = "
 ";
 
 /// Contains OpenGL data.
-pub struct Gl {
+pub struct GlGraphics {
     colored: Colored,
     textured: Textured,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
 }
 
-impl<'a> Gl {
+impl<'a> GlGraphics {
     /// Creates a new OpenGL back-end.
     ///
     /// # Panics
     /// If the OpenGL function pointers have not been loaded yet.
     /// See https://github.com/PistonDevelopers/opengl_graphics/issues/103 for more info.
-    pub fn new(opengl: opengl::OpenGL) -> Gl {
+    pub fn new(opengl: opengl::OpenGL) -> GlGraphics {
         assert!(gl::Enable::is_loaded(), GL_FUNC_NOT_LOADED);
 
         let glsl = opengl.to_GLSL();
         // Load the vertices, color and texture coord buffers.
-        Gl {
+        GlGraphics {
             colored: Colored::new(glsl),
             textured: Textured::new(glsl),
             current_program: None,
@@ -367,7 +367,7 @@ impl<'a> Gl {
     /// Draws graphics.
     pub fn draw<F>(&mut self, viewport: [i32; 4], f: F)
         where
-            F: FnOnce(Context, &mut Gl)
+            F: FnOnce(Context, &mut GlGraphics)
     {
         let [x, y, w, h] = viewport;
         self.viewport(x, y, w, h);
@@ -400,7 +400,7 @@ impl<'a> Gl {
     }
 }
 
-impl BackEnd for Gl {
+impl Graphics for GlGraphics {
     type Texture = Texture;
 
     fn clear(&mut self, color: [f32; 4]) {
