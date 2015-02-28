@@ -3,6 +3,7 @@
 #![deny(missing_copy_implementations)]
 #![feature(std_misc)]
 #![feature(core)]
+#![feature(old_path)]
 
 //! An OpenGL back-end for Rust-Graphics
 
