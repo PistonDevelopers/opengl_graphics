@@ -486,5 +486,5 @@ impl Graphics for GlGraphics {
 #[test]
 #[should_fail]
 fn test_gl_loaded() {
-    Gl::new(opengl::OpenGL::_3_2);
+    GlGraphics::new(opengl::OpenGL::_3_2);
 }
