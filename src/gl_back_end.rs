@@ -431,7 +431,7 @@ impl Graphics for GlGraphics {
             gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
             // Render triangles whether they are facing
             // clockwise or counter clockwise.
-            gl::CullFace(gl::FRONT_AND_BACK);
+            gl::Disable(gl::CULL_FACE);
         }
 
         f(&mut |vertices: &[f32]| {
@@ -471,7 +471,7 @@ impl Graphics for GlGraphics {
             gl::BindTexture(gl::TEXTURE_2D, texture);
             // Render triangles whether they are facing
             // clockwise or counter clockwise.
-            gl::CullFace(gl::FRONT_AND_BACK);
+            gl::Disable(gl::CULL_FACE);
             gl::BindVertexArray(shader.vao);
             gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
         }
