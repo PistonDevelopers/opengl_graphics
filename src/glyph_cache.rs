@@ -5,6 +5,7 @@ use error::Error;
 use freetype;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
+use std::rc::Rc;
 use graphics;
 
 use Texture;
@@ -16,10 +17,11 @@ pub type FontSize = u32;
 pub type Character = graphics::character::Character<Texture>;
 
 /// A struct used for caching rendered font.
+#[derive(Clone)]
 pub struct GlyphCache {
     /// The font face.
     pub face: freetype::Face,
-    data: HashMap<FontSize, HashMap<char, Character>>,
+    data: HashMap<FontSize, HashMap<char, Rc<Character>>>,
 }
 
 impl GlyphCache {
@@ -73,7 +75,7 @@ impl GlyphCache {
                                                  bitmap.width() as u32,
                                                  bitmap.rows() as u32).unwrap();
         let glyph_size = glyph.advance();
-        self.data[size].insert(ch, Character {
+        self.data[size].insert(ch, Rc::new(Character {
             offset: [
                     bitmap_glyph.left() as f64, 
                     bitmap_glyph.top() as f64
@@ -83,7 +85,7 @@ impl GlyphCache {
                     (glyph_size.y >> 16) as f64
                 ],
             texture: texture,
-        });
+        }));
     }
 
     /// Load all characters in the `chars` iterator for `size`
@@ -109,7 +111,9 @@ impl GlyphCache {
     /// Return `ch` for `size` if it's already cached. Don't load.
     /// See the `preload_*` functions.
     pub fn opt_character(&self, size: FontSize, ch: char) -> Option<&Character> {
-        self.data.get(&size).and_then(|entry| entry.get(&ch)) 
+        use std::borrow::Borrow;
+
+        self.data.get(&size).and_then(|entry| entry.get(&ch).map(|e| e.borrow()))
     }
 }
 
