@@ -39,7 +39,7 @@ git = "https://github.com/pistondevelopers/shader_version"
 
 [dependencies.freetype-rs]
 git = "https://github.com/PistonDevelopers/freetype-rs.git"
-#version = "0.0.6"
+#version = "0.0.7"
 
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"
