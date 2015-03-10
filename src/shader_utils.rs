@@ -173,9 +173,9 @@ pub fn attribute_location(program: GLuint, name: &str) -> Result<GLuint, String>
     unsafe {
         let id = gl::GetAttribLocation(program, 
             match CString::new(name.as_bytes()) {
-                Ok(x) => x.as_ptr(),
+                Ok(x) => x,
                 Err(err) => { return Err(format!("attribute_location: {}", err)); }
-            });
+            }.as_ptr());
         if id < 0 { 
             Err(format!("Attribute '{}' does not exists in shader", name))
         } else {
