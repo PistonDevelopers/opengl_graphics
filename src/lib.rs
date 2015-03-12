@@ -25,3 +25,4 @@ pub mod error;
 
 mod gl_back_end;
 mod texture;
+mod shaders;
