@@ -2,7 +2,8 @@
 
 // External crates.
 use std::ffi::CString;
-use shader_version::{opengl, glsl};
+use shader_version::{ OpenGL, Shaders };
+use shader_version::glsl::GLSL;
 use graphics::{ Context, DrawState, Graphics };
 use gl;
 use gl::types::{
@@ -40,25 +41,21 @@ impl Drop for Colored {
 }
 
 impl Colored {
-    fn new(glsl: glsl::GLSL) -> Colored {
+    fn new(glsl: GLSL) -> Colored {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            shaders::pick_120_150(
-                glsl,
-                shaders::VS_COLORED_120,
-                shaders::VS_COLORED_150_CORE
-            )
+            Shaders::new().set(GLSL::_1_20, shaders::VS_COLORED_120)
+                          .set(GLSL::_1_50, shaders::VS_COLORED_150_CORE)
+                          .get(glsl).unwrap()
         ) {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            shaders::pick_120_150(
-                glsl,
-                shaders::FS_COLORED_120,
-                shaders::FS_COLORED_150_CORE
-            )
+            Shaders::new().set(GLSL::_1_20, shaders::FS_COLORED_120)
+                          .set(GLSL::_1_50, shaders::FS_COLORED_150_CORE)
+                          .get(glsl).unwrap()
         ) {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
@@ -124,25 +121,21 @@ impl Drop for Textured {
 }
 
 impl Textured {
-    fn new(glsl: glsl::GLSL) -> Textured {
+    fn new(glsl: GLSL) -> Textured {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            shaders::pick_120_150(
-                glsl,
-                shaders::VS_TEXTURED_120,
-                shaders::VS_TEXTURED_150_CORE
-            )
+            Shaders::new().set(GLSL::_1_20, shaders::VS_TEXTURED_120)
+                          .set(GLSL::_1_50, shaders::VS_TEXTURED_150_CORE)
+                          .get(glsl).unwrap()
         ) {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            shaders::pick_120_150(
-                glsl,
-                shaders::FS_TEXTURED_120,
-                shaders::FS_TEXTURED_150_CORE
-            )
+            Shaders::new().set(GLSL::_1_20, shaders::FS_TEXTURED_120)
+                          .set(GLSL::_1_50, shaders::FS_TEXTURED_150_CORE)
+                          .get(glsl).unwrap()
         ) {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
@@ -213,7 +206,7 @@ impl<'a> GlGraphics {
     /// # Panics
     /// If the OpenGL function pointers have not been loaded yet.
     /// See https://github.com/PistonDevelopers/opengl_graphics/issues/103 for more info.
-    pub fn new(opengl: opengl::OpenGL) -> GlGraphics {
+    pub fn new(opengl: OpenGL) -> GlGraphics {
         assert!(gl::Enable::is_loaded(), GL_FUNC_NOT_LOADED);
 
         let glsl = opengl.to_GLSL();
@@ -391,7 +384,7 @@ impl Graphics for GlGraphics {
 
 // Might not fail if previous tests loaded functions.
 #[test]
-#[should_fail]
+#[should_panic]
 fn test_gl_loaded() {
-    GlGraphics::new(opengl::OpenGL::_3_2);
+    GlGraphics::new(OpenGL::_3_2);
 }

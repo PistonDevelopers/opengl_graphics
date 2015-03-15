@@ -1,5 +1,3 @@
-use shader_version::glsl;
-
 pub static VS_COLORED_120: &'static str = "
 #version 120
 uniform vec4 color;
@@ -109,14 +107,3 @@ void main()
     out_color = texture(s_texture, v_uv) * color;
 }
 ";
-
-pub fn pick_120_150<T>(glsl: glsl::GLSL, for_120: T, for_150: T) -> T {
-    use shader_version::glsl::GLSL;
-    match glsl {
-        GLSL::_1_10 => panic!("GLSL 1.10 not supported"),
-        GLSL::_1_20
-      | GLSL::_1_30
-      | GLSL::_1_40 => for_120,
-        _ => for_150,
-    }
-}
