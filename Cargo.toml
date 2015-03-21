@@ -31,6 +31,7 @@ git = "https://github.com/pistondevelopers/graphics"
 
 [dependencies.image]
 git = "https://github.com/pistondevelopers/image"
+default-features = false
 #version = "~0.2.0"
 
 [dependencies.shader_version]
@@ -45,13 +46,24 @@ git = "https://github.com/PistonDevelopers/freetype-rs.git"
 git = "https://github.com/bjz/gl-rs"
 #version = "0.0.9"
 
-[build-dependencies]
-khronos_api = "*"
-
 [dependencies]
 libc = "*"
+
+[build-dependencies]
+khronos_api = "*"
 
 [lib]
 
 name = "opengl_graphics"
 path = "src/lib.rs"
+
+[features]
+
+default = ["image_png"]
+image_gif = ["image/gif"]
+image_jpeg = ["image/jpeg"]
+image_png = ["image/png"]
+image_ppm = ["image/ppm"]
+image_tga = ["image/tga"]
+image_tiff = ["image/tiff"]
+image_webp = ["image/webp"]
