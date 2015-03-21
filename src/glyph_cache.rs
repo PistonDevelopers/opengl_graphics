@@ -1,13 +1,11 @@
-
 //! Glyph caching
 
-use error::Error;
-use freetype;
+use { freetype, graphics };
 use std::collections::HashMap;
-use std::collections::hash_map::Entry::{Occupied, Vacant};
+use std::collections::hash_map::Entry::{ Occupied, Vacant };
 use std::rc::Rc;
-use graphics;
 
+use error::Error;
 use Texture;
 
 /// The type alias for the font size.
@@ -27,7 +25,7 @@ pub struct GlyphCache {
 impl GlyphCache {
 
     /// Constructor for a GlyphCache.
-    pub fn new(font: &Path) -> Result<GlyphCache, Error> {
+    pub fn new(font: &Path) -> Result<Self, Error> {
         let freetype = match freetype::Library::init() {
             Ok(freetype) => freetype,
             Err(why) => return Err(Error::FreetypeError(why)),
@@ -43,7 +41,7 @@ impl GlyphCache {
     }
 
     /// Creates a GlyphCache for a font stored in memory.
-    pub fn from_bytes(font: &[u8]) -> Result<GlyphCache, Error> {
+    pub fn from_bytes(font: &[u8]) -> Result<Self, Error> {
         let freetype = match freetype::Library::init() {
             Ok(freetype) => freetype,
             Err(why) => return Err(Error::FreetypeError(why))
@@ -63,7 +61,7 @@ impl GlyphCache {
         // Don't load glyph twice
         if self.data.get(&size)
             .map(|entry| entry.contains_key(&ch))
-            .unwrap_or(false) { return; }
+            .unwrap_or(false) { return }
 
         self.face.set_pixel_sizes(0, size).unwrap();
         self.face.load_char(ch as usize, freetype::face::DEFAULT).unwrap();
@@ -77,7 +75,7 @@ impl GlyphCache {
         let glyph_size = glyph.advance();
         self.data[size].insert(ch, Rc::new(Character {
             offset: [
-                    bitmap_glyph.left() as f64, 
+                    bitmap_glyph.left() as f64,
                     bitmap_glyph.top() as f64
                 ],
             size: [
@@ -90,22 +88,22 @@ impl GlyphCache {
 
     /// Load all characters in the `chars` iterator for `size`
     pub fn preload_chars<I>(
-        &mut self, 
-        size: FontSize, 
+        &mut self,
+        size: FontSize,
         chars: I
     )
         where
             I: Iterator<Item = char>
     {
         for ch in chars {
-            self.load_character(size, ch);   
+            self.load_character(size, ch);
         }
     }
 
     /// Load all the printable ASCII characters for `size`. Includes space.
     pub fn preload_printable_ascii(&mut self, size: FontSize) {
         // [0x20, 0x7F) contains all printable ASCII characters ([' ', '~'])
-        self.preload_chars(size, range(0x20u8, 0x7F).map(|ch| ch as char));    
+        self.preload_chars(size, (0x20u8 .. 0x7F).map(|ch| ch as char));
     }
 
     /// Return `ch` for `size` if it's already cached. Don't load.

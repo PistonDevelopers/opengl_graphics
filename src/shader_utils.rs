@@ -10,11 +10,8 @@ use gl::types::{
     GLsizeiptr,
     GLuint,
 };
-
 use std::ffi::CString;
-use std::ptr;
-use std::mem;
-use std::iter::repeat;
+use std::{ ptr, mem };
 
 /// Describes a shader attribute.
 pub struct DynamicAttribute {
@@ -33,7 +30,7 @@ pub struct DynamicAttribute {
 impl Drop for DynamicAttribute {
     fn drop(&mut self) {
         unsafe {
-            gl::DeleteBuffers(1, &self.vbo)
+            gl::DeleteBuffers(1, &self.vbo);
         }
     }
 }
@@ -59,13 +56,13 @@ impl DynamicAttribute {
     }
 
     fn new(
-        program: GLuint, 
-        name: &str, 
-        size: i32, 
+        program: GLuint,
+        name: &str,
+        size: i32,
         normalize: GLboolean,
         ty: GLenum,
         vao: GLuint
-    ) -> Result<DynamicAttribute, String> {
+    ) -> Result<Self, String> {
         let location = try!(attribute_location(program, name));
         let mut vbo = 0;
         unsafe {
@@ -86,7 +83,7 @@ impl DynamicAttribute {
     pub fn xyz(program: GLuint, name: &str, vao: GLuint) -> Result<DynamicAttribute, String> {
         DynamicAttribute::new(program, name, 3, gl::FALSE, gl::FLOAT, vao)
     }
-    
+
     /// Create XY vertex attribute.
     pub fn xy(program: GLuint, name: &str, vao: GLuint) -> Result<DynamicAttribute, String> {
         DynamicAttribute::new(program, name, 2, gl::FALSE, gl::FLOAT, vao)
@@ -96,7 +93,7 @@ impl DynamicAttribute {
     pub fn rgb(program: GLuint, name: &str, vao: GLuint) -> Result<DynamicAttribute, String> {
         DynamicAttribute::new(program, name, 3, gl::FALSE, gl::FLOAT, vao)
     }
-    
+
     /// Create RGBA color attribute.
     pub fn rgba(program: GLuint, name: &str, vao: GLuint) -> Result<DynamicAttribute, String> {
         DynamicAttribute::new(program, name, 4, gl::FALSE, gl::FLOAT, vao)
@@ -129,10 +126,10 @@ pub fn compile_shader(
 ) -> Result<GLuint, String> {
     unsafe {
         let shader = gl::CreateShader(shader_type);
-        gl::ShaderSource(shader, 1, 
-            &match CString::new(source.as_bytes()) {
+        gl::ShaderSource(shader, 1,
+            &match CString::new(source) {
                 Ok(x) => x.as_ptr(),
-                Err(err) => { return Err(format!("compile_shader: {}", err)); }
+                Err(err) => return Err(format!("compile_shader: {}", err))
             }, ptr::null());
         gl::CompileShader(shader);
         let mut status = gl::FALSE as GLint;
@@ -144,20 +141,21 @@ pub fn compile_shader(
             gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
 
             if len == 0 {
-                Err("Compilation failed with no log. The OpenGL context might have been created on another thread, or not have been created.".to_string())
-            }
-            else {
+                Err("Compilation failed with no log. \
+                     The OpenGL context might have been created on another thread, \
+                     or not have been created.".to_string())
+            } else {
                 // Subtract 1 to skip the trailing null character.
-                let mut buf: Vec<u8> = repeat(0u8).take(len as usize - 1).collect();
+                let mut buf = vec![0; len as usize - 1];
                 gl::GetShaderInfoLog(
-                    shader, 
-                    len, 
-                    ptr::null_mut(), 
+                    shader,
+                    len,
+                    ptr::null_mut(),
                     buf.as_mut_ptr() as *mut GLchar
                 );
-                
+
                 gl::DeleteShader(shader);
-                
+
                 Err(String::from_utf8(buf).ok().expect(
                     "ShaderInfoLog not valid utf8"
                 ))
@@ -171,16 +169,15 @@ pub fn compile_shader(
 /// Returns `None` if there is no attribute with such name.
 pub fn attribute_location(program: GLuint, name: &str) -> Result<GLuint, String> {
     unsafe {
-        let id = gl::GetAttribLocation(program, 
-            match CString::new(name.as_bytes()) {
+        let id = gl::GetAttribLocation(program,
+            match CString::new(name) {
                 Ok(x) => x,
-                Err(err) => { return Err(format!("attribute_location: {}", err)); }
+                Err(err) => return Err(format!("attribute_location: {}", err))
             }.as_ptr());
-        if id < 0 { 
+        if id < 0 {
             Err(format!("Attribute '{}' does not exists in shader", name))
         } else {
-            Ok(id as GLuint) 
+            Ok(id as GLuint)
         }
     }
 }
-

@@ -13,12 +13,11 @@ use gl::types::{
 };
 
 // Local crate.
-use Texture;
+use { Texture, shaders };
 use shader_utils::{
     compile_shader,
     DynamicAttribute,
 };
-use shaders;
 
 struct Colored {
     vao: GLuint,
@@ -41,7 +40,7 @@ impl Drop for Colored {
 }
 
 impl Colored {
-    fn new(glsl: GLSL) -> Colored {
+    fn new(glsl: GLSL) -> Self {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
             Shaders::new().set(GLSL::_1_20, shaders::VS_COLORED_120)
@@ -68,7 +67,7 @@ impl Colored {
             gl::AttachShader(program, fragment_shader);
 
             gl::BindFragDataLocation(program, 0,
-                CString::new("out_color".as_bytes()).unwrap().as_ptr());
+                CString::new("out_color").unwrap().as_ptr());
         }
 
         let mut vao = 0;
@@ -83,7 +82,7 @@ impl Colored {
             ).unwrap();
         let color = unsafe {
                 gl::GetUniformLocation(program,
-                    CString::new("color".as_bytes()).unwrap().as_ptr())
+                    CString::new("color").unwrap().as_ptr())
             };
         if color == -1 {
             panic!("Could not find uniform `color`");
@@ -121,7 +120,7 @@ impl Drop for Textured {
 }
 
 impl Textured {
-    fn new(glsl: GLSL) -> Textured {
+    fn new(glsl: GLSL) -> Self {
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
             Shaders::new().set(GLSL::_1_20, shaders::VS_TEXTURED_120)
@@ -148,7 +147,7 @@ impl Textured {
             gl::AttachShader(program, fragment_shader);
 
             gl::BindFragDataLocation(program, 0,
-                CString::new("out_color".as_bytes()).unwrap().as_ptr());
+                CString::new("out_color").unwrap().as_ptr());
         }
 
         let mut vao = 0;
@@ -163,7 +162,7 @@ impl Textured {
             ).unwrap();
         let color = unsafe {
                 gl::GetUniformLocation(program,
-                    CString::new("color".as_bytes()).unwrap().as_ptr())
+                    CString::new("color").unwrap().as_ptr())
             };
         if color == -1 {
             panic!("Could not find uniform `color`");
@@ -206,7 +205,7 @@ impl<'a> GlGraphics {
     /// # Panics
     /// If the OpenGL function pointers have not been loaded yet.
     /// See https://github.com/PistonDevelopers/opengl_graphics/issues/103 for more info.
-    pub fn new(opengl: OpenGL) -> GlGraphics {
+    pub fn new(opengl: OpenGL) -> Self {
         assert!(gl::Enable::is_loaded(), GL_FUNC_NOT_LOADED);
 
         let glsl = opengl.to_GLSL();
@@ -236,7 +235,7 @@ impl<'a> GlGraphics {
         match self.current_program {
             None => {},
             Some(current_program) => {
-                if program == current_program { return; }
+                if program == current_program { return }
             },
         }
 
@@ -256,7 +255,7 @@ impl<'a> GlGraphics {
     /// Draws graphics.
     pub fn draw<F>(&mut self, viewport: [i32; 4], f: F)
         where
-            F: FnOnce(Context, &mut GlGraphics)
+            F: FnOnce(Context, &mut Self)
     {
         let [x, y, w, h] = viewport;
         self.viewport(x, y, w, h);
