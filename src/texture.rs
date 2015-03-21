@@ -1,10 +1,7 @@
 use gl;
 use gl::types::GLuint;
 use libc::c_void;
-
-use image;
-use image::{ DynamicImage, GenericImage, RgbaImage };
-
+use image::{ self, DynamicImage, GenericImage, RgbaImage };
 use graphics::ImageSize;
 
 /// Wraps OpenGL texture data.
@@ -21,7 +18,7 @@ pub struct Texture {
 impl Texture {
     /// Creates a new texture.
     #[inline(always)]
-    pub fn new(id: GLuint, width: u32, height: u32) -> Texture {
+    pub fn new(id: GLuint, width: u32, height: u32) -> Self {
         Texture {
             id: id,
             width: width,
@@ -36,12 +33,10 @@ impl Texture {
     }
 
     /// Loads image from memory, the format is 8-bit greyscale.
-    pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32) -> Result<Texture, String> {
-        let mut pixels = Vec::new();
-        for alpha in buf.iter() {
-            pixels.push(255);
-            pixels.push(255);
-            pixels.push(255);
+    pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32) -> Result<Self, String> {
+        let mut pixels = vec![];
+        for alpha in buf {
+            pixels.extend(vec![255; 3]);
             pixels.push(*alpha);
         }
 
@@ -76,7 +71,7 @@ impl Texture {
     }
 
     /// Loads image by relative file name to the asset root.
-    pub fn from_path(path: &Path) -> Result<Texture, String> {
+    pub fn from_path(path: &Path) -> Result<Self, String> {
         let img = match image::open(path) {
             Ok(img) => img,
             Err(e)  => return Err(format!("Could not load '{}': {:?}",
@@ -113,7 +108,7 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                img.as_slice().as_ptr() as *const c_void
+                img.as_ptr() as *const c_void
             );
         }
 
@@ -121,7 +116,7 @@ impl Texture {
     }
 
     /// Creates a texture from image.
-    pub fn from_image(img: &RgbaImage) -> Texture {
+    pub fn from_image(img: &RgbaImage) -> Self {
         let (width, height) = img.dimensions();
 
         let mut id: GLuint = 0;
@@ -147,7 +142,7 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                img.as_slice().as_ptr() as *const c_void
+                img.as_ptr() as *const c_void
             );
         }
 
@@ -157,7 +152,7 @@ impl Texture {
     /// Updates image with a new one.
     pub fn update(&mut self, img: &RgbaImage) {
         let (width, height) = img.dimensions();
-        
+
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
             gl::TexImage2D(
@@ -169,7 +164,7 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                img.as_slice().as_ptr() as *const c_void
+                img.as_ptr() as *const c_void
             );
         }
     }
@@ -188,4 +183,3 @@ impl ImageSize for Texture {
         (self.width, self.height)
     }
 }
-

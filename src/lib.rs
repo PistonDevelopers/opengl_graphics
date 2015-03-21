@@ -1,9 +1,7 @@
 #![crate_name = "opengl_graphics"]
 #![deny(missing_docs)]
 #![deny(missing_copy_implementations)]
-#![feature(std_misc)]
-#![feature(core)]
-#![feature(old_path)]
+#![feature(std_misc, old_path)]
 
 //! An OpenGL back-end for Rust-Graphics
 
