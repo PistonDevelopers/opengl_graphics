@@ -1,25 +1,24 @@
 use gl;
 use gl::types::GLuint;
 use libc::c_void;
-use image::{ self, DynamicImage, GenericImage, RgbaImage };
-use graphics::ImageSize;
+use texture_lib::{ TextureWithDevice, ImageSize, TexResult, TexError };
 
 /// Wraps OpenGL texture data.
 /// The texture gets deleted when running out of scope.
 ///
 /// In order to create a texture the function `GenTextures` must be loaded.
 /// This is done automatically by the window back-ends in Piston.
-pub struct Texture {
+pub struct GlTexture {
     id: GLuint,
     width: u32,
     height: u32,
 }
 
-impl Texture {
+impl GlTexture {
     /// Creates a new texture.
     #[inline(always)]
     pub fn new(id: GLuint, width: u32, height: u32) -> Self {
-        Texture {
+        GlTexture {
             id: id,
             width: width,
             height: height,
@@ -31,128 +30,71 @@ impl Texture {
     pub fn get_id(&self) -> GLuint {
         self.id
     }
+}
 
-    /// Loads image from memory, the format is 8-bit greyscale.
-    pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32) -> Result<Self, String> {
-        let mut pixels = vec![];
-        for alpha in buf {
-            pixels.extend(vec![255; 3]);
-            pixels.push(*alpha);
-        }
+impl TextureWithDevice for GlTexture {
+    type Device = ();
 
-        let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                pixels.as_ptr() as *const c_void
-            );
-        }
-
-        Ok(Texture::new(id, width, height))
-    }
-
-    /// Loads image by relative file name to the asset root.
-    pub fn from_path(path: &Path) -> Result<Self, String> {
-        let img = match image::open(path) {
-            Ok(img) => img,
-            Err(e)  => return Err(format!("Could not load '{}': {:?}",
-                path.filename_str().unwrap(), e)),
+    fn from_memory(_: &mut <GlTexture as TextureWithDevice>::Device,
+                   memory: &[u8], width: usize, channels: usize) -> TexResult<Self> {
+        let tex = match channels {
+            1 => {
+                let mut tex = vec![];
+                for &alpha in memory {
+                    tex.extend(vec![255; 3]);
+                    tex.push(alpha);
+                }
+                tex
+            }
+            4 => memory.to_vec(),
+            n => return Err(TexError::Channels(n))
         };
+        let height = memory.len() / width / channels;
+        let mut id: GLuint = 0;
+        unsafe {
+            gl::GenTextures(1, &mut id);
+            gl::BindTexture(gl::TEXTURE_2D, id);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MAG_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                width as i32,
+                height as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                tex.as_ptr() as *const c_void
+            );
+        }
 
-        let img = match img {
-            DynamicImage::ImageRgba8(img) => img,
-            x => x.to_rgba()
+        Ok(GlTexture::new(id, width as u32, height as u32))
+    }
+
+    fn update_from_memory(&mut self, _: &mut <GlTexture as TextureWithDevice>::Device,
+                          memory: &[u8], width: usize, channels: usize) -> TexResult<()> {
+        let tex = match channels {
+            1 => {
+                let mut tex = vec![];
+                for &alpha in memory {
+                    tex.extend(vec![255; 3]);
+                    tex.push(alpha);
+                }
+                tex
+            }
+            4 => memory.to_vec(),
+            n => return Err(TexError::Channels(n))
         };
-
-        let (width, height) = img.dimensions();
-
-        let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                img.as_ptr() as *const c_void
-            );
-        }
-
-        Ok(Texture::new(id, width, height))
-    }
-
-    /// Creates a texture from image.
-    pub fn from_image(img: &RgbaImage) -> Self {
-        let (width, height) = img.dimensions();
-
-        let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                img.as_ptr() as *const c_void
-            );
-        }
-
-        Texture::new(id, width, height)
-    }
-
-    /// Updates image with a new one.
-    pub fn update(&mut self, img: &RgbaImage) {
-        let (width, height) = img.dimensions();
-
+        let height = memory.len() / width / channels;
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
             gl::TexImage2D(
@@ -164,13 +106,14 @@ impl Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                img.as_ptr() as *const c_void
+                tex.as_ptr() as *const c_void
             );
         }
+        Ok(())
     }
 }
 
-impl Drop for Texture {
+impl Drop for GlTexture {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteTextures(1, [self.id].as_ptr());
@@ -178,7 +121,7 @@ impl Drop for Texture {
     }
 }
 
-impl ImageSize for Texture {
+impl ImageSize for GlTexture {
     fn get_size(&self) -> (u32, u32) {
         (self.width, self.height)
     }

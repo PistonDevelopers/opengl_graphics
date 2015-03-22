@@ -4,15 +4,16 @@ use { freetype, graphics };
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{ Occupied, Vacant };
 use std::rc::Rc;
+use texture_lib::Texture;
 
 use error::Error;
-use Texture;
+use GlTexture;
 
 /// The type alias for the font size.
 pub type FontSize = u32;
 
 /// The type alias for font characters.
-pub type Character = graphics::character::Character<Texture>;
+pub type Character = graphics::character::Character<GlTexture>;
 
 /// A struct used for caching rendered font.
 #[derive(Clone)]
@@ -69,9 +70,14 @@ impl GlyphCache {
         let bitmap_glyph = glyph.to_bitmap(freetype::render_mode::RenderMode::Normal, None)
             .unwrap();
         let bitmap = bitmap_glyph.bitmap();
-        let texture = Texture::from_memory_alpha(bitmap.buffer(),
-                                                 bitmap.width() as u32,
-                                                 bitmap.rows() as u32).unwrap();
+        let texture = if bitmap.width() > 0 {
+            Texture::from_memory(bitmap.buffer(),
+                                 bitmap.width() as usize,
+                                 1).unwrap()
+        } else {
+            println!("ERROR: char: {:?}, {}", ch, ch as u8);
+            GlTexture::new(0, 0, 0)
+        };
         let glyph_size = glyph.advance();
         self.data[size].insert(ch, Rc::new(Character {
             offset: [
@@ -116,7 +122,7 @@ impl GlyphCache {
 }
 
 impl graphics::character::CharacterCache for GlyphCache {
-    type Texture = Texture;
+    type Texture = GlTexture;
 
     fn character(&mut self, size: FontSize, ch: char) -> &Character {
         match {

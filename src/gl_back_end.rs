@@ -13,7 +13,7 @@ use gl::types::{
 };
 
 // Local crate.
-use { Texture, shaders };
+use { GlTexture, shaders };
 use shader_utils::{
     compile_shader,
     DynamicAttribute,
@@ -270,7 +270,7 @@ impl<'a> GlGraphics {
     }
 
     /// Assume all textures has alpha channel for now.
-    pub fn has_texture_alpha(&self, _texture: &Texture) -> bool { true }
+    pub fn has_texture_alpha(&self, _texture: &GlTexture) -> bool { true }
 
     /// Enabled alpha blending.
     pub fn enable_alpha_blend(&mut self) {
@@ -289,7 +289,7 @@ impl<'a> GlGraphics {
 }
 
 impl Graphics for GlGraphics {
-    type Texture = Texture;
+    type Texture = GlTexture;
 
     fn clear(&mut self, color: [f32; 4]) {
         unsafe {
@@ -342,7 +342,7 @@ impl Graphics for GlGraphics {
         &mut self,
         _draw_state: &DrawState,
         color: &[f32; 4],
-        texture: &Texture,
+        texture: &GlTexture,
         mut f: F
     )
         where F: FnMut(&mut FnMut(&[f32], &[f32]))
