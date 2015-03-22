@@ -29,11 +29,6 @@ git = "https://github.com/pistondevelopers/texture"
 git = "https://github.com/pistondevelopers/graphics"
 #version = "0.0.23"
 
-[dependencies.image]
-git = "https://github.com/pistondevelopers/image"
-default-features = false
-#version = "~0.2.0"
-
 [dependencies.shader_version]
 git = "https://github.com/pistondevelopers/shader_version"
 #version = "0.0.2"
@@ -60,10 +55,10 @@ path = "src/lib.rs"
 [features]
 
 default = ["image_png"]
-image_gif = ["image/gif"]
-image_jpeg = ["image/jpeg"]
-image_png = ["image/png"]
-image_ppm = ["image/ppm"]
-image_tga = ["image/tga"]
-image_tiff = ["image/tiff"]
-image_webp = ["image/webp"]
+image_gif = ["piston-texture/image_gif"]
+image_jpeg = ["piston-texture/image_jpeg"]
+image_png = ["piston-texture/image_png"]
+image_ppm = ["piston-texture/image_ppm"]
+image_tga = ["piston-texture/image_tga"]
+image_tiff = ["piston-texture/image_tiff"]
+image_webp = ["piston-texture/image_webp"]
