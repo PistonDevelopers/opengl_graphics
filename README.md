@@ -2,7 +2,7 @@
 
 An OpenGL 2D back-end for the Piston game engine
 
-Maintainers: @TyOverby, @bvssvni, @Coeuvre
+Maintainers: @Potpourri, @bvssvni
 
 ### Important!
 
