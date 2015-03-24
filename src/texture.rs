@@ -4,6 +4,8 @@ use libc::c_void;
 use image::{ self, DynamicImage, GenericImage, RgbaImage };
 use graphics::ImageSize;
 
+use std::old_path::*;
+
 /// Wraps OpenGL texture data.
 /// The texture gets deleted when running out of scope.
 ///
