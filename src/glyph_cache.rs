@@ -5,6 +5,8 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry::{ Occupied, Vacant };
 use std::rc::Rc;
 
+use std::old_path::*;
+
 use error::Error;
 use Texture;
 
