@@ -75,7 +75,7 @@ impl GlyphCache {
                                                  bitmap.width() as u32,
                                                  bitmap.rows() as u32).unwrap();
         let glyph_size = glyph.advance();
-        self.data[size].insert(ch, Rc::new(Character {
+        self.data.get_mut(&size).unwrap().insert(ch, Rc::new(Character {
             offset: [
                     bitmap_glyph.left() as f64,
                     bitmap_glyph.top() as f64
