@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry::{ Occupied, Vacant };
 use std::rc::Rc;
 
-use std::old_path::*;
+use std::path::Path;
 
 use error::Error;
 use Texture;
@@ -127,8 +127,8 @@ impl graphics::character::CharacterCache for GlyphCache {
                 Occupied(entry) => entry.into_mut(),
             }
         }.contains_key(&ch) {
-            true => &self.data[size][ch],
-            false => { self.load_character(size, ch); &self.data[size][ch] }
+            true => &self.data[&size][&ch],
+            false => { self.load_character(size, ch); &self.data[&size][&ch] }
         }
     }
 }
