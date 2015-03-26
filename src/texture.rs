@@ -4,7 +4,7 @@ use libc::c_void;
 use image::{ self, DynamicImage, GenericImage, RgbaImage };
 use graphics::ImageSize;
 
-use std::old_path::*;
+use std::path::Path;
 
 /// Wraps OpenGL texture data.
 /// The texture gets deleted when running out of scope.
@@ -76,8 +76,8 @@ impl Texture {
     pub fn from_path(path: &Path) -> Result<Self, String> {
         let img = match image::open(path) {
             Ok(img) => img,
-            Err(e)  => return Err(format!("Could not load '{}': {:?}",
-                path.filename_str().unwrap(), e)),
+            Err(e)  => return Err(format!("Could not load '{:?}': {:?}",
+                path.file_name().unwrap(), e)),
         };
 
         let img = match img {
