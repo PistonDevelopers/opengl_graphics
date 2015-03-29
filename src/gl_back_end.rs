@@ -257,7 +257,7 @@ impl<'a> GlGraphics {
         where
             F: FnOnce(Context, &mut Self)
     {
-        let [x, y, w, h] = viewport;
+        let (x, y, w, h) = (viewport[0], viewport[1], viewport[2], viewport[3]);
         self.viewport(x, y, w, h);
         self.clear_program();
         self.enable_alpha_blend();
@@ -293,7 +293,7 @@ impl Graphics for GlGraphics {
 
     fn clear(&mut self, color: [f32; 4]) {
         unsafe {
-            let [r, g, b, a] = color;
+            let (r, g, b, a) = (color[0], color[1], color[2], color[3]);
             gl::ClearColor(r, g, b, a);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
