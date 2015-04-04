@@ -1,4 +1,3 @@
-#![crate_name = "opengl_graphics"]
 #![deny(missing_docs)]
 #![deny(missing_copy_implementations)]
 
