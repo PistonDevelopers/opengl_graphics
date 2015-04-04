@@ -3,7 +3,7 @@
 use std::fmt;
 
 /// An enum to represent various possible run-time errors that may occur.
-#[derive(Copy, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Error {
     /// An error happened with the FreeType library.
     FreetypeError(::freetype::error::Error),
