@@ -18,16 +18,16 @@ pub type Character = graphics::character::Character<Texture>;
 
 /// A struct used for caching rendered font.
 #[derive(Clone)]
-pub struct GlyphCache {
+pub struct GlyphCache<'a> {
     /// The font face.
-    pub face: freetype::Face,
+    pub face: freetype::Face<'a>,
     data: HashMap<FontSize, HashMap<char, Rc<Character>>>,
 }
 
-impl GlyphCache {
+impl<'a> GlyphCache<'a> {
 
     /// Constructor for a GlyphCache.
-    pub fn new(font: &Path) -> Result<Self, Error> {
+    pub fn new(font: &Path) -> Result<GlyphCache<'static>, Error> {
         let freetype = match freetype::Library::init() {
             Ok(freetype) => freetype,
             Err(why) => return Err(Error::FreetypeError(why)),
@@ -43,7 +43,7 @@ impl GlyphCache {
     }
 
     /// Creates a GlyphCache for a font stored in memory.
-    pub fn from_bytes(font: &[u8]) -> Result<Self, Error> {
+    pub fn from_bytes(font: &'a [u8]) -> Result<GlyphCache<'a>, Error> {
         let freetype = match freetype::Library::init() {
             Ok(freetype) => freetype,
             Err(why) => return Err(Error::FreetypeError(why))
@@ -117,7 +117,7 @@ impl GlyphCache {
     }
 }
 
-impl graphics::character::CharacterCache for GlyphCache {
+impl<'a> graphics::character::CharacterCache for GlyphCache<'a> {
     type Texture = Texture;
 
     fn character(&mut self, size: FontSize, ch: char) -> &Character {
