@@ -299,6 +299,12 @@ impl Graphics for GlGraphics {
         }
     }
 
+    fn clear_stencil(&mut self, value: u8) {
+        unsafe {
+            gl::ClearStencil(value as i32);
+        }
+    }
+
     fn tri_list<F>(
         &mut self,
         _draw_state: &DrawState,
