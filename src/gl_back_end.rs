@@ -262,10 +262,7 @@ impl<'a> GlGraphics {
         self.viewport(x, y, w, h);
         self.clear_program();
         self.enable_alpha_blend();
-        let c = Context::abs(
-            w as f64,
-            h as f64
-        );
+        let c = Context::new_viewport(viewport);
         f(c, self);
         self.disable_alpha_blend();
     }
