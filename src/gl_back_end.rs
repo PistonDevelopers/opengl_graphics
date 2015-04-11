@@ -13,7 +13,7 @@ use gl::types::{
 };
 
 // Local crate.
-use { Texture, shaders };
+use { Texture, Viewport, shaders };
 use shader_utils::{
     compile_shader,
     DynamicAttribute,
@@ -253,11 +253,12 @@ impl<'a> GlGraphics {
     }
 
     /// Draws graphics.
-    pub fn draw<F>(&mut self, viewport: [i32; 4], f: F)
+    pub fn draw<F>(&mut self, viewport: Viewport, f: F)
         where
             F: FnOnce(Context, &mut Self)
     {
-        let (x, y, w, h) = (viewport[0], viewport[1], viewport[2], viewport[3]);
+        let rect = viewport.rect;
+        let (x, y, w, h) = (rect[0], rect[1], rect[2], rect[3]);
         self.viewport(x, y, w, h);
         self.clear_program();
         self.enable_alpha_blend();

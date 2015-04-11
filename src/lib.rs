@@ -9,11 +9,13 @@ extern crate gl;
 extern crate libc;
 extern crate graphics;
 extern crate freetype;
+extern crate viewport;
 
 pub use shader_version::OpenGL;
 pub use gl_back_end::GlGraphics;
 pub use gl_back_end::GlGraphics as Gl;
 pub use texture::Texture;
+pub use viewport::Viewport;
 
 pub mod shader_utils;
 pub mod glyph_cache;
