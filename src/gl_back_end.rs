@@ -4,7 +4,7 @@
 use std::ffi::CString;
 use shader_version::{ OpenGL, Shaders };
 use shader_version::glsl::GLSL;
-use graphics::{ Context, DrawState, Graphics };
+use graphics::{ Context, DrawState, Graphics, Viewport };
 use gl;
 use gl::types::{
     GLint,
@@ -13,7 +13,7 @@ use gl::types::{
 };
 
 // Local crate.
-use { Texture, Viewport, shaders };
+use { Texture, shaders };
 use shader_utils::{
     compile_shader,
     DynamicAttribute,
