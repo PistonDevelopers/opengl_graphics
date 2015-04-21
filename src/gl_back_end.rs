@@ -13,7 +13,7 @@ use gl::types::{
 };
 
 // Local crate.
-use { Texture, shaders };
+use Texture;
 use shader_utils::{
     compile_shader,
     DynamicAttribute,
@@ -41,10 +41,14 @@ impl Drop for Colored {
 
 impl Colored {
     fn new(glsl: GLSL) -> Self {
+        use shaders::colored;
+
+        let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
+
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            Shaders::new().set(GLSL::_1_20, shaders::VS_COLORED_120)
-                          .set(GLSL::_1_50, shaders::VS_COLORED_150_CORE)
+            Shaders::new().set(GLSL::_1_20, src(colored::VERTEX_GLSL_120))
+                          .set(GLSL::_1_50, src(colored::VERTEX_GLSL_150_CORE))
                           .get(glsl).unwrap()
         ) {
             Ok(id) => id,
@@ -52,8 +56,8 @@ impl Colored {
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            Shaders::new().set(GLSL::_1_20, shaders::FS_COLORED_120)
-                          .set(GLSL::_1_50, shaders::FS_COLORED_150_CORE)
+            Shaders::new().set(GLSL::_1_20, src(colored::FRAGMENT_GLSL_120))
+                          .set(GLSL::_1_50, src(colored::FRAGMENT_GLSL_150_CORE))
                           .get(glsl).unwrap()
         ) {
             Ok(id) => id,
@@ -67,7 +71,7 @@ impl Colored {
             gl::AttachShader(program, fragment_shader);
 
             gl::BindFragDataLocation(program, 0,
-                CString::new("out_color").unwrap().as_ptr());
+                CString::new("o_Color").unwrap().as_ptr());
         }
 
         let mut vao = 0;
@@ -121,10 +125,14 @@ impl Drop for Textured {
 
 impl Textured {
     fn new(glsl: GLSL) -> Self {
+        use shaders::textured;
+
+        let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
+
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            Shaders::new().set(GLSL::_1_20, shaders::VS_TEXTURED_120)
-                          .set(GLSL::_1_50, shaders::VS_TEXTURED_150_CORE)
+            Shaders::new().set(GLSL::_1_20, src(textured::VERTEX_GLSL_120))
+                          .set(GLSL::_1_50, src(textured::VERTEX_GLSL_150_CORE))
                           .get(glsl).unwrap()
         ) {
             Ok(id) => id,
@@ -132,8 +140,8 @@ impl Textured {
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            Shaders::new().set(GLSL::_1_20, shaders::FS_TEXTURED_120)
-                          .set(GLSL::_1_50, shaders::FS_TEXTURED_150_CORE)
+            Shaders::new().set(GLSL::_1_20, src(textured::FRAGMENT_GLSL_120))
+                          .set(GLSL::_1_50, src(textured::FRAGMENT_GLSL_150_CORE))
                           .get(glsl).unwrap()
         ) {
             Ok(id) => id,
@@ -147,7 +155,7 @@ impl Textured {
             gl::AttachShader(program, fragment_shader);
 
             gl::BindFragDataLocation(program, 0,
-                CString::new("out_color").unwrap().as_ptr());
+                CString::new("o_Color").unwrap().as_ptr());
         }
 
         let mut vao = 0;

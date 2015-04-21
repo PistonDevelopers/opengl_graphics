@@ -4,6 +4,7 @@
 //! An OpenGL back-end for Rust-Graphics
 
 extern crate shader_version;
+extern crate shaders_graphics2d as shaders;
 extern crate image;
 extern crate gl;
 extern crate libc;
@@ -21,4 +22,3 @@ pub mod error;
 
 mod gl_back_end;
 mod texture;
-mod shaders;
