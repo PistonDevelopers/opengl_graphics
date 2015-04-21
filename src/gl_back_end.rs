@@ -289,7 +289,7 @@ impl<'a> GlGraphics {
 impl Graphics for GlGraphics {
     type Texture = Texture;
 
-    fn clear(&mut self, color: [f32; 4]) {
+    fn clear_color(&mut self, color: [f32; 4]) {
         unsafe {
             let (r, g, b, a) = (color[0], color[1], color[2], color[3]);
             gl::ClearColor(r, g, b, a);
