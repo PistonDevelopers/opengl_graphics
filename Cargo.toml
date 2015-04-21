@@ -38,6 +38,10 @@ default-features = false
 git = "https://github.com/pistondevelopers/shader_version"
 #version = "0.0.2"
 
+[dependencies.piston-shaders_graphics2d]
+git = "https://github.com/pistondevelopers/shaders"
+#version = "0.0.0"
+
 [dependencies.freetype-rs]
 git = "https://github.com/PistonDevelopers/freetype-rs.git"
 #version = "0.0.7"
@@ -45,6 +49,14 @@ git = "https://github.com/PistonDevelopers/freetype-rs.git"
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"
 #version = "0.0.9"
+
+[dev-dependencies.piston]
+git = "https://github.com/pistondevelopers/piston"
+#version = "0.0.0"
+
+[dev-dependencies.pistoncore-sdl2_window]
+git = "https://github.com/pistondevelopers/sdl2_window"
+#version = "0.0.0"
 
 [dependencies]
 libc = "*"
