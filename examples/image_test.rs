@@ -25,7 +25,7 @@ fn main() {
     ));
 
     let rust_logo = Texture::from_path(&Path::new("./assets/rust.png")).unwrap();
-    let mut gl = Gl::new(opengl);
+    let mut gl = GlGraphics::new(opengl);
     for e in window.events() {
         use graphics::*;
 
