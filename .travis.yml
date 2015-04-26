@@ -1,18 +1,9 @@
 language: rust
-notifications:
-    irc: "irc.mozilla.org#piston-internals"
-os:
-    - linux
-    - osx
-env:
-    global:
-        - secure: hWrSHu41/9TWaVMYlgkjBfdftSp2mRMdN/Zo+adxIv+dCJw3vOWAtjxDjhnKgQGHwXKEGTmCDqE+4unYKRfqPp3WCsVJvlbZu8c81veYrq2yVorEtRwyLd/NYFJcmQw8NzQaKyqXqHuCOQUzwQIecTcSh5ElPeITigapEWMu8M0=
-        - LD_LIBRARY_PATH: /usr/local/lib
+before_install:
+  - sudo add-apt-repository ppa:team-xbmc/ppa -y
+  - sudo apt-get update -qq
+install:
+  - sudo apt-get install libsdl2-dev
 script:
-    - cargo build -v
-    - cargo test -v
-    - cargo doc -v
-after_success:
-    - cp -R target/doc doc
-    - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
-    - rm -r doc
+  - cargo test -v
+  - cargo doc -v
