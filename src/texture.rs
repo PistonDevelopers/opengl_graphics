@@ -73,7 +73,9 @@ impl Texture {
     }
 
     /// Loads image by relative file name to the asset root.
-    pub fn from_path(path: &Path) -> Result<Self, String> {
+    pub fn from_path<P>(path: P) -> Result<Self, String> where P: AsRef<Path> {
+		let path = path.as_ref();
+
         let img = match image::open(path) {
             Ok(img) => img,
             Err(e)  => return Err(format!("Could not load '{:?}': {:?}",
