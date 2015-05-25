@@ -22,47 +22,47 @@ repository = "https://github.com/PistonDevelopers/opengl_graphics.git"
 homepage = "https://github.com/PistonDevelopers/opengl_graphics"
 
 [dependencies.piston-texture]
-git = "https://github.com/pistondevelopers/texture"
-#version = "0.0.1"
+#git = "https://github.com/pistondevelopers/texture"
+version = "0.0.1"
 
 [dependencies.piston2d-graphics]
 git = "https://github.com/pistondevelopers/graphics"
 #version = "0.0.23"
 
 [dependencies.image]
-git = "https://github.com/pistondevelopers/image"
+#git = "https://github.com/pistondevelopers/image"
 default-features = false
-#version = "~0.2.0"
+version = "0.3.10"
 
 [dependencies.shader_version]
-git = "https://github.com/pistondevelopers/shader_version"
-#version = "0.0.2"
+#git = "https://github.com/pistondevelopers/shader_version"
+version = "0.0.6"
 
 [dependencies.piston-shaders_graphics2d]
-git = "https://github.com/pistondevelopers/shaders"
-#version = "0.0.0"
+#git = "https://github.com/pistondevelopers/shaders"
+version = "0.0.0"
 
 [dependencies.freetype-rs]
-git = "https://github.com/PistonDevelopers/freetype-rs.git"
-#version = "0.0.7"
+#git = "https://github.com/PistonDevelopers/freetype-rs.git"
+version = "0.0.10"
 
 [dependencies.gl]
-git = "https://github.com/bjz/gl-rs"
-#version = "0.0.9"
+#git = "https://github.com/bjz/gl-rs"
+version = "0.0.12"
 
 [dev-dependencies.piston]
-git = "https://github.com/pistondevelopers/piston"
-#version = "0.0.0"
+#git = "https://github.com/pistondevelopers/piston"
+version = "0.1.3"
 
 [dev-dependencies.pistoncore-sdl2_window]
 git = "https://github.com/pistondevelopers/sdl2_window"
 #version = "0.0.0"
 
 [dependencies]
-libc = "*"
+libc = "0.1.8"
 
 [build-dependencies]
-khronos_api = "*"
+khronos_api = "0.0.5"
 
 [lib]
 
