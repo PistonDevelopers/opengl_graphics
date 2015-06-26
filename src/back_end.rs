@@ -118,6 +118,10 @@ impl<'a> GlGraphics {
             gl::Disable(gl::BLEND);
         }
     }
+
+    pub fn from_colored_texture(&mut self) {
+        
+    }
 }
 
 impl Graphics for GlGraphics {

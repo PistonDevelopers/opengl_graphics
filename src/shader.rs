@@ -1,10 +1,9 @@
 use std::ffi::CString;
-use shader_version::{ OpenGL, Shaders };
+use shader_version::Shaders;
 use shader_version::glsl::GLSL;
 use gl;
 use gl::types::{
     GLint,
-    GLsizei,
     GLuint,
 };
 use shader_utils::{
@@ -12,6 +11,7 @@ use shader_utils::{
     DynamicAttribute,
 };
 
+/// Colored Shader
 pub struct Colored {
     pub vao: GLuint,
     pub vertex_shader: GLuint,
@@ -33,6 +33,7 @@ impl Drop for Colored {
 }
 
 impl Colored {
+    /// Creates a new Colored Shader
     pub fn new(glsl: GLSL) -> Self {
         use shaders::colored;
 
@@ -95,6 +96,7 @@ impl Colored {
     }
 }
 
+/// Textured Shader
 pub struct Textured {
     pub vertex_shader: GLuint,
     pub fragment_shader: GLuint,
@@ -117,6 +119,7 @@ impl Drop for Textured {
 }
 
 impl Textured {
+    /// Creates a new Textured Shader
     pub fn new(glsl: GLSL) -> Self {
         use shaders::textured;
 
