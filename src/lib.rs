@@ -15,6 +15,7 @@ pub use shader_version::OpenGL;
 pub use back_end::GlGraphics;
 pub use texture::Texture;
 
+pub mod shader;
 pub mod shader_utils;
 pub mod glyph_cache;
 pub mod error;
