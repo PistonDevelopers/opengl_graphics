@@ -10,7 +10,7 @@ use opengl_graphics::*;
 use sdl2_window::Sdl2Window;
 
 fn main() {
-    let opengl = OpenGL::_3_2;
+    let opengl = OpenGL::V3_2;
     let window: Sdl2Window = 
         WindowSettings::new(
             "gfx_graphics: image_test",

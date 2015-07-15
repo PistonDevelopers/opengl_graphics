@@ -47,8 +47,8 @@ impl Colored {
 
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            Shaders::new().set(GLSL::_1_20, src(colored::VERTEX_GLSL_120))
-                          .set(GLSL::_1_50, src(colored::VERTEX_GLSL_150_CORE))
+            Shaders::new().set(GLSL::V1_20, src(colored::VERTEX_GLSL_120))
+                          .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE))
                           .get(glsl).unwrap()
         ) {
             Ok(id) => id,
@@ -56,8 +56,8 @@ impl Colored {
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            Shaders::new().set(GLSL::_1_20, src(colored::FRAGMENT_GLSL_120))
-                          .set(GLSL::_1_50, src(colored::FRAGMENT_GLSL_150_CORE))
+            Shaders::new().set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120))
+                          .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE))
                           .get(glsl).unwrap()
         ) {
             Ok(id) => id,
@@ -131,8 +131,8 @@ impl Textured {
 
         let vertex_shader = match compile_shader(
             gl::VERTEX_SHADER,                  // shader type
-            Shaders::new().set(GLSL::_1_20, src(textured::VERTEX_GLSL_120))
-                          .set(GLSL::_1_50, src(textured::VERTEX_GLSL_150_CORE))
+            Shaders::new().set(GLSL::V1_20, src(textured::VERTEX_GLSL_120))
+                          .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE))
                           .get(glsl).unwrap()
         ) {
             Ok(id) => id,
@@ -140,8 +140,8 @@ impl Textured {
         };
         let fragment_shader = match compile_shader(
             gl::FRAGMENT_SHADER,                // shader type
-            Shaders::new().set(GLSL::_1_20, src(textured::FRAGMENT_GLSL_120))
-                          .set(GLSL::_1_50, src(textured::FRAGMENT_GLSL_150_CORE))
+            Shaders::new().set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120))
+                          .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE))
                           .get(glsl).unwrap()
         ) {
             Ok(id) => id,
@@ -216,7 +216,7 @@ impl<'a> GlGraphics {
     pub fn new(opengl: OpenGL) -> Self {
         assert!(gl::Enable::is_loaded(), GL_FUNC_NOT_LOADED);
 
-        let glsl = opengl.to_GLSL();
+        let glsl = opengl.to_glsl();
         // Load the vertices, color and texture coord buffers.
         GlGraphics {
             colored: Colored::new(glsl),
@@ -397,5 +397,5 @@ impl Graphics for GlGraphics {
 #[test]
 #[should_panic]
 fn test_gl_loaded() {
-    GlGraphics::new(OpenGL::_3_2);
+    GlGraphics::new(OpenGL::V3_2);
 }
