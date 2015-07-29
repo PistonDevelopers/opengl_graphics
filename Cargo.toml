@@ -41,7 +41,7 @@ version = "0.3.10"
 default-features = false
 
 [dependencies]
-freetype-rs = "0.1.0"
+freetype-rs = "0.2.0"
 gl = "0.0.12"
 libc = "0.1.8"
 piston-shaders_graphics2d = "0.1.0"

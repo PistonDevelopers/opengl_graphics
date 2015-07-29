@@ -74,15 +74,14 @@ impl<'a> GlyphCache<'a> {
         let texture = Texture::from_memory_alpha(bitmap.buffer(),
                                                  bitmap.width() as u32,
                                                  bitmap.rows() as u32).unwrap();
-        let glyph_size = glyph.advance();
         self.data.get_mut(&size).unwrap().insert(ch, Rc::new(Character {
             offset: [
                     bitmap_glyph.left() as f64,
                     bitmap_glyph.top() as f64
                 ],
             size: [
-                    (glyph_size.x >> 16) as f64,
-                    (glyph_size.y >> 16) as f64
+                    (glyph.advance_x() >> 16) as f64,
+                    (glyph.advance_y() >> 16) as f64
                 ],
             texture: texture,
         }));
