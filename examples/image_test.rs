@@ -4,7 +4,8 @@ extern crate opengl_graphics;
 extern crate sdl2_window;
 
 use std::path::Path;
-use piston::event::*;
+use piston::event_loop::*;
+use piston::input::*;
 use piston::window::WindowSettings;
 use opengl_graphics::*;
 use sdl2_window::Sdl2Window;
@@ -18,7 +19,8 @@ fn main() {
         )
         .exit_on_esc(true)
         .opengl(opengl)
-        .into();
+        .build()
+        .unwrap();
 
     let rust_logo = Texture::from_path(&Path::new("./assets/rust.png")).unwrap();
     let mut gl = GlGraphics::new(opengl);
