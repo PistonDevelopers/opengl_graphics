@@ -2,9 +2,10 @@ use gl;
 use gl::types::GLuint;
 use libc::c_void;
 use image::{ self, DynamicImage, GenericImage, RgbaImage };
-use graphics::ImageSize;
 
 use std::path::Path;
+
+use { ops, ImageSize, Rgba8Texture, TextureSettings };
 
 /// Wraps OpenGL texture data.
 /// The texture gets deleted when running out of scope.
@@ -36,50 +37,9 @@ impl Texture {
 
     /// Loads image from memory, the format is 8-bit greyscale.
     pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32) -> Result<Self, String> {
-        let mut pixels = vec![];
-        for alpha in buf {
-            pixels.extend(vec![255; 3]);
-            pixels.push(*alpha);
-        }
-
-        let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_WRAP_S,
-                gl::CLAMP_TO_EDGE as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_WRAP_T,
-                gl::CLAMP_TO_EDGE as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                pixels.as_ptr() as *const c_void
-            );
-        }
-
-        Ok(Texture::new(id, width, height))
+        let size = [width, height];
+        let buffer = ops::alpha_to_rgba8(buf, size);
+        Rgba8Texture::create(&mut (), &buffer, size, &TextureSettings::new())
     }
 
     /// Loads image by relative file name to the asset root.
@@ -97,110 +57,20 @@ impl Texture {
             x => x.to_rgba()
         };
 
-        let (width, height) = img.dimensions();
-
-        let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_WRAP_S,
-                gl::CLAMP_TO_EDGE as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_WRAP_T,
-                gl::CLAMP_TO_EDGE as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                img.as_ptr() as *const c_void
-            );
-        }
-
-        Ok(Texture::new(id, width, height))
+        Ok(Texture::from_image(&img))
     }
 
     /// Creates a texture from image.
     pub fn from_image(img: &RgbaImage) -> Self {
         let (width, height) = img.dimensions();
-
-        let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_WRAP_S,
-                gl::CLAMP_TO_EDGE as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_WRAP_T,
-                gl::CLAMP_TO_EDGE as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                img.as_ptr() as *const c_void
-            );
-        }
-
-        Texture::new(id, width, height)
+        Rgba8Texture::create(&mut (), img, [width, height], &TextureSettings::new()).unwrap()
     }
 
     /// Updates image with a new one.
     pub fn update(&mut self, img: &RgbaImage) {
         let (width, height) = img.dimensions();
 
-        unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, self.id);
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                img.as_ptr() as *const c_void
-            );
-        }
+        Rgba8Texture::update(self, &mut (), img, [width, height]).unwrap();
     }
 }
 
@@ -215,5 +85,81 @@ impl Drop for Texture {
 impl ImageSize for Texture {
     fn get_size(&self) -> (u32, u32) {
         (self.width, self.height)
+    }
+}
+
+impl Rgba8Texture<()> for Texture {
+    type Error = String;
+
+    fn create<S: Into<[u32; 2]>>(
+        _factory: &mut (),
+        memory: &[u8],
+        size: S,
+        _settings: &TextureSettings
+    ) -> Result<Self, Self::Error> {
+        let size = size.into();
+        let mut id: GLuint = 0;
+        unsafe {
+            gl::GenTextures(1, &mut id);
+            gl::BindTexture(gl::TEXTURE_2D, id);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MAG_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_WRAP_S,
+                gl::CLAMP_TO_EDGE as i32
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_WRAP_T,
+                gl::CLAMP_TO_EDGE as i32
+            );
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                size[0] as i32,
+                size[1] as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                memory.as_ptr() as *const c_void
+            );
+        }
+
+        Ok(Texture::new(id, size[0], size[1]))
+    }
+
+    fn update<S: Into<[u32; 2]>>(
+        &mut self,
+        _factory: &mut (),
+        memory: &[u8],
+        size: S
+    ) -> Result<(), Self::Error> {
+        let size = size.into();
+        unsafe {
+            gl::BindTexture(gl::TEXTURE_2D, self.id);
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                size[0] as i32,
+                size[1] as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                memory.as_ptr() as *const c_void
+            );
+        }
+
+        Ok(())
     }
 }
