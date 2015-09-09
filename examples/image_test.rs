@@ -14,7 +14,7 @@ fn main() {
     let opengl = OpenGL::V3_2;
     let window: Sdl2Window = 
         WindowSettings::new(
-            "gfx_graphics: image_test",
+            "opengl_graphics: image_test",
             [300, 300]
         )
         .exit_on_esc(true)
