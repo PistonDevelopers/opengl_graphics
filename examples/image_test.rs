@@ -11,8 +11,9 @@ use opengl_graphics::*;
 use sdl2_window::Sdl2Window;
 
 fn main() {
+    println!("Set image `default-features = true` in Cargo.toml to test");
     let opengl = OpenGL::V3_2;
-    let window: Sdl2Window = 
+    let window: Sdl2Window =
         WindowSettings::new(
             "opengl_graphics: image_test",
             [300, 300]
