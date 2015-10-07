@@ -16,7 +16,7 @@ pub fn bind_state(old_state: &DrawState, new_state: &DrawState) {
         bind_multi_sample(new_state.multi_sample);
     }
     if old_state.scissor != new_state.scissor {
-        bind_scissor(old_state.scissor);
+        bind_scissor(new_state.scissor);
     }
     if old_state.depth != new_state.depth
     || old_state.stencil != new_state.stencil

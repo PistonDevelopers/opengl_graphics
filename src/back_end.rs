@@ -206,6 +206,8 @@ pub struct GlGraphics {
     textured: Textured,
     // Keeps track of the current shader program.
     current_program: Option<GLuint>,
+    // Keeps track of the current draw state.
+    current_draw_state: Option<DrawState>,
 }
 
 impl<'a> GlGraphics {
@@ -223,6 +225,7 @@ impl<'a> GlGraphics {
             colored: Colored::new(glsl),
             textured: Textured::new(glsl),
             current_program: None,
+            current_draw_state: None,
        }
     }
 
@@ -259,6 +262,33 @@ impl<'a> GlGraphics {
     /// This forces the current program to be set on next drawing call.
     pub fn clear_program(&mut self) {
         self.current_program = None
+    }
+
+    /// Sets the current draw state, by detecting changes.
+    pub fn use_draw_state(&mut self, draw_state: &DrawState) {
+        match self.current_draw_state {
+            None => {
+                draw_state::bind_scissor(draw_state.scissor);
+                draw_state::bind_primitive(draw_state.primitive);
+                draw_state::bind_multi_sample(draw_state.multi_sample);
+                draw_state::bind_depth(draw_state.depth);
+                draw_state::bind_stencil(draw_state.stencil,
+                    draw_state.primitive.get_cull_face());
+                draw_state::bind_blend(draw_state.blend);
+                draw_state::bind_color_mask(draw_state.color_mask);
+            }
+            Some(ref old_state) => {
+                draw_state::bind_state(old_state, draw_state);
+            }
+        }
+        self.current_draw_state = Some(*draw_state);
+    }
+
+    /// Unsets the current draw state.
+    ///
+    /// This forces the current draw state to be set on next drawing call.
+    pub fn clear_draw_state(&mut self) {
+        self.current_draw_state = None;
     }
 
     /// Draws graphics.
@@ -321,20 +351,12 @@ impl Graphics for GlGraphics {
         where F: FnMut(&mut FnMut(&[f32]))
     {
         {
-            // Set shader program.
+            // Set shader program and draw state.
             let shader_program = self.colored.program;
             self.use_program(shader_program);
+            self.use_draw_state(draw_state);
         }
         let ref mut shader = self.colored;
-
-        draw_state::bind_scissor(draw_state.scissor);
-        draw_state::bind_primitive(draw_state.primitive);
-        draw_state::bind_multi_sample(draw_state.multi_sample);
-        draw_state::bind_depth(draw_state.depth);
-        draw_state::bind_stencil(draw_state.stencil,
-            draw_state.primitive.get_cull_face());
-        draw_state::bind_blend(draw_state.blend);
-        draw_state::bind_color_mask(draw_state.color_mask);
 
         unsafe {
             gl::BindVertexArray(shader.vao);
@@ -370,20 +392,12 @@ impl Graphics for GlGraphics {
         where F: FnMut(&mut FnMut(&[f32], &[f32]))
     {
         {
-            // Set shader program.
+            // Set shader program and draw state.
             let shader_program = self.textured.program;
             self.use_program(shader_program);
+            self.use_draw_state(draw_state);
         }
         let ref mut shader = self.textured;
-
-        draw_state::bind_scissor(draw_state.scissor);
-        draw_state::bind_primitive(draw_state.primitive);
-        draw_state::bind_multi_sample(draw_state.multi_sample);
-        draw_state::bind_depth(draw_state.depth);
-        draw_state::bind_stencil(draw_state.stencil,
-            draw_state.primitive.get_cull_face());
-        draw_state::bind_blend(draw_state.blend);
-        draw_state::bind_color_mask(draw_state.color_mask);
 
         let texture = texture.get_id();
         unsafe {
