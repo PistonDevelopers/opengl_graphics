@@ -13,6 +13,7 @@ use gl::types::{
 };
 
 // Local crate.
+use draw_state;
 use Texture;
 use shader_utils::{
     compile_shader,
@@ -313,7 +314,7 @@ impl Graphics for GlGraphics {
 
     fn tri_list<F>(
         &mut self,
-        _draw_state: &DrawState,
+        draw_state: &DrawState,
         color: &[f32; 4],
         mut f: F
     )
@@ -325,6 +326,15 @@ impl Graphics for GlGraphics {
             self.use_program(shader_program);
         }
         let ref mut shader = self.colored;
+
+        draw_state::bind_scissor(draw_state.scissor);
+        draw_state::bind_primitive(draw_state.primitive);
+        draw_state::bind_multi_sample(draw_state.multi_sample);
+        draw_state::bind_depth(draw_state.depth);
+        draw_state::bind_stencil(draw_state.stencil,
+            draw_state.primitive.get_cull_face());
+        draw_state::bind_blend(draw_state.blend);
+        draw_state::bind_color_mask(draw_state.color_mask);
 
         unsafe {
             gl::BindVertexArray(shader.vao);
@@ -352,7 +362,7 @@ impl Graphics for GlGraphics {
 
     fn tri_list_uv<F>(
         &mut self,
-        _draw_state: &DrawState,
+        draw_state: &DrawState,
         color: &[f32; 4],
         texture: &Texture,
         mut f: F
@@ -365,6 +375,15 @@ impl Graphics for GlGraphics {
             self.use_program(shader_program);
         }
         let ref mut shader = self.textured;
+
+        draw_state::bind_scissor(draw_state.scissor);
+        draw_state::bind_primitive(draw_state.primitive);
+        draw_state::bind_multi_sample(draw_state.multi_sample);
+        draw_state::bind_depth(draw_state.depth);
+        draw_state::bind_stencil(draw_state.stencil,
+            draw_state.primitive.get_cull_face());
+        draw_state::bind_blend(draw_state.blend);
+        draw_state::bind_color_mask(draw_state.color_mask);
 
         let texture = texture.get_id();
         unsafe {
