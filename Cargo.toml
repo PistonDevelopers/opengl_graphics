@@ -1,7 +1,7 @@
 [package]
 
 name = "piston2d-opengl_graphics"
-version = "0.15.0"
+version = "0.16.0"
 authors = [
     "bvssvni <bvssvni@gmail.com>",
     "Coeuvre <coeuvre@gmail.com>",
@@ -25,20 +25,8 @@ homepage = "https://github.com/PistonDevelopers/opengl_graphics"
 name = "opengl_graphics"
 path = "src/lib.rs"
 
-[features]
-default = ["image_png"]
-image_gif = ["image/gif"]
-image_jpeg = ["image/jpeg"]
-image_png = ["image/png"]
-image_ppm = ["image/ppm"]
-image_tga = ["image/tga"]
-image_tiff = ["image/tiff"]
-image_webp = ["image/webp"]
-
-
 [dependencies.image]
 version = "0.4.0"
-default-features = false
 
 [dependencies]
 freetype-rs = "0.3.0"
