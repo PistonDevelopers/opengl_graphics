@@ -13,7 +13,6 @@ use sdl2_window::{ Sdl2Window, OpenGL };
 use graphics::draw_state::BlendPreset;
 
 fn main() {
-    println!("Set image `default-features = true` in Cargo.toml to test");
     println!("Press A to change blending");
     println!("Press S to change clip inside/out");
 

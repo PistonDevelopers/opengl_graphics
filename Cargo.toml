@@ -1,7 +1,7 @@
 [package]
 
 name = "piston2d-opengl_graphics"
-version = "0.16.0"
+version = "0.17.0"
 authors = [
     "bvssvni <bvssvni@gmail.com>",
     "Coeuvre <coeuvre@gmail.com>",
@@ -34,7 +34,7 @@ gl = "0.1.0"
 libc = "0.1.8"
 piston-shaders_graphics2d = "0.1.0"
 piston-texture = "0.2.2"
-piston2d-graphics = "0.10.0"
+piston2d-graphics = "0.11.0"
 shader_version = "0.2.0"
 
 [dev-dependencies]

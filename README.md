@@ -11,8 +11,6 @@ If you are experiencing strange error messages like "X not loaded" this is likel
 This is done automatically for you in the SDL2 and GLFW window back-ends for Piston.
 To do this manually, see the README in [gl-rs](https://github.com/bjz/gl-rs)
 
-To run the examples, set "default-features = true" in Cargo.toml.
-
 ## Dependencies
 
 ![dependencies](./Cargo.png)
