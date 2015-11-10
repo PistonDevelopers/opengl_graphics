@@ -1,8 +1,8 @@
-# opengl_graphics [![Build Status](https://travis-ci.org/PistonDevelopers/opengl_graphics.svg)](https://travis-ci.org/PistonDevelopers/opengl_graphics)
+# opengl_graphics [![Build Status](https://travis-ci.org/PistonDevelopers/opengl_graphics.svg)](https://travis-ci.org/PistonDevelopers/opengl_graphics) [![Crates.io](https://img.shields.io/crates/v/piston2d-opengl_graphics.svg)](https://crates.io/crates/piston2d-opengl_graphics) [![Crates.io](https://img.shields.io/crates/l/piston2d-opengl_graphics.svg)](https://github.com/PistonDevelopers/opengl_graphics/blob/master/LICENSE)
 
 An OpenGL 2D back-end for the Piston game engine
 
-Maintainers: @Potpourri, @bvssvni
+Maintainers: @Potpourri, @bvssvni, @mitchmindtree
 
 ### Important!
 
