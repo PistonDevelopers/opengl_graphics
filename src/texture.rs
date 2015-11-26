@@ -1,6 +1,5 @@
 use gl;
 use gl::types::GLuint;
-use libc::c_void;
 use image::{ self, DynamicImage, GenericImage, RgbaImage };
 
 use std::path::Path;
@@ -131,7 +130,7 @@ impl Rgba8Texture<()> for Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                memory.as_ptr() as *const c_void
+                memory.as_ptr() as *const _
             );
         }
 
@@ -156,7 +155,7 @@ impl Rgba8Texture<()> for Texture {
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
-                memory.as_ptr() as *const c_void
+                memory.as_ptr() as *const _
             );
         }
 
