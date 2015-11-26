@@ -7,7 +7,6 @@ extern crate shader_version;
 extern crate shaders_graphics2d as shaders;
 extern crate image;
 extern crate gl;
-extern crate libc;
 extern crate graphics;
 extern crate freetype;
 extern crate texture as texture_lib;
