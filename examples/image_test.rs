@@ -12,7 +12,7 @@ use sdl2_window::Sdl2Window;
 
 fn main() {
     let opengl = OpenGL::V3_2;
-    let window: Sdl2Window =
+    let mut window: Sdl2Window =
         WindowSettings::new(
             "opengl_graphics: image_test",
             [300, 300]
@@ -24,7 +24,8 @@ fn main() {
 
     let rust_logo = Texture::from_path(&Path::new("./assets/rust.png")).unwrap();
     let mut gl = GlGraphics::new(opengl);
-    for e in window.events() {
+    let mut events = window.events();
+    while let Some(e) = events.next(&mut window) {
         use graphics::*;
 
         if let Some(args) = e.render_args() {

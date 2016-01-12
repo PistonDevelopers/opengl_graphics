@@ -18,7 +18,7 @@ fn main() {
 
     let opengl = OpenGL::V3_2;
     let (w, h) = (640, 480);
-    let window: Sdl2Window =
+    let mut window: Sdl2Window =
         WindowSettings::new("glium_graphics: image_test", [w, h])
         .exit_on_esc(true).build().unwrap();
 
@@ -26,7 +26,8 @@ fn main() {
     let mut clip_inside = true;
     let rust_logo = Texture::from_path(&Path::new("./assets/rust.png")).unwrap();
     let mut gl = GlGraphics::new(opengl);
-    for e in window.events() {
+    let mut events = window.events();
+    while let Some(e) = events.next(&mut window) {
         if let Some(args) = e.render_args() {
             use graphics::*;
 
