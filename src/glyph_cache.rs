@@ -1,6 +1,6 @@
 //! Glyph caching
 
-use { freetype, graphics };
+use { freetype, graphics, TextureSettings };
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{ Occupied, Vacant };
 use std::rc::Rc;
@@ -73,7 +73,8 @@ impl<'a> GlyphCache<'a> {
         let bitmap = bitmap_glyph.bitmap();
         let texture = Texture::from_memory_alpha(bitmap.buffer(),
                                                  bitmap.width() as u32,
-                                                 bitmap.rows() as u32).unwrap();
+                                                 bitmap.rows() as u32,
+                                                 &TextureSettings::new()).unwrap();
         self.data.get_mut(&size).unwrap().insert(ch, Rc::new(Character {
             offset: [
                     bitmap_glyph.left() as f64,
