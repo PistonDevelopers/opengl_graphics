@@ -4,7 +4,54 @@ use image::{ self, DynamicImage, GenericImage, RgbaImage };
 
 use std::path::Path;
 
-use { ops, ImageSize, Rgba8Texture, TextureSettings };
+use { ops, ImageSize, Rgba8Texture, TextureSettings, Filter};
+
+trait GlSettings {
+    fn get_gl_mag(&self) -> gl::types::GLenum;
+    fn get_gl_min(&self) -> gl::types::GLenum;
+    fn get_gl_mipmap(&self) -> gl::types::GLenum;
+}
+
+impl GlSettings for TextureSettings {
+    fn get_gl_mag(&self) -> gl::types::GLenum {
+        match self.get_mag() {
+            Filter::Linear => gl::LINEAR,
+            Filter::Nearest => gl::NEAREST,
+        }
+    }
+
+    fn get_gl_min(&self) -> gl::types::GLenum {
+        match self.get_min() {
+            Filter::Linear => {
+                if self.get_generate_mipmap() {
+                    match self.get_mipmap() {
+                        Filter::Linear => gl::LINEAR_MIPMAP_LINEAR,
+                        Filter::Nearest => gl::LINEAR_MIPMAP_NEAREST,
+                    }
+                } else {
+                    gl::LINEAR
+                }
+            },
+            Filter::Nearest => {
+                if self.get_generate_mipmap() {
+                    match self.get_mipmap() {
+                        Filter::Linear => gl::NEAREST_MIPMAP_LINEAR,
+                        Filter::Nearest => gl::NEAREST_MIPMAP_NEAREST,
+                    }
+                } else {
+                    gl::NEAREST
+                }
+            },
+        }
+    }
+
+    fn get_gl_mipmap(&self) -> gl::types::GLenum {
+        match self.get_mipmap() {
+            Filter::Linear => gl::LINEAR,
+            Filter::Nearest => gl::NEAREST,
+        }
+    }
+}
 
 /// Wraps OpenGL texture data.
 /// The texture gets deleted when running out of scope.
@@ -35,10 +82,10 @@ impl Texture {
     }
 
     /// Loads image from memory, the format is 8-bit greyscale.
-    pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32) -> Result<Self, String> {
+    pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32, settings: &TextureSettings) -> Result<Self, String> {
         let size = [width, height];
         let buffer = ops::alpha_to_rgba8(buf, size);
-        Rgba8Texture::create(&mut (), &buffer, size, &TextureSettings::new())
+        Rgba8Texture::create(&mut (), &buffer, size, settings)
     }
 
     /// Loads image by relative file name to the asset root.
@@ -56,13 +103,13 @@ impl Texture {
             x => x.to_rgba()
         };
 
-        Ok(Texture::from_image(&img))
+        Ok(Texture::from_image(&img, &TextureSettings::new()))
     }
 
     /// Creates a texture from image.
-    pub fn from_image(img: &RgbaImage) -> Self {
+    pub fn from_image(img: &RgbaImage, settings: &TextureSettings) -> Self {
         let (width, height) = img.dimensions();
-        Rgba8Texture::create(&mut (), img, [width, height], &TextureSettings::new()).unwrap()
+        Rgba8Texture::create(&mut (), img, [width, height], settings).unwrap()
     }
 
     /// Updates image with a new one.
@@ -94,7 +141,7 @@ impl Rgba8Texture<()> for Texture {
         _factory: &mut (),
         memory: &[u8],
         size: S,
-        _settings: &TextureSettings
+        settings: &TextureSettings
     ) -> Result<Self, Self::Error> {
         let size = size.into();
         let mut id: GLuint = 0;
@@ -104,12 +151,12 @@ impl Rgba8Texture<()> for Texture {
             gl::TexParameteri(
                 gl::TEXTURE_2D,
                 gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
+                settings.get_gl_min() as i32
             );
             gl::TexParameteri(
                 gl::TEXTURE_2D,
                 gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
+                settings.get_gl_mag() as i32
             );
             gl::TexParameteri(
                 gl::TEXTURE_2D,
@@ -121,6 +168,9 @@ impl Rgba8Texture<()> for Texture {
                 gl::TEXTURE_WRAP_T,
                 gl::CLAMP_TO_EDGE as i32
             );
+            if settings.get_generate_mipmap() {
+                gl::GenerateMipmap(gl::TEXTURE_2D);
+            }
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
@@ -162,3 +212,5 @@ impl Rgba8Texture<()> for Texture {
         Ok(())
     }
 }
+
+
