@@ -4,10 +4,9 @@ Source: https://github.com/gfx-rs/gfx_device_gl/blob/master/src/state.rs
 */
 
 use gl;
-use graphics::draw_state::target::Rect;
-use graphics::draw_state::state::*;
-use graphics::DrawState;
+// use graphics::draw_state::*;
 
+/*
 pub fn bind_state(old_state: &DrawState, new_state: &DrawState) {
     if old_state.primitive != new_state.primitive {
         bind_primitive(new_state.primitive);
@@ -214,3 +213,4 @@ pub fn bind_color_mask(mask: ColorMask) {
         if (mask & ALPHA).is_empty() {gl::FALSE} else {gl::TRUE}
     )};
 }
+*/

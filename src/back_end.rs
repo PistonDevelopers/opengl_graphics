@@ -266,6 +266,7 @@ impl<'a> GlGraphics {
 
     /// Sets the current draw state, by detecting changes.
     pub fn use_draw_state(&mut self, draw_state: &DrawState) {
+        /*
         match self.current_draw_state {
             None => {
                 draw_state::bind_scissor(draw_state.scissor);
@@ -282,6 +283,7 @@ impl<'a> GlGraphics {
             }
         }
         self.current_draw_state = Some(*draw_state);
+        */
     }
 
     /// Unsets the current draw state.
