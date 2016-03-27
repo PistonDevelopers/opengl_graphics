@@ -32,8 +32,8 @@ version = "0.7.0"
 freetype-rs = "0.6.0"
 gl = "0.5.2"
 piston-shaders_graphics2d = "0.1.0"
-piston-texture = "0.3.0"
-piston2d-graphics = "0.14.0"
+piston-texture = "0.4.0"
+piston2d-graphics = "0.16.0"
 shader_version = "0.2.0"
 
 [dev-dependencies]
