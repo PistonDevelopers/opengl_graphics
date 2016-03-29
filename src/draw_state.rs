@@ -4,97 +4,36 @@ Source: https://github.com/gfx-rs/gfx_device_gl/blob/master/src/state.rs
 */
 
 use gl;
-// use graphics::draw_state::*;
+use graphics::draw_state::*;
 
-/*
 pub fn bind_state(old_state: &DrawState, new_state: &DrawState) {
-    if old_state.primitive != new_state.primitive {
-        bind_primitive(new_state.primitive);
-    }
-    if old_state.multi_sample != new_state.multi_sample {
-        bind_multi_sample(new_state.multi_sample);
-    }
     if old_state.scissor != new_state.scissor {
         bind_scissor(new_state.scissor);
     }
-    if old_state.depth != new_state.depth
-    || old_state.stencil != new_state.stencil
-    || old_state.primitive.get_cull_face() !=
-        new_state.primitive.get_cull_face() {
-        bind_depth(new_state.depth);
-        bind_stencil(new_state.stencil, new_state.primitive.get_cull_face());
+    if old_state.stencil != new_state.stencil {
+        // bind_stencil(new_state.stencil, new_state.primitive.get_cull_face());
     }
     if old_state.blend != new_state.blend {
-        bind_blend(new_state.blend);
-    }
-    if old_state.color_mask != new_state.color_mask {
-        bind_color_mask(new_state.color_mask);
+        // bind_blend(new_state.blend);
     }
 }
 
-pub fn bind_primitive(p: Primitive) {
-    unsafe { gl::FrontFace(match p.front_face {
-        FrontFace::Clockwise => gl::CW,
-        FrontFace::CounterClockwise => gl::CCW,
-    }) };
-
-    let (gl_draw, gl_offset) = match p.method {
-        RasterMethod::Point => (gl::POINT, gl::POLYGON_OFFSET_POINT),
-        RasterMethod::Line(width) => {
-            unsafe { gl::LineWidth(width) };
-            (gl::LINE, gl::POLYGON_OFFSET_LINE)
-        },
-        RasterMethod::Fill(cull) => {
-            match cull {
-                CullFace::Nothing => unsafe { gl::Disable(gl::CULL_FACE) },
-                CullFace::Front => { unsafe {
-                    gl::Enable(gl::CULL_FACE);
-                    gl::CullFace(gl::FRONT);
-                }},
-                CullFace::Back => { unsafe {
-                    gl::Enable(gl::CULL_FACE);
-                    gl::CullFace(gl::BACK);
-                }},
-            }
-            (gl::FILL, gl::POLYGON_OFFSET_FILL)
-        },
-    };
-
-    unsafe { gl::PolygonMode(gl::FRONT_AND_BACK, gl_draw) };
-
-    match p.offset {
-        Some(Offset(factor, units)) => unsafe {
-            gl::Enable(gl_offset);
-            gl::PolygonOffset(factor, units as gl::types::GLfloat);
-        },
-        None => unsafe {
-            gl::Disable(gl_offset)
-        },
-    }
-}
-
-pub fn bind_multi_sample(ms: Option<MultiSample>) {
-    match ms {
-        Some(_) => unsafe { gl::Enable(gl::MULTISAMPLE) },
-        None => unsafe { gl::Disable(gl::MULTISAMPLE) },
-    }
-}
-
-pub fn bind_scissor(rect: Option<Rect>) {
+pub fn bind_scissor(rect: Option<[u32; 4]>) {
     match rect {
         Some(r) => { unsafe {
             gl::Enable(gl::SCISSOR_TEST);
             gl::Scissor(
-                r.x as gl::types::GLint,
-                r.y as gl::types::GLint,
-                r.w as gl::types::GLint,
-                r.h as gl::types::GLint
+                r[0] as gl::types::GLint,
+                r[1] as gl::types::GLint,
+                r[2] as gl::types::GLint,
+                r[3] as gl::types::GLint
             );
         }},
         None => unsafe { gl::Disable(gl::SCISSOR_TEST) },
     }
 }
 
+/*
 fn map_comparison(cmp: Comparison) -> gl::types::GLenum {
     match cmp {
         Comparison::Never        => gl::NEVER,
@@ -107,18 +46,9 @@ fn map_comparison(cmp: Comparison) -> gl::types::GLenum {
         Comparison::Always       => gl::ALWAYS,
     }
 }
+*/
 
-pub fn bind_depth(depth: Option<Depth>) {
-    match depth {
-        Some(d) => { unsafe {
-            gl::Enable(gl::DEPTH_TEST);
-            gl::DepthFunc(map_comparison(d.fun));
-            gl::DepthMask(if d.write {gl::TRUE} else {gl::FALSE});
-        }},
-        None => unsafe { gl::Disable(gl::DEPTH_TEST) },
-    }
-}
-
+/*
 fn map_operation(op: StencilOp) -> gl::types::GLenum {
     match op {
         StencilOp::Keep          => gl::KEEP,
@@ -203,14 +133,5 @@ pub fn bind_blend(blend: Option<Blend>) {
         }},
         None => unsafe { gl::Disable(gl::BLEND) },
     }
-}
-
-pub fn bind_color_mask(mask: ColorMask) {
-    unsafe { gl::ColorMask(
-        if (mask & RED  ).is_empty() {gl::FALSE} else {gl::TRUE},
-        if (mask & GREEN).is_empty() {gl::FALSE} else {gl::TRUE},
-        if (mask & BLUE ).is_empty() {gl::FALSE} else {gl::TRUE},
-        if (mask & ALPHA).is_empty() {gl::FALSE} else {gl::TRUE}
-    )};
 }
 */

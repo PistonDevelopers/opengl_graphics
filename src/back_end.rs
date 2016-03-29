@@ -266,24 +266,18 @@ impl<'a> GlGraphics {
 
     /// Sets the current draw state, by detecting changes.
     pub fn use_draw_state(&mut self, draw_state: &DrawState) {
-        /*
         match self.current_draw_state {
             None => {
                 draw_state::bind_scissor(draw_state.scissor);
-                draw_state::bind_primitive(draw_state.primitive);
-                draw_state::bind_multi_sample(draw_state.multi_sample);
-                draw_state::bind_depth(draw_state.depth);
-                draw_state::bind_stencil(draw_state.stencil,
-                    draw_state.primitive.get_cull_face());
-                draw_state::bind_blend(draw_state.blend);
-                draw_state::bind_color_mask(draw_state.color_mask);
+                // draw_state::bind_stencil(draw_state.stencil,
+                //    draw_state.primitive.get_cull_face());
+                // draw_state::bind_blend(draw_state.blend);
             }
             Some(ref old_state) => {
                 draw_state::bind_state(old_state, draw_state);
             }
         }
         self.current_draw_state = Some(*draw_state);
-        */
     }
 
     /// Unsets the current draw state.
