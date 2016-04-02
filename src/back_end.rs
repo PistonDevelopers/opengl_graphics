@@ -269,8 +269,7 @@ impl<'a> GlGraphics {
         match self.current_draw_state {
             None => {
                 draw_state::bind_scissor(draw_state.scissor);
-                // draw_state::bind_stencil(draw_state.stencil,
-                //    draw_state.primitive.get_cull_face());
+                draw_state::bind_stencil(draw_state.stencil);
                 // draw_state::bind_blend(draw_state.blend);
             }
             Some(ref old_state) => {

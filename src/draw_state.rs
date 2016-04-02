@@ -11,7 +11,7 @@ pub fn bind_state(old_state: &DrawState, new_state: &DrawState) {
         bind_scissor(new_state.scissor);
     }
     if old_state.stencil != new_state.stencil {
-        // bind_stencil(new_state.stencil, new_state.primitive.get_cull_face());
+        bind_stencil(new_state.stencil);
     }
     if old_state.blend != new_state.blend {
         // bind_blend(new_state.blend);
@@ -61,29 +61,37 @@ fn map_operation(op: StencilOp) -> gl::types::GLenum {
         StencilOp::Invert        => gl::INVERT,
     }
 }
+*/
 
-pub fn bind_stencil(stencil: Option<Stencil>, cull: CullFace) {
-    fn bind_side(face: gl::types::GLenum, side: StencilSide) { unsafe {
-        gl::StencilFuncSeparate(face, map_comparison(side.fun),
-            side.value as gl::types::GLint, side.mask_read as gl::types::GLuint);
-        gl::StencilMaskSeparate(face, side.mask_write as gl::types::GLuint);
-        gl::StencilOpSeparate(face, map_operation(side.op_fail),
-            map_operation(side.op_depth_fail), map_operation(side.op_pass));
-    }}
-    match stencil {
-        Some(s) => {
-            unsafe { gl::Enable(gl::STENCIL_TEST) };
-            if cull != CullFace::Front {
-                bind_side(gl::FRONT, s.front);
+pub fn bind_stencil(stencil: Option<Stencil>) {
+    unsafe {
+        match stencil {
+            Some(s) => {
+                gl::Enable(gl::STENCIL_TEST);
+                match s {
+                    Stencil::Clip(val) => {
+                        gl::StencilFunc(gl::NEVER, val as gl::types::GLint, 255);
+                        gl::StencilMask(255);
+                        gl::StencilOp(gl::REPLACE, gl::KEEP, gl::KEEP);
+                    }
+                    Stencil::Inside(val) => {
+                        gl::StencilFunc(gl::EQUAL, val as gl::types::GLint, 255);
+                        gl::StencilMask(255);
+                        gl::StencilOp(gl::KEEP, gl::KEEP, gl::KEEP);
+                    }
+                    Stencil::Outside(val) => {
+                        gl::StencilFunc(gl::NOTEQUAL, val as gl::types::GLint, 255);
+                        gl::StencilMask(255);
+                        gl::StencilOp(gl::KEEP, gl::KEEP, gl::KEEP);
+                    }
+                }
             }
-            if cull != CullFace::Back {
-                bind_side(gl::BACK, s.back);
-            }
+            None => gl::Disable(gl::STENCIL_TEST),
         }
-        None => unsafe { gl::Disable(gl::STENCIL_TEST) },
     }
 }
 
+/*
 fn map_equation(eq: Equation) -> gl::types::GLenum {
     match eq {
         Equation::Add    => gl::FUNC_ADD,
