@@ -1,8 +1,3 @@
-/*
-Use same binding of draw state as Gfx.
-Source: https://github.com/gfx-rs/gfx_device_gl/blob/master/src/state.rs
-*/
-
 use gl;
 use graphics::draw_state::*;
 
@@ -14,7 +9,7 @@ pub fn bind_state(old_state: &DrawState, new_state: &DrawState) {
         bind_stencil(new_state.stencil);
     }
     if old_state.blend != new_state.blend {
-        // bind_blend(new_state.blend);
+        bind_blend(new_state.blend);
     }
 }
 
@@ -32,36 +27,6 @@ pub fn bind_scissor(rect: Option<[u32; 4]>) {
         None => unsafe { gl::Disable(gl::SCISSOR_TEST) },
     }
 }
-
-/*
-fn map_comparison(cmp: Comparison) -> gl::types::GLenum {
-    match cmp {
-        Comparison::Never        => gl::NEVER,
-        Comparison::Less         => gl::LESS,
-        Comparison::LessEqual    => gl::LEQUAL,
-        Comparison::Equal        => gl::EQUAL,
-        Comparison::GreaterEqual => gl::GEQUAL,
-        Comparison::Greater      => gl::GREATER,
-        Comparison::NotEqual     => gl::NOTEQUAL,
-        Comparison::Always       => gl::ALWAYS,
-    }
-}
-*/
-
-/*
-fn map_operation(op: StencilOp) -> gl::types::GLenum {
-    match op {
-        StencilOp::Keep          => gl::KEEP,
-        StencilOp::Zero          => gl::ZERO,
-        StencilOp::Replace       => gl::REPLACE,
-        StencilOp::IncrementClamp=> gl::INCR,
-        StencilOp::IncrementWrap => gl::INCR_WRAP,
-        StencilOp::DecrementClamp=> gl::DECR,
-        StencilOp::DecrementWrap => gl::DECR_WRAP,
-        StencilOp::Invert        => gl::INVERT,
-    }
-}
-*/
 
 pub fn bind_stencil(stencil: Option<Stencil>) {
     unsafe {
@@ -121,25 +86,54 @@ fn map_factor(factor: Factor) -> gl::types::GLenum {
         Factor::SourceAlphaSaturated => gl::SRC_ALPHA_SATURATE,
     }
 }
+*/
 
 pub fn bind_blend(blend: Option<Blend>) {
-    match blend {
-        Some(b) => { unsafe {
-            gl::Enable(gl::BLEND);
-            gl::BlendEquationSeparate(
-                map_equation(b.color.equation),
-                map_equation(b.alpha.equation)
-            );
-            gl::BlendFuncSeparate(
-                map_factor(b.color.source),
-                map_factor(b.color.destination),
-                map_factor(b.alpha.source),
-                map_factor(b.alpha.destination)
-            );
-            let c = b.value;
-            gl::BlendColor(c[0], c[1], c[2], c[3]);
-        }},
-        None => unsafe { gl::Disable(gl::BLEND) },
+    unsafe {
+        match blend {
+            Some(b) => {
+                gl::Enable(gl::BLEND);
+                gl::BlendColor(1.0, 1.0, 1.0, 1.0);
+                match b {
+                    Blend::Alpha => {
+                        gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
+                        gl::BlendFuncSeparate(
+                            gl::SRC_ALPHA,
+                            gl::ONE_MINUS_SRC_ALPHA,
+                            gl::ONE,
+                            gl::ONE
+                        );
+                    }
+                    Blend::Add => {
+                        gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
+                        gl::BlendFuncSeparate(
+                            gl::ONE,
+                            gl::ONE,
+                            gl::ONE,
+                            gl::ONE
+                        );
+                    }
+                    Blend::Multiply => {
+                        gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
+                        gl::BlendFuncSeparate(
+                            gl::DST_COLOR,
+                            gl::ZERO,
+                            gl::DST_ALPHA,
+                            gl::ZERO
+                        );
+                    }
+                    Blend::Invert => {
+                        gl::BlendEquationSeparate(gl::FUNC_SUBTRACT, gl::FUNC_ADD);
+                        gl::BlendFuncSeparate(
+                            gl::CONSTANT_COLOR,
+                            gl::SRC_COLOR,
+                            gl::ZERO,
+                            gl::ONE
+                        );
+                    }
+                }
+            },
+            None => gl::Disable(gl::BLEND),
+        }
     }
 }
-*/

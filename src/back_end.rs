@@ -270,7 +270,7 @@ impl<'a> GlGraphics {
             None => {
                 draw_state::bind_scissor(draw_state.scissor);
                 draw_state::bind_stencil(draw_state.stencil);
-                // draw_state::bind_blend(draw_state.blend);
+                draw_state::bind_blend(draw_state.blend);
             }
             Some(ref old_state) => {
                 draw_state::bind_state(old_state, draw_state);

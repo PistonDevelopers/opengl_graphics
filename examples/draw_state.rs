@@ -62,7 +62,7 @@ fn main() {
 
         if let Some(Button::Keyboard(Key::A)) = e.press_args() {
             blend = (blend + 1) % blends.len();
-            println!("Changed blending to {:?}", blend);
+            println!("Changed blending to {:?}", blends[blend]);
         }
 
         if let Some(Button::Keyboard(Key::S)) = e.press_args() {
