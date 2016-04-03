@@ -37,8 +37,8 @@ piston2d-graphics = "0.16.0"
 shader_version = "0.2.0"
 
 [dev-dependencies]
-piston = "0.17.0"
-pistoncore-sdl2_window = "0.24.0"
+piston = "0.18.0"
+pistoncore-sdl2_window = "0.25.0"
 
 [build-dependencies]
 khronos_api = "0.0.8"

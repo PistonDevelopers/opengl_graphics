@@ -5,6 +5,7 @@ use std::ffi::CString;
 use shader_version::{ OpenGL, Shaders };
 use shader_version::glsl::GLSL;
 use graphics::{ Context, DrawState, Graphics, Viewport };
+use graphics::color::gamma_srgb_to_linear;
 use gl;
 use gl::types::{
     GLint,
@@ -295,6 +296,7 @@ impl<'a> GlGraphics {
         let (x, y, w, h) = (rect[0], rect[1], rect[2], rect[3]);
         self.viewport(x, y, w, h);
         self.clear_program();
+        unsafe { gl::Enable(gl::FRAMEBUFFER_SRGB); }
         self.enable_alpha_blend();
         let c = Context::new_viewport(viewport);
         f(c, self);
@@ -324,6 +326,7 @@ impl Graphics for GlGraphics {
     type Texture = Texture;
 
     fn clear_color(&mut self, color: [f32; 4]) {
+        let color = gamma_srgb_to_linear(color);
         unsafe {
             let (r, g, b, a) = (color[0], color[1], color[2], color[3]);
             gl::ClearColor(r, g, b, a);
@@ -345,6 +348,7 @@ impl Graphics for GlGraphics {
     )
         where F: FnMut(&mut FnMut(&[f32]))
     {
+        let color = gamma_srgb_to_linear(*color);
         {
             // Set shader program and draw state.
             let shader_program = self.colored.program;
@@ -386,6 +390,7 @@ impl Graphics for GlGraphics {
     )
         where F: FnMut(&mut FnMut(&[f32], &[f32]))
     {
+        let color = gamma_srgb_to_linear(*color);
         {
             // Set shader program and draw state.
             let shader_program = self.textured.program;
