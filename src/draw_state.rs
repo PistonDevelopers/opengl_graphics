@@ -1,160 +1,62 @@
-/*
-Use same binding of draw state as Gfx.
-Source: https://github.com/gfx-rs/gfx_device_gl/blob/master/src/state.rs
-*/
-
 use gl;
-use graphics::draw_state::target::Rect;
-use graphics::draw_state::state::*;
-use graphics::DrawState;
+use graphics::draw_state::*;
 
 pub fn bind_state(old_state: &DrawState, new_state: &DrawState) {
-    if old_state.primitive != new_state.primitive {
-        bind_primitive(new_state.primitive);
-    }
-    if old_state.multi_sample != new_state.multi_sample {
-        bind_multi_sample(new_state.multi_sample);
-    }
     if old_state.scissor != new_state.scissor {
         bind_scissor(new_state.scissor);
     }
-    if old_state.depth != new_state.depth
-    || old_state.stencil != new_state.stencil
-    || old_state.primitive.get_cull_face() !=
-        new_state.primitive.get_cull_face() {
-        bind_depth(new_state.depth);
-        bind_stencil(new_state.stencil, new_state.primitive.get_cull_face());
+    if old_state.stencil != new_state.stencil {
+        bind_stencil(new_state.stencil);
     }
     if old_state.blend != new_state.blend {
         bind_blend(new_state.blend);
     }
-    if old_state.color_mask != new_state.color_mask {
-        bind_color_mask(new_state.color_mask);
-    }
 }
 
-pub fn bind_primitive(p: Primitive) {
-    unsafe { gl::FrontFace(match p.front_face {
-        FrontFace::Clockwise => gl::CW,
-        FrontFace::CounterClockwise => gl::CCW,
-    }) };
-
-    let (gl_draw, gl_offset) = match p.method {
-        RasterMethod::Point => (gl::POINT, gl::POLYGON_OFFSET_POINT),
-        RasterMethod::Line(width) => {
-            unsafe { gl::LineWidth(width) };
-            (gl::LINE, gl::POLYGON_OFFSET_LINE)
-        },
-        RasterMethod::Fill(cull) => {
-            match cull {
-                CullFace::Nothing => unsafe { gl::Disable(gl::CULL_FACE) },
-                CullFace::Front => { unsafe {
-                    gl::Enable(gl::CULL_FACE);
-                    gl::CullFace(gl::FRONT);
-                }},
-                CullFace::Back => { unsafe {
-                    gl::Enable(gl::CULL_FACE);
-                    gl::CullFace(gl::BACK);
-                }},
-            }
-            (gl::FILL, gl::POLYGON_OFFSET_FILL)
-        },
-    };
-
-    unsafe { gl::PolygonMode(gl::FRONT_AND_BACK, gl_draw) };
-
-    match p.offset {
-        Some(Offset(factor, units)) => unsafe {
-            gl::Enable(gl_offset);
-            gl::PolygonOffset(factor, units as gl::types::GLfloat);
-        },
-        None => unsafe {
-            gl::Disable(gl_offset)
-        },
-    }
-}
-
-pub fn bind_multi_sample(ms: Option<MultiSample>) {
-    match ms {
-        Some(_) => unsafe { gl::Enable(gl::MULTISAMPLE) },
-        None => unsafe { gl::Disable(gl::MULTISAMPLE) },
-    }
-}
-
-pub fn bind_scissor(rect: Option<Rect>) {
+pub fn bind_scissor(rect: Option<[u32; 4]>) {
     match rect {
         Some(r) => { unsafe {
             gl::Enable(gl::SCISSOR_TEST);
             gl::Scissor(
-                r.x as gl::types::GLint,
-                r.y as gl::types::GLint,
-                r.w as gl::types::GLint,
-                r.h as gl::types::GLint
+                r[0] as gl::types::GLint,
+                r[1] as gl::types::GLint,
+                r[2] as gl::types::GLint,
+                r[3] as gl::types::GLint
             );
         }},
         None => unsafe { gl::Disable(gl::SCISSOR_TEST) },
     }
 }
 
-fn map_comparison(cmp: Comparison) -> gl::types::GLenum {
-    match cmp {
-        Comparison::Never        => gl::NEVER,
-        Comparison::Less         => gl::LESS,
-        Comparison::LessEqual    => gl::LEQUAL,
-        Comparison::Equal        => gl::EQUAL,
-        Comparison::GreaterEqual => gl::GEQUAL,
-        Comparison::Greater      => gl::GREATER,
-        Comparison::NotEqual     => gl::NOTEQUAL,
-        Comparison::Always       => gl::ALWAYS,
-    }
-}
-
-pub fn bind_depth(depth: Option<Depth>) {
-    match depth {
-        Some(d) => { unsafe {
-            gl::Enable(gl::DEPTH_TEST);
-            gl::DepthFunc(map_comparison(d.fun));
-            gl::DepthMask(if d.write {gl::TRUE} else {gl::FALSE});
-        }},
-        None => unsafe { gl::Disable(gl::DEPTH_TEST) },
-    }
-}
-
-fn map_operation(op: StencilOp) -> gl::types::GLenum {
-    match op {
-        StencilOp::Keep          => gl::KEEP,
-        StencilOp::Zero          => gl::ZERO,
-        StencilOp::Replace       => gl::REPLACE,
-        StencilOp::IncrementClamp=> gl::INCR,
-        StencilOp::IncrementWrap => gl::INCR_WRAP,
-        StencilOp::DecrementClamp=> gl::DECR,
-        StencilOp::DecrementWrap => gl::DECR_WRAP,
-        StencilOp::Invert        => gl::INVERT,
-    }
-}
-
-pub fn bind_stencil(stencil: Option<Stencil>, cull: CullFace) {
-    fn bind_side(face: gl::types::GLenum, side: StencilSide) { unsafe {
-        gl::StencilFuncSeparate(face, map_comparison(side.fun),
-            side.value as gl::types::GLint, side.mask_read as gl::types::GLuint);
-        gl::StencilMaskSeparate(face, side.mask_write as gl::types::GLuint);
-        gl::StencilOpSeparate(face, map_operation(side.op_fail),
-            map_operation(side.op_depth_fail), map_operation(side.op_pass));
-    }}
-    match stencil {
-        Some(s) => {
-            unsafe { gl::Enable(gl::STENCIL_TEST) };
-            if cull != CullFace::Front {
-                bind_side(gl::FRONT, s.front);
+pub fn bind_stencil(stencil: Option<Stencil>) {
+    unsafe {
+        match stencil {
+            Some(s) => {
+                gl::Enable(gl::STENCIL_TEST);
+                match s {
+                    Stencil::Clip(val) => {
+                        gl::StencilFunc(gl::NEVER, val as gl::types::GLint, 255);
+                        gl::StencilMask(255);
+                        gl::StencilOp(gl::REPLACE, gl::KEEP, gl::KEEP);
+                    }
+                    Stencil::Inside(val) => {
+                        gl::StencilFunc(gl::EQUAL, val as gl::types::GLint, 255);
+                        gl::StencilMask(255);
+                        gl::StencilOp(gl::KEEP, gl::KEEP, gl::KEEP);
+                    }
+                    Stencil::Outside(val) => {
+                        gl::StencilFunc(gl::NOTEQUAL, val as gl::types::GLint, 255);
+                        gl::StencilMask(255);
+                        gl::StencilOp(gl::KEEP, gl::KEEP, gl::KEEP);
+                    }
+                }
             }
-            if cull != CullFace::Back {
-                bind_side(gl::BACK, s.back);
-            }
+            None => gl::Disable(gl::STENCIL_TEST),
         }
-        None => unsafe { gl::Disable(gl::STENCIL_TEST) },
     }
 }
 
+/*
 fn map_equation(eq: Equation) -> gl::types::GLenum {
     match eq {
         Equation::Add    => gl::FUNC_ADD,
@@ -184,33 +86,54 @@ fn map_factor(factor: Factor) -> gl::types::GLenum {
         Factor::SourceAlphaSaturated => gl::SRC_ALPHA_SATURATE,
     }
 }
+*/
 
 pub fn bind_blend(blend: Option<Blend>) {
-    match blend {
-        Some(b) => { unsafe {
-            gl::Enable(gl::BLEND);
-            gl::BlendEquationSeparate(
-                map_equation(b.color.equation),
-                map_equation(b.alpha.equation)
-            );
-            gl::BlendFuncSeparate(
-                map_factor(b.color.source),
-                map_factor(b.color.destination),
-                map_factor(b.alpha.source),
-                map_factor(b.alpha.destination)
-            );
-            let c = b.value;
-            gl::BlendColor(c[0], c[1], c[2], c[3]);
-        }},
-        None => unsafe { gl::Disable(gl::BLEND) },
+    unsafe {
+        match blend {
+            Some(b) => {
+                gl::Enable(gl::BLEND);
+                gl::BlendColor(1.0, 1.0, 1.0, 1.0);
+                match b {
+                    Blend::Alpha => {
+                        gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
+                        gl::BlendFuncSeparate(
+                            gl::SRC_ALPHA,
+                            gl::ONE_MINUS_SRC_ALPHA,
+                            gl::ONE,
+                            gl::ONE
+                        );
+                    }
+                    Blend::Add => {
+                        gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
+                        gl::BlendFuncSeparate(
+                            gl::ONE,
+                            gl::ONE,
+                            gl::ONE,
+                            gl::ONE
+                        );
+                    }
+                    Blend::Multiply => {
+                        gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
+                        gl::BlendFuncSeparate(
+                            gl::DST_COLOR,
+                            gl::ZERO,
+                            gl::DST_ALPHA,
+                            gl::ZERO
+                        );
+                    }
+                    Blend::Invert => {
+                        gl::BlendEquationSeparate(gl::FUNC_SUBTRACT, gl::FUNC_ADD);
+                        gl::BlendFuncSeparate(
+                            gl::CONSTANT_COLOR,
+                            gl::SRC_COLOR,
+                            gl::ZERO,
+                            gl::ONE
+                        );
+                    }
+                }
+            },
+            None => gl::Disable(gl::BLEND),
+        }
     }
-}
-
-pub fn bind_color_mask(mask: ColorMask) {
-    unsafe { gl::ColorMask(
-        if (mask & RED  ).is_empty() {gl::FALSE} else {gl::TRUE},
-        if (mask & GREEN).is_empty() {gl::FALSE} else {gl::TRUE},
-        if (mask & BLUE ).is_empty() {gl::FALSE} else {gl::TRUE},
-        if (mask & ALPHA).is_empty() {gl::FALSE} else {gl::TRUE}
-    )};
 }

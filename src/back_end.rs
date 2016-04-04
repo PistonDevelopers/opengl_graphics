@@ -5,6 +5,7 @@ use std::ffi::CString;
 use shader_version::{ OpenGL, Shaders };
 use shader_version::glsl::GLSL;
 use graphics::{ Context, DrawState, Graphics, Viewport };
+use graphics::color::gamma_srgb_to_linear;
 use gl;
 use gl::types::{
     GLint,
@@ -269,13 +270,8 @@ impl<'a> GlGraphics {
         match self.current_draw_state {
             None => {
                 draw_state::bind_scissor(draw_state.scissor);
-                draw_state::bind_primitive(draw_state.primitive);
-                draw_state::bind_multi_sample(draw_state.multi_sample);
-                draw_state::bind_depth(draw_state.depth);
-                draw_state::bind_stencil(draw_state.stencil,
-                    draw_state.primitive.get_cull_face());
+                draw_state::bind_stencil(draw_state.stencil);
                 draw_state::bind_blend(draw_state.blend);
-                draw_state::bind_color_mask(draw_state.color_mask);
             }
             Some(ref old_state) => {
                 draw_state::bind_state(old_state, draw_state);
@@ -300,35 +296,20 @@ impl<'a> GlGraphics {
         let (x, y, w, h) = (rect[0], rect[1], rect[2], rect[3]);
         self.viewport(x, y, w, h);
         self.clear_program();
-        self.enable_alpha_blend();
+        unsafe { gl::Enable(gl::FRAMEBUFFER_SRGB); }
         let c = Context::new_viewport(viewport);
         f(c, self);
-        self.disable_alpha_blend();
     }
 
     /// Assume all textures has alpha channel for now.
     pub fn has_texture_alpha(&self, _texture: &Texture) -> bool { true }
-
-    /// Enabled alpha blending.
-    pub fn enable_alpha_blend(&mut self) {
-        unsafe {
-            gl::Enable(gl::BLEND);
-            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        }
-    }
-
-    /// Disables alpha blending.
-    pub fn disable_alpha_blend(&mut self) {
-        unsafe {
-            gl::Disable(gl::BLEND);
-        }
-    }
 }
 
 impl Graphics for GlGraphics {
     type Texture = Texture;
 
     fn clear_color(&mut self, color: [f32; 4]) {
+        let color = gamma_srgb_to_linear(color);
         unsafe {
             let (r, g, b, a) = (color[0], color[1], color[2], color[3]);
             gl::ClearColor(r, g, b, a);
@@ -350,6 +331,7 @@ impl Graphics for GlGraphics {
     )
         where F: FnMut(&mut FnMut(&[f32]))
     {
+        let color = gamma_srgb_to_linear(*color);
         {
             // Set shader program and draw state.
             let shader_program = self.colored.program;
@@ -391,6 +373,7 @@ impl Graphics for GlGraphics {
     )
         where F: FnMut(&mut FnMut(&[f32], &[f32]))
     {
+        let color = gamma_srgb_to_linear(*color);
         {
             // Set shader program and draw state.
             let shader_program = self.textured.program;

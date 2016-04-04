@@ -4,7 +4,10 @@ use image::{ self, DynamicImage, GenericImage, RgbaImage };
 
 use std::path::Path;
 
-use { ops, ImageSize, Rgba8Texture, TextureSettings, Filter};
+use {
+    ops, ImageSize, CreateTexture, UpdateTexture, TextureSettings,
+    Format, Filter
+};
 
 trait GlSettings {
     fn get_gl_mag(&self) -> gl::types::GLenum;
@@ -85,7 +88,7 @@ impl Texture {
     pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32, settings: &TextureSettings) -> Result<Self, String> {
         let size = [width, height];
         let buffer = ops::alpha_to_rgba8(buf, size);
-        Rgba8Texture::create(&mut (), &buffer, size, settings)
+        CreateTexture::create(&mut (), Format::Rgba8, &buffer, size, settings)
     }
 
     /// Loads image by relative file name to the asset root.
@@ -109,14 +112,16 @@ impl Texture {
     /// Creates a texture from image.
     pub fn from_image(img: &RgbaImage, settings: &TextureSettings) -> Self {
         let (width, height) = img.dimensions();
-        Rgba8Texture::create(&mut (), img, [width, height], settings).unwrap()
+        CreateTexture::create(&mut (), Format::Rgba8,
+                              img, [width, height], settings).unwrap()
     }
 
     /// Updates image with a new one.
     pub fn update(&mut self, img: &RgbaImage) {
         let (width, height) = img.dimensions();
 
-        Rgba8Texture::update(self, &mut (), img, [width, height]).unwrap();
+        UpdateTexture::update(self, &mut (), Format::Rgba8,
+                              img, [width, height]).unwrap();
     }
 }
 
@@ -134,11 +139,12 @@ impl ImageSize for Texture {
     }
 }
 
-impl Rgba8Texture<()> for Texture {
+impl CreateTexture<()> for Texture {
     type Error = String;
 
     fn create<S: Into<[u32; 2]>>(
         _factory: &mut (),
+        _format: Format,
         memory: &[u8],
         size: S,
         settings: &TextureSettings
@@ -186,10 +192,15 @@ impl Rgba8Texture<()> for Texture {
 
         Ok(Texture::new(id, size[0], size[1]))
     }
+}
+
+impl UpdateTexture<()> for Texture {
+    type Error = String;
 
     fn update<S: Into<[u32; 2]>>(
         &mut self,
         _factory: &mut (),
+        _format: Format,
         memory: &[u8],
         size: S
     ) -> Result<(), Self::Error> {
@@ -212,5 +223,3 @@ impl Rgba8Texture<()> for Texture {
         Ok(())
     }
 }
-
-

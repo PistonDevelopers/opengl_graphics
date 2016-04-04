@@ -1,31 +1,26 @@
 //! Glyph caching
 
-use { freetype, graphics, TextureSettings };
+use { freetype, graphics, Texture, TextureSettings };
 use std::collections::HashMap;
-use std::collections::hash_map::Entry::{ Occupied, Vacant };
-use std::rc::Rc;
+use graphics::types::Scalar;
 
 use std::path::Path;
-
 use error::Error;
-use Texture;
 
-/// The type alias for the font size.
-pub type FontSize = u32;
+pub use graphics::types::FontSize;
 
 /// The type alias for font characters.
-pub type Character = graphics::character::Character<Texture>;
+pub type Character<'a> = graphics::character::Character<'a, Texture>;
 
 /// A struct used for caching rendered font.
-#[derive(Clone)]
 pub struct GlyphCache<'a> {
     /// The font face.
     pub face: freetype::Face<'a>,
-    data: HashMap<FontSize, HashMap<char, Rc<Character>>>,
+    // Maps from fontsize and character to offset, size and texture.
+    data: HashMap<(FontSize, char), ([Scalar; 2], [Scalar; 2], Texture)>,
 }
 
 impl<'a> GlyphCache<'a> {
-
     /// Constructor for a GlyphCache.
     pub fn new(font: &Path) -> Result<GlyphCache<'static>, Error> {
         let freetype = match freetype::Library::init() {
@@ -60,10 +55,10 @@ impl<'a> GlyphCache<'a> {
 
     /// Load a `Character` from a given `FontSize` and `char`.
     fn load_character(&mut self, size: FontSize, ch: char) {
-        // Don't load glyph twice
-        if self.data.get(&size)
-            .map(|entry| entry.contains_key(&ch))
-            .unwrap_or(false) { return }
+        // Don't load glyph twice.
+        if !self.data.contains_key(&(size, ch)) {
+            return;
+        }
 
         self.face.set_pixel_sizes(0, size).unwrap();
         self.face.load_char(ch as usize, freetype::face::DEFAULT).unwrap();
@@ -75,17 +70,11 @@ impl<'a> GlyphCache<'a> {
                                                  bitmap.width() as u32,
                                                  bitmap.rows() as u32,
                                                  &TextureSettings::new()).unwrap();
-        self.data.get_mut(&size).unwrap().insert(ch, Rc::new(Character {
-            offset: [
-                    bitmap_glyph.left() as f64,
-                    bitmap_glyph.top() as f64
-                ],
-            size: [
-                    (glyph.advance_x() >> 16) as f64,
-                    (glyph.advance_y() >> 16) as f64
-                ],
-            texture: texture,
-        }));
+        self.data.insert((size, ch), (
+            [bitmap_glyph.left() as f64, bitmap_glyph.top() as f64],
+            [(glyph.advance_x() >> 16) as f64, (glyph.advance_y() >> 16) as f64],
+            texture,
+        ));
     }
 
     /// Load all characters in the `chars` iterator for `size`
@@ -110,25 +99,29 @@ impl<'a> GlyphCache<'a> {
 
     /// Return `ch` for `size` if it's already cached. Don't load.
     /// See the `preload_*` functions.
-    pub fn opt_character(&self, size: FontSize, ch: char) -> Option<&Character> {
-        use std::borrow::Borrow;
-
-        self.data.get(&size).and_then(|entry| entry.get(&ch).map(|e| e.borrow()))
+    pub fn opt_character(&self, size: FontSize, ch: char) -> Option<Character> {
+        self.data.get(&(size, ch)).map(|&(offset, size, ref texture)| {
+            Character {
+                offset: offset,
+                size: size,
+                texture: texture
+            }
+        })
     }
 }
 
-impl<'a> graphics::character::CharacterCache for GlyphCache<'a> {
+impl<'b> graphics::character::CharacterCache for GlyphCache<'b> {
     type Texture = Texture;
 
-    fn character(&mut self, size: FontSize, ch: char) -> &Character {
-        match {
-            match self.data.entry(size) {
-                Vacant(entry) => entry.insert(HashMap::new()),
-                Occupied(entry) => entry.into_mut(),
-            }
-        }.contains_key(&ch) {
-            true => &self.data[&size][&ch],
-            false => { self.load_character(size, ch); &self.data[&size][&ch] }
+    fn character<'a>(&'a mut self, size: FontSize, ch: char) -> Character<'a> {
+        if !self.data.contains_key(&(size, ch)) {
+            self.load_character(size, ch);
+        }
+        let &(offset, size, ref texture) = &self.data[&(size, ch)];
+        return Character {
+            offset: offset,
+            size: size,
+            texture: texture
         }
     }
 }
