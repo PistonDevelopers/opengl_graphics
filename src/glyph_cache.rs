@@ -4,6 +4,10 @@ use { freetype, graphics, Texture, TextureSettings };
 use std::collections::HashMap;
 use graphics::types::Scalar;
 
+extern crate fnv;
+use self::fnv::FnvHasher;
+use std::hash::BuildHasherDefault;
+
 use std::path::Path;
 use error::Error;
 
@@ -17,7 +21,9 @@ pub struct GlyphCache<'a> {
     /// The font face.
     pub face: freetype::Face<'a>,
     // Maps from fontsize and character to offset, size and texture.
-    data: HashMap<(FontSize, char), ([Scalar; 2], [Scalar; 2], Texture)>,
+    data: HashMap<(FontSize, char),
+                  ([Scalar; 2], [Scalar; 2], Texture),
+                  BuildHasherDefault<FnvHasher>>,
 }
 
 impl<'a> GlyphCache<'a> {
@@ -33,7 +39,7 @@ impl<'a> GlyphCache<'a> {
         };
         Ok(GlyphCache {
             face: face,
-            data: HashMap::new(),
+            data: HashMap::with_hasher(BuildHasherDefault::<FnvHasher>::default()),
         })
     }
 
@@ -49,7 +55,7 @@ impl<'a> GlyphCache<'a> {
         };
         Ok(GlyphCache {
             face: face,
-            data: HashMap::new()
+            data: HashMap::with_hasher(BuildHasherDefault::<FnvHasher>::default())
         })
     }
 
