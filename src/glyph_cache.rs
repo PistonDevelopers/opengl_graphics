@@ -53,28 +53,32 @@ impl<'a> GlyphCache<'a> {
         })
     }
 
-    /// Load a `Character` from a given `FontSize` and `char`.
-    fn load_character(&mut self, size: FontSize, ch: char) {
-        // Don't load glyph twice.
-        if self.data.contains_key(&(size, ch)) {
-            return;
+    /// Get a `Character` from cache, or load it if not there.
+    fn get(&mut self, size: FontSize,  ch: char)
+    -> &([Scalar; 2], [Scalar; 2], Texture) {
+        // Create a `Character` from a given `FontSize` and `char`.
+        fn create_character(face: &freetype::Face, size: FontSize, ch: char)
+        -> ([Scalar; 2], [Scalar; 2], Texture) {
+            face.set_pixel_sizes(0, size).unwrap();
+            face.load_char(ch as usize, freetype::face::DEFAULT).unwrap();
+            let glyph = face.glyph().get_glyph().unwrap();
+            let bitmap_glyph = glyph.to_bitmap(freetype::render_mode::RenderMode::Normal, None)
+                .unwrap();
+            let bitmap = bitmap_glyph.bitmap();
+            let texture = Texture::from_memory_alpha(bitmap.buffer(),
+                                                     bitmap.width() as u32,
+                                                     bitmap.rows() as u32,
+                                                     &TextureSettings::new()).unwrap();
+            (
+                [bitmap_glyph.left() as f64, bitmap_glyph.top() as f64],
+                [(glyph.advance_x() >> 16) as f64, (glyph.advance_y() >> 16) as f64],
+                texture,
+            )
         }
 
-        self.face.set_pixel_sizes(0, size).unwrap();
-        self.face.load_char(ch as usize, freetype::face::DEFAULT).unwrap();
-        let glyph = self.face.glyph().get_glyph().unwrap();
-        let bitmap_glyph = glyph.to_bitmap(freetype::render_mode::RenderMode::Normal, None)
-            .unwrap();
-        let bitmap = bitmap_glyph.bitmap();
-        let texture = Texture::from_memory_alpha(bitmap.buffer(),
-                                                 bitmap.width() as u32,
-                                                 bitmap.rows() as u32,
-                                                 &TextureSettings::new()).unwrap();
-        self.data.insert((size, ch), (
-            [bitmap_glyph.left() as f64, bitmap_glyph.top() as f64],
-            [(glyph.advance_x() >> 16) as f64, (glyph.advance_y() >> 16) as f64],
-            texture,
-        ));
+        let face = &self.face;// necessary to borrow-check
+        self.data.entry((size, ch))
+                 .or_insert_with(|| create_character(face, size, ch) )
     }
 
     /// Load all characters in the `chars` iterator for `size`
@@ -87,7 +91,7 @@ impl<'a> GlyphCache<'a> {
             I: Iterator<Item = char>
     {
         for ch in chars {
-            self.load_character(size, ch);
+            self.get(size, ch);
         }
     }
 
@@ -114,10 +118,7 @@ impl<'b> graphics::character::CharacterCache for GlyphCache<'b> {
     type Texture = Texture;
 
     fn character<'a>(&'a mut self, size: FontSize, ch: char) -> Character<'a> {
-        if !self.data.contains_key(&(size, ch)) {
-            self.load_character(size, ch);
-        }
-        let &(offset, size, ref texture) = &self.data[&(size, ch)];
+        let &(offset, size, ref texture) = self.get(size, ch);
         return Character {
             offset: offset,
             size: size,
