@@ -29,34 +29,26 @@ pub struct GlyphCache<'a> {
 impl<'a> GlyphCache<'a> {
     /// Constructor for a GlyphCache.
     pub fn new(font: &Path) -> Result<GlyphCache<'static>, Error> {
-        let freetype = match freetype::Library::init() {
-            Ok(freetype) => freetype,
-            Err(why) => return Err(Error::FreetypeError(why)),
-        };
-        let face = match freetype.new_face(font, 0) {
-            Ok(face) => face,
-            Err(why) => return Err(Error::FreetypeError(why)),
-        };
-        Ok(GlyphCache {
-            face: face,
-            data: HashMap::with_hasher(BuildHasherDefault::<FnvHasher>::default()),
-        })
+        let fnv = BuildHasherDefault::<FnvHasher>::default();
+        freetype::Library::init()
+                          .and_then(|freetype| freetype.new_face(font, 0) )
+                          .map_err( Error::FreetypeError )
+                          .map(|face| GlyphCache {
+                                          face: face,
+                                          data: HashMap::with_hasher(fnv),
+                                      } )
     }
 
     /// Creates a GlyphCache for a font stored in memory.
     pub fn from_bytes(font: &'a [u8]) -> Result<GlyphCache<'a>, Error> {
-        let freetype = match freetype::Library::init() {
-            Ok(freetype) => freetype,
-            Err(why) => return Err(Error::FreetypeError(why))
-        };
-        let face = match freetype.new_memory_face(font, 0) {
-            Ok(face) => face,
-            Err(why) => return Err(Error::FreetypeError(why))
-        };
-        Ok(GlyphCache {
-            face: face,
-            data: HashMap::with_hasher(BuildHasherDefault::<FnvHasher>::default())
-        })
+        let fnv = BuildHasherDefault::<FnvHasher>::default();
+        freetype::Library::init()
+                          .and_then(|freetype| freetype.new_memory_face(font, 0) )
+                          .map_err( Error::FreetypeError )
+                          .map(|face| GlyphCache {
+                                          face: face,
+                                          data: HashMap::with_hasher(fnv),
+                                      } )
     }
 
     /// Get a `Character` from cache, or load it if not there.
