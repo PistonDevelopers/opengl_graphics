@@ -56,7 +56,7 @@ impl<'a> GlyphCache<'a> {
     /// Load a `Character` from a given `FontSize` and `char`.
     fn load_character(&mut self, size: FontSize, ch: char) {
         // Don't load glyph twice.
-        if !self.data.contains_key(&(size, ch)) {
+        if self.data.contains_key(&(size, ch)) {
             return;
         }
 
