@@ -28,10 +28,12 @@ pub struct GlyphCache<'a> {
 
 impl<'a> GlyphCache<'a> {
     /// Constructor for a GlyphCache.
-    pub fn new(font: &Path) -> Result<GlyphCache<'static>, Error> {
+    pub fn new<P>(font: P) -> Result<GlyphCache<'static>, Error>
+		where P: AsRef<Path>
+	{
         let fnv = BuildHasherDefault::<FnvHasher>::default();
         freetype::Library::init()
-                          .and_then(|freetype| freetype.new_face(font, 0) )
+                          .and_then(|freetype| freetype.new_face(font.as_ref(), 0) )
                           .map_err( Error::FreetypeError )
                           .map(|face| GlyphCache {
                                           face: face,
