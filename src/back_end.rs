@@ -72,8 +72,9 @@ impl Colored {
             gl::AttachShader(program, vertex_shader);
             gl::AttachShader(program, fragment_shader);
 
-            gl::BindFragDataLocation(program, 0,
-                CString::new("o_Color").unwrap().as_ptr());
+            let c_o_color = CString::new("o_Color").unwrap();
+            gl::BindFragDataLocation(program, 0, c_o_color.as_ptr());
+            drop(c_o_color);
         }
 
         let mut vao = 0;
@@ -86,10 +87,11 @@ impl Colored {
                 "pos",
                 vao
             ).unwrap();
+        let c_color = CString::new("color").unwrap();
         let color = unsafe {
-                gl::GetUniformLocation(program,
-                    CString::new("color").unwrap().as_ptr())
+                gl::GetUniformLocation(program, c_color.as_ptr())
             };
+        drop(c_color);
         if color == -1 {
             panic!("Could not find uniform `color`");
         }
@@ -156,8 +158,9 @@ impl Textured {
             gl::AttachShader(program, vertex_shader);
             gl::AttachShader(program, fragment_shader);
 
-            gl::BindFragDataLocation(program, 0,
-                CString::new("o_Color").unwrap().as_ptr());
+            let c_o_color = CString::new("o_Color").unwrap();
+            gl::BindFragDataLocation(program, 0, c_o_color.as_ptr());
+            drop(c_o_color);
         }
 
         let mut vao = 0;
@@ -170,10 +173,11 @@ impl Textured {
                 "pos",
                 vao
             ).unwrap();
+        let c_color = CString::new("color").unwrap();
         let color = unsafe {
-                gl::GetUniformLocation(program,
-                    CString::new("color").unwrap().as_ptr())
+                gl::GetUniformLocation(program, c_color.as_ptr())
             };
+        drop(c_color);
         if color == -1 {
             panic!("Could not find uniform `color`");
         }

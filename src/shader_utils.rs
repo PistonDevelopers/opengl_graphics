@@ -126,13 +126,12 @@ pub fn compile_shader(
 ) -> Result<GLuint, String> {
     unsafe {
         let shader = gl::CreateShader(shader_type);
-        {
-            let source = &match CString::new(source) {
-                Ok(x) => x,
-                Err(err) => return Err(format!("compile_shader: {}", err))
-            };
-            gl::ShaderSource(shader, 1, &source.as_ptr(), ptr::null());
-        }
+        let c_source = match CString::new(source) {
+            Ok(x) => x,
+            Err(err) => return Err(format!("compile_shader: {}", err))
+        };
+        gl::ShaderSource(shader, 1, &c_source.as_ptr(), ptr::null());
+        drop(source);
         gl::CompileShader(shader);
         let mut status = gl::FALSE as GLint;
         gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
@@ -171,11 +170,12 @@ pub fn compile_shader(
 /// Returns `None` if there is no attribute with such name.
 pub fn attribute_location(program: GLuint, name: &str) -> Result<GLuint, String> {
     unsafe {
-        let id = gl::GetAttribLocation(program,
-            match CString::new(name) {
-                Ok(x) => x,
-                Err(err) => return Err(format!("attribute_location: {}", err))
-            }.as_ptr());
+        let c_name = match CString::new(name) {
+            Ok(x) => x,
+            Err(err) => return Err(format!("attribute_location: {}", err))
+        };
+        let id = gl::GetAttribLocation(program, c_name.as_ptr());
+        drop(c_name);
         if id < 0 {
             Err(format!("Attribute '{}' does not exists in shader", name))
         } else {

@@ -128,7 +128,9 @@ impl Texture {
 impl Drop for Texture {
     fn drop(&mut self) {
         unsafe {
-            gl::DeleteTextures(1, [self.id].as_ptr());
+            let ids = [self.id];
+            gl::DeleteTextures(1, ids.as_ptr());
+            drop(ids);
         }
     }
 }
