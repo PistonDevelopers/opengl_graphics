@@ -126,11 +126,13 @@ pub fn compile_shader(
 ) -> Result<GLuint, String> {
     unsafe {
         let shader = gl::CreateShader(shader_type);
-        gl::ShaderSource(shader, 1,
-            &match CString::new(source) {
-                Ok(x) => x.as_ptr(),
+        {
+            let source = &match CString::new(source) {
+                Ok(x) => x,
                 Err(err) => return Err(format!("compile_shader: {}", err))
-            }, ptr::null());
+            };
+            gl::ShaderSource(shader, 1, &source.as_ptr(), ptr::null());
+        }
         gl::CompileShader(shader);
         let mut status = gl::FALSE as GLint;
         gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
