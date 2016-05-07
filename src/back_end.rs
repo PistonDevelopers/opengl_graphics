@@ -292,9 +292,9 @@ impl<'a> GlGraphics {
     }
 
     /// Draws graphics.
-    pub fn draw<F>(&mut self, viewport: Viewport, f: F)
+    pub fn draw<F, U>(&mut self, viewport: Viewport, f: F) -> U
         where
-            F: FnOnce(Context, &mut Self)
+            F: FnOnce(Context, &mut Self) -> U
     {
         let rect = viewport.rect;
         let (x, y, w, h) = (rect[0], rect[1], rect[2], rect[3]);
@@ -302,7 +302,7 @@ impl<'a> GlGraphics {
         self.clear_program();
         unsafe { gl::Enable(gl::FRAMEBUFFER_SRGB); }
         let c = Context::new_viewport(viewport);
-        f(c, self);
+        f(c, self)
     }
 
     /// Assume all textures has alpha channel for now.
