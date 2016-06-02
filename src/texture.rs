@@ -1,6 +1,6 @@
 use gl;
 use gl::types::GLuint;
-use image::{ self, DynamicImage, GenericImage, RgbaImage };
+use image::{ self, DynamicImage, RgbaImage };
 
 use std::path::Path;
 
