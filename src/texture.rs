@@ -121,7 +121,7 @@ impl Texture {
         let (width, height) = img.dimensions();
 
         UpdateTexture::update(self, &mut (), Format::Rgba8,
-                              img, [width, height]).unwrap();
+                              img, [0, 0], [width, height]).unwrap();
     }
 }
 
@@ -199,23 +199,25 @@ impl CreateTexture<()> for Texture {
 impl UpdateTexture<()> for Texture {
     type Error = String;
 
-    fn update<S: Into<[u32; 2]>>(
+    fn update<O: Into<[u32; 2]>, S: Into<[u32; 2]>>(
         &mut self,
         _factory: &mut (),
         _format: Format,
         memory: &[u8],
+        offset: O,
         size: S
     ) -> Result<(), Self::Error> {
+        let offset = offset.into();
         let size = size.into();
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
-            gl::TexImage2D(
+            gl::TexSubImage2D(
                 gl::TEXTURE_2D,
                 0,
-                gl::RGBA as i32,
+                offset[0] as i32,
+                offset[1] as i32,
                 size[0] as i32,
                 size[1] as i32,
-                0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
                 memory.as_ptr() as *const _
