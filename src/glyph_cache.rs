@@ -1,6 +1,6 @@
 //! Glyph caching
 
-use { freetype, graphics, Texture, TextureSettings };
+use {rusttype, graphics, Texture, TextureSettings};
 use std::collections::HashMap;
 use graphics::types::Scalar;
 
@@ -9,6 +9,8 @@ use self::fnv::FnvHasher;
 use std::hash::BuildHasherDefault;
 
 use std::path::Path;
+use std::io::Read;
+use std::fs::File;
 use error::Error;
 
 pub use graphics::types::FontSize;
@@ -18,8 +20,8 @@ pub type Character<'a> = graphics::character::Character<'a, Texture>;
 
 /// A struct used for caching rendered font.
 pub struct GlyphCache<'a> {
-    /// The font face.
-    pub face: freetype::Face<'a>,
+    /// The font.
+    pub font: rusttype::Font<'a>,
     // Maps from fontsize and character to offset, size and texture.
     data: HashMap<(FontSize, char),
                   ([Scalar; 2], [Scalar; 2], Texture),
@@ -29,66 +31,76 @@ pub struct GlyphCache<'a> {
 impl<'a> GlyphCache<'a> {
     /// Constructor for a GlyphCache.
     pub fn new<P>(font: P) -> Result<GlyphCache<'static>, Error>
-		where P: AsRef<Path>
-	{
+        where P: AsRef<Path>
+    {
         let fnv = BuildHasherDefault::<FnvHasher>::default();
-        freetype::Library::init()
-                          .and_then(|freetype| freetype.new_face(font.as_ref(), 0) )
-                          .map_err( Error::FreetypeError )
-                          .map(|face| GlyphCache {
-                                          face: face,
-                                          data: HashMap::with_hasher(fnv),
-                                      } )
+        let mut file = try!(File::open(font));
+        let mut file_buffer = Vec::new();
+        try!(file.read_to_end(&mut file_buffer));
+
+        let collection = rusttype::FontCollection::from_bytes(file_buffer);
+        let font = collection.into_font().unwrap();
+        Ok(GlyphCache {
+            font: font,
+            data: HashMap::with_hasher(fnv),
+        })
     }
 
     /// Creates a GlyphCache for a font stored in memory.
     pub fn from_bytes(font: &'a [u8]) -> Result<GlyphCache<'a>, Error> {
         let fnv = BuildHasherDefault::<FnvHasher>::default();
-        freetype::Library::init()
-                          .and_then(|freetype| freetype.new_memory_face(font, 0) )
-                          .map_err( Error::FreetypeError )
-                          .map(|face| GlyphCache {
-                                          face: face,
-                                          data: HashMap::with_hasher(fnv),
-                                      } )
+        let collection = rusttype::FontCollection::from_bytes(font);
+        let font = collection.into_font().unwrap();
+        Ok(GlyphCache {
+            font: font,
+            data: HashMap::with_hasher(fnv),
+        })
     }
 
     /// Get a `Character` from cache, or load it if not there.
-    fn get(&mut self, size: FontSize,  ch: char)
-    -> &([Scalar; 2], [Scalar; 2], Texture) {
+    fn get(&mut self, size: FontSize, ch: char) -> &([Scalar; 2], [Scalar; 2], Texture) {
         // Create a `Character` from a given `FontSize` and `char`.
-        fn create_character(face: &freetype::Face, size: FontSize, ch: char)
-        -> ([Scalar; 2], [Scalar; 2], Texture) {
-            face.set_pixel_sizes(0, size).unwrap();
-            face.load_char(ch as usize, freetype::face::DEFAULT).unwrap();
-            let glyph = face.glyph().get_glyph().unwrap();
-            let bitmap_glyph = glyph.to_bitmap(freetype::render_mode::RenderMode::Normal, None)
+        fn create_character(font: &rusttype::Font,
+                            size: FontSize,
+                            ch: char)
+                            -> ([Scalar; 2], [Scalar; 2], Texture) {
+            let size = ((size as f32) * 1.333).round() as u32;
+            let glyph = font.glyph(ch).unwrap_or(font.glyph(rusttype::Codepoint(0))
+                .unwrap_or(font.glyph('\u{FFd}').unwrap()));
+            let glyph = glyph.scaled(rusttype::Scale::uniform(size as f32));
+            let h_metrics = glyph.h_metrics();
+            let pixel_bounding_box = glyph.exact_bounding_box().unwrap_or(rusttype::Rect {
+                min: rusttype::Point { x: 0.0, y: 0.0 },
+                max: rusttype::Point { x: 0.0, y: 0.0 },
+            });
+            let pixel_bb_width = pixel_bounding_box.width();
+            let pixel_bb_height = pixel_bounding_box.height();
+
+            let mut image_buffer = Vec::new();
+            image_buffer.resize((pixel_bb_width * pixel_bb_height) as usize, 0);
+            glyph.positioned(rusttype::point(0.0, 0.0)).draw(|x, y, v| {
+                let pos = (x + y * (pixel_bb_width as u32)) as usize;
+                image_buffer[pos] = (255.0 * v) as u8;
+            });
+            let texture = Texture::from_memory_alpha(&image_buffer,
+                                                     pixel_bb_width as u32,
+                                                     pixel_bb_height as u32,
+                                                     &TextureSettings::new())
                 .unwrap();
-            let bitmap = bitmap_glyph.bitmap();
-            let texture = Texture::from_memory_alpha(bitmap.buffer(),
-                                                     bitmap.width() as u32,
-                                                     bitmap.rows() as u32,
-                                                     &TextureSettings::new()).unwrap();
-            (
-                [bitmap_glyph.left() as f64, bitmap_glyph.top() as f64],
-                [(glyph.advance_x() >> 16) as f64, (glyph.advance_y() >> 16) as f64],
-                texture,
-            )
+            ([pixel_bounding_box.min.x as Scalar, -pixel_bounding_box.min.y as Scalar],
+             [h_metrics.advance_width as Scalar, 0 as Scalar],
+             texture)
         }
 
-        let face = &self.face;// necessary to borrow-check
-        self.data.entry((size, ch))
-                 .or_insert_with(|| create_character(face, size, ch) )
+        let font = &self.font;// necessary to borrow-check
+        self.data
+            .entry((size, ch))
+            .or_insert_with(|| create_character(font, size, ch))
     }
 
     /// Load all characters in the `chars` iterator for `size`
-    pub fn preload_chars<I>(
-        &mut self,
-        size: FontSize,
-        chars: I
-    )
-        where
-            I: Iterator<Item = char>
+    pub fn preload_chars<I>(&mut self, size: FontSize, chars: I)
+        where I: Iterator<Item = char>
     {
         for ch in chars {
             self.get(size, ch);
@@ -98,7 +110,7 @@ impl<'a> GlyphCache<'a> {
     /// Load all the printable ASCII characters for `size`. Includes space.
     pub fn preload_printable_ascii(&mut self, size: FontSize) {
         // [0x20, 0x7F) contains all printable ASCII characters ([' ', '~'])
-        self.preload_chars(size, (0x20u8 .. 0x7F).map(|ch| ch as char));
+        self.preload_chars(size, (0x20u8..0x7F).map(|ch| ch as char));
     }
 
     /// Return `ch` for `size` if it's already cached. Don't load.
@@ -108,7 +120,7 @@ impl<'a> GlyphCache<'a> {
             Character {
                 offset: offset,
                 size: size,
-                texture: texture
+                texture: texture,
             }
         })
     }
@@ -122,7 +134,7 @@ impl<'b> graphics::character::CharacterCache for GlyphCache<'b> {
         return Character {
             offset: offset,
             size: size,
-            texture: texture
-        }
+            texture: texture,
+        };
     }
 }

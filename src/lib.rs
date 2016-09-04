@@ -8,7 +8,7 @@ extern crate shaders_graphics2d as shaders;
 extern crate image;
 extern crate gl;
 extern crate graphics;
-extern crate freetype;
+extern crate rusttype;
 extern crate texture as texture_lib;
 
 pub use shader_version::OpenGL;
