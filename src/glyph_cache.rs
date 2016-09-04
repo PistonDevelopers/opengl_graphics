@@ -14,6 +14,7 @@ use std::fs::File;
 use error::Error;
 
 pub use graphics::types::FontSize;
+use graphics::character::CharacterCache;
 
 /// The type alias for font characters.
 pub type Character<'a> = graphics::character::Character<'a, Texture>;
@@ -57,53 +58,12 @@ impl<'a> GlyphCache<'a> {
         })
     }
 
-    /// Get a `Character` from cache, or load it if not there.
-    fn get(&mut self, size: FontSize, ch: char) -> &([Scalar; 2], [Scalar; 2], Texture) {
-        // Create a `Character` from a given `FontSize` and `char`.
-        fn create_character(font: &rusttype::Font,
-                            size: FontSize,
-                            ch: char)
-                            -> ([Scalar; 2], [Scalar; 2], Texture) {
-            let size = ((size as f32) * 1.333).round() as u32;
-            let glyph = font.glyph(ch).unwrap_or(font.glyph(rusttype::Codepoint(0))
-                .unwrap_or(font.glyph('\u{FFd}').unwrap()));
-            let glyph = glyph.scaled(rusttype::Scale::uniform(size as f32));
-            let h_metrics = glyph.h_metrics();
-            let pixel_bounding_box = glyph.exact_bounding_box().unwrap_or(rusttype::Rect {
-                min: rusttype::Point { x: 0.0, y: 0.0 },
-                max: rusttype::Point { x: 0.0, y: 0.0 },
-            });
-            let pixel_bb_width = pixel_bounding_box.width();
-            let pixel_bb_height = pixel_bounding_box.height();
-
-            let mut image_buffer = Vec::new();
-            image_buffer.resize((pixel_bb_width * pixel_bb_height) as usize, 0);
-            glyph.positioned(rusttype::point(0.0, 0.0)).draw(|x, y, v| {
-                let pos = (x + y * (pixel_bb_width as u32)) as usize;
-                image_buffer[pos] = (255.0 * v) as u8;
-            });
-            let texture = Texture::from_memory_alpha(&image_buffer,
-                                                     pixel_bb_width as u32,
-                                                     pixel_bb_height as u32,
-                                                     &TextureSettings::new())
-                .unwrap();
-            ([pixel_bounding_box.min.x as Scalar, -pixel_bounding_box.min.y as Scalar],
-             [h_metrics.advance_width as Scalar, 0 as Scalar],
-             texture)
-        }
-
-        let font = &self.font;// necessary to borrow-check
-        self.data
-            .entry((size, ch))
-            .or_insert_with(|| create_character(font, size, ch))
-    }
-
     /// Load all characters in the `chars` iterator for `size`
     pub fn preload_chars<I>(&mut self, size: FontSize, chars: I)
         where I: Iterator<Item = char>
     {
         for ch in chars {
-            self.get(size, ch);
+            self.character(size, ch);
         }
     }
 
@@ -126,15 +86,81 @@ impl<'a> GlyphCache<'a> {
     }
 }
 
-impl<'b> graphics::character::CharacterCache for GlyphCache<'b> {
+impl<'b> CharacterCache for GlyphCache<'b> {
     type Texture = Texture;
 
-    fn character<'a>(&'a mut self, size: FontSize, ch: char) -> Character<'a> {
-        let &(offset, size, ref texture) = self.get(size, ch);
-        return Character {
-            offset: offset,
-            size: size,
-            texture: texture,
-        };
+    fn character<'a>(
+        &'a mut self,
+        size: FontSize,
+        ch: char
+    ) -> Character<'a> {
+        use std::collections::hash_map::Entry;
+        use rusttype as rt;
+
+        let size = ((size as f32) * 1.333).round() as u32 ; // convert points to pixels
+
+        match self.data.entry((size, ch)) {
+            //returning `into_mut()' to get reference with 'a lifetime
+            Entry::Occupied(v) => {
+                let &mut (offset, size, ref texture) = v.into_mut();
+                Character {
+                    offset: offset,
+                    size: size,
+                    texture: texture
+                }
+            }
+            Entry::Vacant(v) => {
+                let glyph = self.font.glyph(ch).unwrap(); // this is only None for invalid GlyphIds, but char is converted to a Codepoint which must result in a glyph.
+                let scale = rt::Scale::uniform(size as f32);
+                let mut glyph = glyph.scaled(scale);
+
+                // some fonts do not contain glyph zero as fallback, instead try U+FFFD.
+                if glyph.id() == rt::GlyphId(0) && glyph.shape().is_none() {
+                    glyph = self.font.glyph('\u{FFFD}').unwrap().scaled(scale);
+                }
+
+                let h_metrics = glyph.h_metrics();
+                let bounding_box = glyph.exact_bounding_box().unwrap_or(rt::Rect{min: rt::Point{x: 0.0, y: 0.0}, max: rt::Point{x: 0.0, y: 0.0} });
+                let glyph = glyph.positioned(rt::point(0.0, 0.0));
+                let pixel_bounding_box = glyph.pixel_bounding_box().unwrap_or(rt::Rect{min: rt::Point{x: 0, y: 0}, max: rt::Point{x: 0, y: 0} });
+                let pixel_bb_width = pixel_bounding_box.width();
+                let pixel_bb_height = pixel_bounding_box.height();
+
+                let mut image_buffer = Vec::<u8>::new();
+                image_buffer.resize((pixel_bb_width * pixel_bb_height) as usize, 0);
+                glyph.draw(|x, y, v| {
+                   let pos = (x + y * (pixel_bb_width as u32)) as usize;
+                   image_buffer[pos] = (255.0 * v) as u8;
+                });
+
+                let &mut (offset, size, ref texture) = v.insert((
+                    [
+                        bounding_box.min.x as Scalar,
+                        -pixel_bounding_box.min.y as Scalar,
+                    ],
+                    [
+                        h_metrics.advance_width as Scalar,
+                        0 as Scalar,
+                    ],
+                    {
+                        if pixel_bb_width == 0 || pixel_bb_height == 0 {
+                            Texture::empty().unwrap()
+                        } else {
+                            Texture::from_memory_alpha(
+                                &image_buffer,
+                                pixel_bb_width as u32,
+                                pixel_bb_height as u32,
+                                &TextureSettings::new()
+                            ).unwrap()
+                        }
+                    },
+                ));
+                Character {
+                    offset: offset,
+                    size: size,
+                    texture: texture
+                }
+            }
+        }
     }
 }

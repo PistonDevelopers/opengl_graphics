@@ -84,6 +84,12 @@ impl Texture {
         self.id
     }
 
+    /// Returns empty texture.
+    pub fn empty() -> Result<Self, String> {
+        CreateTexture::create(&mut (), Format::Rgba8, &[0u8; 4], [1, 1],
+                              &TextureSettings::new())
+    }
+
     /// Loads image from memory, the format is 8-bit greyscale.
     pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32, settings: &TextureSettings) -> Result<Self, String> {
         let size = [width, height];
