@@ -165,9 +165,9 @@ pub fn compile_shader(
     }
 }
 
-/// Creates a vertex buffer for an attribute from a program.
+/// Finds attribute location from a program.
 ///
-/// Returns `None` if there is no attribute with such name.
+/// Returns `Err` if there is no attribute with such name.
 pub fn attribute_location(program: GLuint, name: &str) -> Result<GLuint, String> {
     unsafe {
         let c_name = match CString::new(name) {
@@ -183,3 +183,23 @@ pub fn attribute_location(program: GLuint, name: &str) -> Result<GLuint, String>
         }
     }
 }
+
+/// Finds uniform location from a program.
+///
+/// Returns `Err` if there is no uniform with such name.
+pub fn uniform_location(program: GLuint, name: &str) -> Result<GLuint, String> {
+    unsafe {
+        let c_name = match CString::new(name) {
+            Ok(x) => x,
+            Err(err) => return Err(format!("uniform_location: {}", err))
+        };
+        let id = gl::GetUniformLocation(program, c_name.as_ptr());
+        drop(c_name);
+        if id < 0 {
+            Err(format!("Uniform '{}' does not exists in shader", name))
+        } else {
+            Ok(id as GLuint)
+        }
+    }
+}
+
