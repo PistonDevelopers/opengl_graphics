@@ -73,7 +73,9 @@ impl Colored {
             gl::AttachShader(program, fragment_shader);
 
             let c_o_color = CString::new("o_Color").unwrap();
-            gl::BindFragDataLocation(program, 0, c_o_color.as_ptr());
+            if cfg!(not(target_os = "emscripten")) {
+                gl::BindFragDataLocation(program, 0, c_o_color.as_ptr());
+            }
             drop(c_o_color);
         }
 
@@ -159,7 +161,9 @@ impl Textured {
             gl::AttachShader(program, fragment_shader);
 
             let c_o_color = CString::new("o_Color").unwrap();
-            gl::BindFragDataLocation(program, 0, c_o_color.as_ptr());
+            if cfg!(not(target_os = "emscripten")) {
+                gl::BindFragDataLocation(program, 0, c_o_color.as_ptr());
+            }
             drop(c_o_color);
         }
 
