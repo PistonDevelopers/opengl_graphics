@@ -30,6 +30,15 @@ pub struct GlyphCache<'a> {
 }
 
 impl<'a> GlyphCache<'a> {
+    /// Constructs a GlyphCache from a Font.
+    pub fn from_font(font: rusttype::Font<'a>) -> Self {
+        let fnv = BuildHasherDefault::<FnvHasher>::default();
+        GlyphCache {
+            font: font,
+            data: HashMap::with_hasher(fnv),
+        }
+    }
+
     /// Constructor for a GlyphCache.
     pub fn new<P>(font: P) -> Result<GlyphCache<'static>, Error>
         where P: AsRef<Path>
@@ -49,13 +58,9 @@ impl<'a> GlyphCache<'a> {
 
     /// Creates a GlyphCache for a font stored in memory.
     pub fn from_bytes(font: &'a [u8]) -> Result<GlyphCache<'a>, Error> {
-        let fnv = BuildHasherDefault::<FnvHasher>::default();
         let collection = rusttype::FontCollection::from_bytes(font);
         let font = collection.into_font().unwrap();
-        Ok(GlyphCache {
-            font: font,
-            data: HashMap::with_hasher(fnv),
-        })
+        Ok(Self::from_font(font))
     }
 
     /// Load all characters in the `chars` iterator for `size`
