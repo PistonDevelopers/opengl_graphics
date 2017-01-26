@@ -1,13 +1,10 @@
 use gl;
 use gl::types::GLuint;
-use image::{ self, DynamicImage, RgbaImage };
+use image::{self, DynamicImage, RgbaImage};
 
 use std::path::Path;
 
-use {
-    ops, ImageSize, CreateTexture, UpdateTexture, TextureSettings,
-    Format, Filter
-};
+use {ops, ImageSize, CreateTexture, UpdateTexture, TextureSettings, Format, Filter};
 
 trait GlSettings {
     fn get_gl_mag(&self) -> gl::types::GLenum;
@@ -34,7 +31,7 @@ impl GlSettings for TextureSettings {
                 } else {
                     gl::LINEAR
                 }
-            },
+            }
             Filter::Nearest => {
                 if self.get_generate_mipmap() {
                     match self.get_mipmap() {
@@ -44,7 +41,7 @@ impl GlSettings for TextureSettings {
                 } else {
                     gl::NEAREST
                 }
-            },
+            }
         }
     }
 
@@ -86,30 +83,40 @@ impl Texture {
 
     /// Returns empty texture.
     pub fn empty() -> Result<Self, String> {
-        CreateTexture::create(&mut (), Format::Rgba8, &[0u8; 4], [1, 1],
+        CreateTexture::create(&mut (),
+                              Format::Rgba8,
+                              &[0u8; 4],
+                              [1, 1],
                               &TextureSettings::new())
     }
 
     /// Loads image from memory, the format is 8-bit greyscale.
-    pub fn from_memory_alpha(buf: &[u8], width: u32, height: u32, settings: &TextureSettings) -> Result<Self, String> {
+    pub fn from_memory_alpha(buf: &[u8],
+                             width: u32,
+                             height: u32,
+                             settings: &TextureSettings)
+                             -> Result<Self, String> {
         let size = [width, height];
         let buffer = ops::alpha_to_rgba8(buf, size);
         CreateTexture::create(&mut (), Format::Rgba8, &buffer, size, settings)
     }
 
     /// Loads image by relative file name to the asset root.
-    pub fn from_path<P>(path: P) -> Result<Self, String> where P: AsRef<Path> {
-		let path = path.as_ref();
+    pub fn from_path<P>(path: P) -> Result<Self, String>
+        where P: AsRef<Path>
+    {
+        let path = path.as_ref();
 
         let img = match image::open(path) {
             Ok(img) => img,
-            Err(e)  => return Err(format!("Could not load '{:?}': {:?}",
-                path.file_name().unwrap(), e)),
+            Err(e) => {
+                return Err(format!("Could not load '{:?}': {:?}", path.file_name().unwrap(), e))
+            }
         };
 
         let img = match img {
             DynamicImage::ImageRgba8(img) => img,
-            x => x.to_rgba()
+            x => x.to_rgba(),
         };
 
         Ok(Texture::from_image(&img, &TextureSettings::new()))
@@ -118,16 +125,14 @@ impl Texture {
     /// Creates a texture from image.
     pub fn from_image(img: &RgbaImage, settings: &TextureSettings) -> Self {
         let (width, height) = img.dimensions();
-        CreateTexture::create(&mut (), Format::Rgba8,
-                              img, [width, height], settings).unwrap()
+        CreateTexture::create(&mut (), Format::Rgba8, img, [width, height], settings).unwrap()
     }
 
     /// Updates image with a new one.
     pub fn update(&mut self, img: &RgbaImage) {
         let (width, height) = img.dimensions();
 
-        UpdateTexture::update(self, &mut (), Format::Rgba8,
-                              img, [0, 0], [width, height]).unwrap();
+        UpdateTexture::update(self, &mut (), Format::Rgba8, img, [0, 0], [width, height]).unwrap();
     }
 }
 
@@ -150,52 +155,37 @@ impl ImageSize for Texture {
 impl CreateTexture<()> for Texture {
     type Error = String;
 
-    fn create<S: Into<[u32; 2]>>(
-        _factory: &mut (),
-        _format: Format,
-        memory: &[u8],
-        size: S,
-        settings: &TextureSettings
-    ) -> Result<Self, Self::Error> {
+    fn create<S: Into<[u32; 2]>>(_factory: &mut (),
+                                 _format: Format,
+                                 memory: &[u8],
+                                 size: S,
+                                 settings: &TextureSettings)
+                                 -> Result<Self, Self::Error> {
         let size = size.into();
         let mut id: GLuint = 0;
         unsafe {
             gl::GenTextures(1, &mut id);
             gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                settings.get_gl_min() as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                settings.get_gl_mag() as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_WRAP_S,
-                gl::CLAMP_TO_EDGE as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_WRAP_T,
-                gl::CLAMP_TO_EDGE as i32
-            );
+            gl::TexParameteri(gl::TEXTURE_2D,
+                              gl::TEXTURE_MIN_FILTER,
+                              settings.get_gl_min() as i32);
+            gl::TexParameteri(gl::TEXTURE_2D,
+                              gl::TEXTURE_MAG_FILTER,
+                              settings.get_gl_mag() as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
             if settings.get_generate_mipmap() {
                 gl::GenerateMipmap(gl::TEXTURE_2D);
             }
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                size[0] as i32,
-                size[1] as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                memory.as_ptr() as *const _
-            );
+            gl::TexImage2D(gl::TEXTURE_2D,
+                           0,
+                           gl::RGBA as i32,
+                           size[0] as i32,
+                           size[1] as i32,
+                           0,
+                           gl::RGBA,
+                           gl::UNSIGNED_BYTE,
+                           memory.as_ptr() as *const _);
         }
 
         Ok(Texture::new(id, size[0], size[1]))
@@ -205,29 +195,26 @@ impl CreateTexture<()> for Texture {
 impl UpdateTexture<()> for Texture {
     type Error = String;
 
-    fn update<O: Into<[u32; 2]>, S: Into<[u32; 2]>>(
-        &mut self,
-        _factory: &mut (),
-        _format: Format,
-        memory: &[u8],
-        offset: O,
-        size: S
-    ) -> Result<(), Self::Error> {
+    fn update<O: Into<[u32; 2]>, S: Into<[u32; 2]>>(&mut self,
+                                                    _factory: &mut (),
+                                                    _format: Format,
+                                                    memory: &[u8],
+                                                    offset: O,
+                                                    size: S)
+                                                    -> Result<(), Self::Error> {
         let offset = offset.into();
         let size = size.into();
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
-            gl::TexSubImage2D(
-                gl::TEXTURE_2D,
-                0,
-                offset[0] as i32,
-                offset[1] as i32,
-                size[0] as i32,
-                size[1] as i32,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                memory.as_ptr() as *const _
-            );
+            gl::TexSubImage2D(gl::TEXTURE_2D,
+                              0,
+                              offset[0] as i32,
+                              offset[1] as i32,
+                              size[0] as i32,
+                              size[1] as i32,
+                              gl::RGBA,
+                              gl::UNSIGNED_BYTE,
+                              memory.as_ptr() as *const _);
         }
 
         Ok(())

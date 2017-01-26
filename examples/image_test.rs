@@ -12,11 +12,7 @@ use sdl2_window::Sdl2Window;
 
 fn main() {
     let opengl = OpenGL::V3_2;
-    let mut window: Sdl2Window =
-        WindowSettings::new(
-            "opengl_graphics: image_test",
-            [300, 300]
-        )
+    let mut window: Sdl2Window = WindowSettings::new("opengl_graphics: image_test", [300, 300])
         .exit_on_esc(true)
         .opengl(opengl)
         .build()
@@ -34,15 +30,9 @@ fn main() {
 
                 clear([1.0; 4], g);
                 Rectangle::new([1.0, 0.0, 0.0, 1.0])
-                    .draw([0.0, 0.0, 100.0, 100.0],
-                          &c.draw_state,
-                          c.transform,
-                          g);
+                    .draw([0.0, 0.0, 100.0, 100.0], &c.draw_state, c.transform, g);
                 Rectangle::new([0.0, 1.0, 0.0, 0.3])
-                    .draw([50.0, 50.0, 100.0, 100.0],
-                          &c.draw_state,
-                          c.transform,
-                          g);
+                    .draw([50.0, 50.0, 100.0, 100.0], &c.draw_state, c.transform, g);
                 image(&rust_logo, transform, g);
             });
         }
