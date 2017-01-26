@@ -12,11 +12,7 @@ use sdl2_window::Sdl2Window;
 
 fn main() {
     let opengl = OpenGL::V3_2;
-    let mut window: Sdl2Window =
-        WindowSettings::new(
-            "opengl_graphics: hello_world",
-            [200, 200]
-        )
+    let mut window: Sdl2Window = WindowSettings::new("opengl_graphics: hello_world", [200, 200])
         .exit_on_esc(true)
         .opengl(opengl)
         .build()
@@ -33,12 +29,8 @@ fn main() {
                 let transform = c.transform.trans(10.0, 100.0);
 
                 clear([0.0, 0.0, 0.0, 1.0], g);
-                text::Text::new_color([0.0, 1.0, 0.0, 1.0], 32).draw(
-                    "Hello world!",
-                    &mut glyphs,
-                    &c.draw_state,
-                    transform, g
-                );
+                text::Text::new_color([0.0, 1.0, 0.0, 1.0], 32)
+                    .draw("Hello world!", &mut glyphs, &c.draw_state, transform, g);
             });
         }
     }

@@ -2,25 +2,18 @@
 
 // External crates.
 use std::ffi::CString;
-use shader_version::{ OpenGL, Shaders };
+use shader_version::{OpenGL, Shaders};
 use shader_version::glsl::GLSL;
-use graphics::{ Context, DrawState, Graphics, Viewport };
+use graphics::{Context, DrawState, Graphics, Viewport};
 use graphics::color::gamma_srgb_to_linear;
 use graphics::BACK_END_MAX_VERTEX_COUNT as BUFFER_SIZE;
 use gl;
-use gl::types::{
-    GLint,
-    GLsizei,
-    GLuint,
-};
+use gl::types::{GLint, GLsizei, GLuint};
 
 // Local crate.
 use draw_state;
 use Texture;
-use shader_utils::{
-    compile_shader,
-    DynamicAttribute,
-};
+use shader_utils::{compile_shader, DynamicAttribute};
 
 struct Colored {
     vao: GLuint,
@@ -50,38 +43,40 @@ impl Colored {
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
 
         let vertex_shader = match if cfg!(target_os = "emscripten") {
-                compile_shader(gl::VERTEX_SHADER,
-                    Shaders::new()
-                        .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120_WEBGL))
-                        .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE_WEBGL))
-                        .get(glsl).unwrap())
-            } else {
-                compile_shader(gl::VERTEX_SHADER,
-                    Shaders::new()
-                        .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120))
-                        .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE))
-                        .get(glsl).unwrap())
-            }
-        {
+            compile_shader(gl::VERTEX_SHADER,
+                           Shaders::new()
+                               .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120_WEBGL))
+                               .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE_WEBGL))
+                               .get(glsl)
+                               .unwrap())
+        } else {
+            compile_shader(gl::VERTEX_SHADER,
+                           Shaders::new()
+                               .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120))
+                               .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE))
+                               .get(glsl)
+                               .unwrap())
+        } {
             Ok(id) => id,
-            Err(s) => panic!("compile_shader: {}", s)
+            Err(s) => panic!("compile_shader: {}", s),
         };
         let fragment_shader = match if cfg!(target_os = "emscripten") {
-                compile_shader(gl::FRAGMENT_SHADER,
-                    Shaders::new()
-                        .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120_WEBGL))
-                        .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE_WEBGL))
-                        .get(glsl).unwrap())
-            } else {
-                compile_shader(gl::FRAGMENT_SHADER,
-                    Shaders::new()
-                        .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120))
-                        .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE))
-                        .get(glsl).unwrap())
-            }
-        {
+            compile_shader(gl::FRAGMENT_SHADER,
+                           Shaders::new()
+                               .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120_WEBGL))
+                               .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE_WEBGL))
+                               .get(glsl)
+                               .unwrap())
+        } else {
+            compile_shader(gl::FRAGMENT_SHADER,
+                           Shaders::new()
+                               .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120))
+                               .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE))
+                               .get(glsl)
+                               .unwrap())
+        } {
             Ok(id) => id,
-            Err(s) => panic!("compile_shader: {}", s)
+            Err(s) => panic!("compile_shader: {}", s),
         };
 
         let program;
@@ -102,16 +97,8 @@ impl Colored {
             gl::GenVertexArrays(1, &mut vao);
             gl::LinkProgram(program);
         }
-        let pos = DynamicAttribute::xy(
-                program,
-                "pos",
-                vao
-            ).unwrap();
-        let color = DynamicAttribute::rgba(
-                program,
-                "color",
-                vao
-            ).unwrap();
+        let pos = DynamicAttribute::xy(program, "pos", vao).unwrap();
+        let color = DynamicAttribute::rgba(program, "color", vao).unwrap();
         Colored {
             vao: vao,
             vertex_shader: vertex_shader,
@@ -152,38 +139,40 @@ impl Textured {
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
 
         let vertex_shader = match if cfg!(target_os = "emscripten") {
-                compile_shader(gl::VERTEX_SHADER,
-                    Shaders::new()
-                        .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120_WEBGL))
-                        .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE_WEBGL))
-                        .get(glsl).unwrap())
-            } else {
-                compile_shader(gl::VERTEX_SHADER,
-                    Shaders::new()
-                        .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120))
-                        .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE))
-                        .get(glsl).unwrap())
-            }
-        {
+            compile_shader(gl::VERTEX_SHADER,
+                           Shaders::new()
+                               .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120_WEBGL))
+                               .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE_WEBGL))
+                               .get(glsl)
+                               .unwrap())
+        } else {
+            compile_shader(gl::VERTEX_SHADER,
+                           Shaders::new()
+                               .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120))
+                               .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE))
+                               .get(glsl)
+                               .unwrap())
+        } {
             Ok(id) => id,
-            Err(s) => panic!("compile_shader: {}", s)
+            Err(s) => panic!("compile_shader: {}", s),
         };
         let fragment_shader = match if cfg!(target_os = "emscripten") {
-                compile_shader(gl::FRAGMENT_SHADER,
-                    Shaders::new()
-                        .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120_WEBGL))
-                        .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE_WEBGL))
-                        .get(glsl).unwrap())
-            } else {
-                compile_shader(gl::FRAGMENT_SHADER,
-                    Shaders::new()
-                        .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120))
-                        .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE))
-                        .get(glsl).unwrap())
-            }
-        {
+            compile_shader(gl::FRAGMENT_SHADER,
+                           Shaders::new()
+                               .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120_WEBGL))
+                               .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE_WEBGL))
+                               .get(glsl)
+                               .unwrap())
+        } else {
+            compile_shader(gl::FRAGMENT_SHADER,
+                           Shaders::new()
+                               .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120))
+                               .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE))
+                               .get(glsl)
+                               .unwrap())
+        } {
             Ok(id) => id,
-            Err(s) => panic!("compile_shader: {}", s)
+            Err(s) => panic!("compile_shader: {}", s),
         };
 
         let program;
@@ -204,24 +193,14 @@ impl Textured {
             gl::GenVertexArrays(1, &mut vao);
             gl::LinkProgram(program);
         }
-        let pos = DynamicAttribute::xy(
-                program,
-                "pos",
-                vao
-            ).unwrap();
+        let pos = DynamicAttribute::xy(program, "pos", vao).unwrap();
         let c_color = CString::new("color").unwrap();
-        let color = unsafe {
-                gl::GetUniformLocation(program, c_color.as_ptr())
-            };
+        let color = unsafe { gl::GetUniformLocation(program, c_color.as_ptr()) };
         drop(c_color);
         if color == -1 {
             panic!("Could not find uniform `color`");
         }
-        let uv = DynamicAttribute::uv(
-                program,
-                "uv",
-                vao
-            ).unwrap();
+        let uv = DynamicAttribute::uv(program, "uv", vao).unwrap();
         Textured {
             vao: vao,
             vertex_shader: vertex_shader,
@@ -267,17 +246,11 @@ impl<'a> GlGraphics {
             textured: Textured::new(glsl),
             current_program: None,
             current_draw_state: None,
-       }
+        }
     }
 
     /// Sets viewport with normalized coordinates and center as origin.
-    pub fn viewport(
-        &mut self,
-        x: i32,
-        y: i32,
-        w: i32,
-        h: i32
-    ) {
+    pub fn viewport(&mut self, x: i32, y: i32, w: i32, h: i32) {
         unsafe {
             gl::Viewport(x as GLint, y as GLint, w as GLsizei, h as GLsizei);
         }
@@ -286,10 +259,12 @@ impl<'a> GlGraphics {
     /// Sets the current program only if the program is not in use.
     pub fn use_program(&mut self, program: GLuint) {
         match self.current_program {
-            None => {},
+            None => {}
             Some(current_program) => {
-                if program == current_program { return }
-            },
+                if program == current_program {
+                    return;
+                }
+            }
         }
 
         unsafe {
@@ -329,20 +304,23 @@ impl<'a> GlGraphics {
 
     /// Draws graphics.
     pub fn draw<F, U>(&mut self, viewport: Viewport, f: F) -> U
-        where
-            F: FnOnce(Context, &mut Self) -> U
+        where F: FnOnce(Context, &mut Self) -> U
     {
         let rect = viewport.rect;
         let (x, y, w, h) = (rect[0], rect[1], rect[2], rect[3]);
         self.viewport(x, y, w, h);
         self.clear_program();
-        unsafe { gl::Enable(gl::FRAMEBUFFER_SRGB); }
+        unsafe {
+            gl::Enable(gl::FRAMEBUFFER_SRGB);
+        }
         let c = Context::new_viewport(viewport);
         f(c, self)
     }
 
     /// Assume all textures has alpha channel for now.
-    pub fn has_texture_alpha(&self, _texture: &Texture) -> bool { true }
+    pub fn has_texture_alpha(&self, _texture: &Texture) -> bool {
+        true
+    }
 }
 
 impl Graphics for GlGraphics {
@@ -363,12 +341,7 @@ impl Graphics for GlGraphics {
         }
     }
 
-    fn tri_list<F>(
-        &mut self,
-        draw_state: &DrawState,
-        color: &[f32; 4],
-        mut f: F
-    )
+    fn tri_list<F>(&mut self, draw_state: &DrawState, color: &[f32; 4], mut f: F)
         where F: FnMut(&mut FnMut(&[f32]))
     {
         let color = gamma_srgb_to_linear(*color);
@@ -405,13 +378,11 @@ impl Graphics for GlGraphics {
         }
     }
 
-    fn tri_list_uv<F>(
-        &mut self,
-        draw_state: &DrawState,
-        color: &[f32; 4],
-        texture: &Texture,
-        mut f: F
-    )
+    fn tri_list_uv<F>(&mut self,
+                      draw_state: &DrawState,
+                      color: &[f32; 4],
+                      texture: &Texture,
+                      mut f: F)
         where F: FnMut(&mut FnMut(&[f32], &[f32]))
     {
         let color = gamma_srgb_to_linear(*color);

@@ -94,15 +94,11 @@ impl<'a> GlyphCache<'a> {
 impl<'b> CharacterCache for GlyphCache<'b> {
     type Texture = Texture;
 
-    fn character<'a>(
-        &'a mut self,
-        size: FontSize,
-        ch: char
-    ) -> Character<'a> {
+    fn character<'a>(&'a mut self, size: FontSize, ch: char) -> Character<'a> {
         use std::collections::hash_map::Entry;
         use rusttype as rt;
 
-        let size = ((size as f32) * 1.333).round() as u32 ; // convert points to pixels
+        let size = ((size as f32) * 1.333).round() as u32; // convert points to pixels
 
         match self.data.entry((size, ch)) {
             //returning `into_mut()' to get reference with 'a lifetime
@@ -111,11 +107,13 @@ impl<'b> CharacterCache for GlyphCache<'b> {
                 Character {
                     offset: offset,
                     size: size,
-                    texture: texture
+                    texture: texture,
                 }
             }
             Entry::Vacant(v) => {
-                let glyph = self.font.glyph(ch).unwrap(); // this is only None for invalid GlyphIds, but char is converted to a Codepoint which must result in a glyph.
+                // this is only None for invalid GlyphIds,
+                // but char is converted to a Codepoint which must result in a glyph.
+                let glyph = self.font.glyph(ch).unwrap();
                 let scale = rt::Scale::uniform(size as f32);
                 let mut glyph = glyph.scaled(scale);
 
@@ -125,45 +123,44 @@ impl<'b> CharacterCache for GlyphCache<'b> {
                 }
 
                 let h_metrics = glyph.h_metrics();
-                let bounding_box = glyph.exact_bounding_box().unwrap_or(rt::Rect{min: rt::Point{x: 0.0, y: 0.0}, max: rt::Point{x: 0.0, y: 0.0} });
+                let bounding_box = glyph.exact_bounding_box().unwrap_or(rt::Rect {
+                    min: rt::Point { x: 0.0, y: 0.0 },
+                    max: rt::Point { x: 0.0, y: 0.0 },
+                });
                 let glyph = glyph.positioned(rt::point(0.0, 0.0));
-                let pixel_bounding_box = glyph.pixel_bounding_box().unwrap_or(rt::Rect{min: rt::Point{x: 0, y: 0}, max: rt::Point{x: 0, y: 0} });
+                let pixel_bounding_box = glyph.pixel_bounding_box().unwrap_or(rt::Rect {
+                    min: rt::Point { x: 0, y: 0 },
+                    max: rt::Point { x: 0, y: 0 },
+                });
                 let pixel_bb_width = pixel_bounding_box.width() + 2;
                 let pixel_bb_height = pixel_bounding_box.height() + 2;
 
                 let mut image_buffer = Vec::<u8>::new();
                 image_buffer.resize((pixel_bb_width * pixel_bb_height) as usize, 0);
                 glyph.draw(|x, y, v| {
-                   let pos = ((x+1) + (y+1) * (pixel_bb_width as u32)) as usize;
-                   image_buffer[pos] = (255.0 * v) as u8;
+                    let pos = ((x + 1) + (y + 1) * (pixel_bb_width as u32)) as usize;
+                    image_buffer[pos] = (255.0 * v) as u8;
                 });
 
-                let &mut (offset, size, ref texture) = v.insert((
-                    [
-                        bounding_box.min.x as Scalar - 1.0,
-                        -pixel_bounding_box.min.y as Scalar + 1.0,
-                    ],
-                    [
-                        h_metrics.advance_width as Scalar,
-                        0 as Scalar,
-                    ],
-                    {
-                        if pixel_bb_width == 0 || pixel_bb_height == 0 {
-                            Texture::empty().unwrap()
-                        } else {
-                            Texture::from_memory_alpha(
-                                &image_buffer,
-                                pixel_bb_width as u32,
-                                pixel_bb_height as u32,
-                                &TextureSettings::new()
-                            ).unwrap()
-                        }
-                    },
-                ));
+                let &mut (offset, size, ref texture) =
+                    v.insert(([bounding_box.min.x as Scalar - 1.0,
+                               -pixel_bounding_box.min.y as Scalar + 1.0],
+                              [h_metrics.advance_width as Scalar, 0 as Scalar],
+                              {
+                                  if pixel_bb_width == 0 || pixel_bb_height == 0 {
+                                      Texture::empty().unwrap()
+                                  } else {
+                                      Texture::from_memory_alpha(&image_buffer,
+                                                                 pixel_bb_width as u32,
+                                                                 pixel_bb_height as u32,
+                                                                 &TextureSettings::new())
+                                          .unwrap()
+                                  }
+                              }));
                 Character {
                     offset: offset,
                     size: size,
-                    texture: texture
+                    texture: texture,
                 }
             }
         }

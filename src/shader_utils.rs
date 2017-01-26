@@ -2,16 +2,9 @@
 
 // External crates.
 use gl;
-use gl::types::{
-    GLboolean,
-    GLchar,
-    GLenum,
-    GLint,
-    GLsizeiptr,
-    GLuint,
-};
+use gl::types::{GLboolean, GLchar, GLenum, GLint, GLsizeiptr, GLuint};
 use std::ffi::CString;
-use std::{ ptr, mem };
+use std::{ptr, mem};
 
 /// Describes a shader attribute.
 pub struct DynamicAttribute {
@@ -44,37 +37,34 @@ impl DynamicAttribute {
         unsafe {
             gl::BindVertexArray(vao);
             gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
-            gl::VertexAttribPointer(
-                self.location,
-                self.size,
-                self.ty,
-                self.normalize,
-                stride,
-                ptr::null()
-            );
+            gl::VertexAttribPointer(self.location,
+                                    self.size,
+                                    self.ty,
+                                    self.normalize,
+                                    stride,
+                                    ptr::null());
         }
     }
 
-    fn new(
-        program: GLuint,
-        name: &str,
-        size: i32,
-        normalize: GLboolean,
-        ty: GLenum,
-        vao: GLuint
-    ) -> Result<Self, String> {
+    fn new(program: GLuint,
+           name: &str,
+           size: i32,
+           normalize: GLboolean,
+           ty: GLenum,
+           vao: GLuint)
+           -> Result<Self, String> {
         let location = try!(attribute_location(program, name));
         let mut vbo = 0;
         unsafe {
             gl::GenBuffers(1, &mut vbo);
         }
         let res = DynamicAttribute {
-                vbo: vbo,
-                size: size,
-                location: location,
-                normalize: normalize,
-                ty: ty,
-            };
+            vbo: vbo,
+            size: size,
+            location: location,
+            normalize: normalize,
+            ty: ty,
+        };
         res.bind_vao(vao);
         Ok(res)
     }
@@ -108,27 +98,22 @@ impl DynamicAttribute {
     pub unsafe fn set<T>(&self, data: &[T]) {
         gl::EnableVertexAttribArray(self.location);
         gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
-        gl::BufferData(
-            gl::ARRAY_BUFFER,
-            data.len() as GLsizeiptr * mem::size_of::<T>() as GLsizeiptr,
-            mem::transmute(data.as_ptr()),
-            gl::DYNAMIC_DRAW
-        );
+        gl::BufferData(gl::ARRAY_BUFFER,
+                       data.len() as GLsizeiptr * mem::size_of::<T>() as GLsizeiptr,
+                       mem::transmute(data.as_ptr()),
+                       gl::DYNAMIC_DRAW);
     }
 }
 
 /// Compiles a shader.
 ///
 /// Returns a shader or a message with the error.
-pub fn compile_shader(
-    shader_type: GLenum,
-    source: &str
-) -> Result<GLuint, String> {
+pub fn compile_shader(shader_type: GLenum, source: &str) -> Result<GLuint, String> {
     unsafe {
         let shader = gl::CreateShader(shader_type);
         let c_source = match CString::new(source) {
             Ok(x) => x,
-            Err(err) => return Err(format!("compile_shader: {}", err))
+            Err(err) => return Err(format!("compile_shader: {}", err)),
         };
         gl::ShaderSource(shader, 1, &c_source.as_ptr(), ptr::null());
         drop(source);
@@ -144,22 +129,19 @@ pub fn compile_shader(
             if len == 0 {
                 Err("Compilation failed with no log. \
                      The OpenGL context might have been created on another thread, \
-                     or not have been created.".to_string())
+                     or not have been created."
+                    .to_string())
             } else {
                 // Subtract 1 to skip the trailing null character.
                 let mut buf = vec![0; len as usize - 1];
-                gl::GetShaderInfoLog(
-                    shader,
-                    len,
-                    ptr::null_mut(),
-                    buf.as_mut_ptr() as *mut GLchar
-                );
+                gl::GetShaderInfoLog(shader,
+                                     len,
+                                     ptr::null_mut(),
+                                     buf.as_mut_ptr() as *mut GLchar);
 
                 gl::DeleteShader(shader);
 
-                Err(String::from_utf8(buf).ok().expect(
-                    "ShaderInfoLog not valid utf8"
-                ))
+                Err(String::from_utf8(buf).ok().expect("ShaderInfoLog not valid utf8"))
             }
         }
     }
@@ -172,7 +154,7 @@ pub fn attribute_location(program: GLuint, name: &str) -> Result<GLuint, String>
     unsafe {
         let c_name = match CString::new(name) {
             Ok(x) => x,
-            Err(err) => return Err(format!("attribute_location: {}", err))
+            Err(err) => return Err(format!("attribute_location: {}", err)),
         };
         let id = gl::GetAttribLocation(program, c_name.as_ptr());
         drop(c_name);
@@ -191,7 +173,7 @@ pub fn uniform_location(program: GLuint, name: &str) -> Result<GLuint, String> {
     unsafe {
         let c_name = match CString::new(name) {
             Ok(x) => x,
-            Err(err) => return Err(format!("uniform_location: {}", err))
+            Err(err) => return Err(format!("uniform_location: {}", err)),
         };
         let id = gl::GetUniformLocation(program, c_name.as_ptr());
         drop(c_name);
@@ -202,4 +184,3 @@ pub fn uniform_location(program: GLuint, name: &str) -> Result<GLuint, String> {
         }
     }
 }
-

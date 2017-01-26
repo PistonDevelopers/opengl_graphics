@@ -5,11 +5,11 @@ extern crate piston;
 extern crate sdl2_window;
 
 use std::path::Path;
-use opengl_graphics::{ GlGraphics, Texture };
+use opengl_graphics::{GlGraphics, Texture};
 use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
-use sdl2_window::{ Sdl2Window, OpenGL };
+use sdl2_window::{Sdl2Window, OpenGL};
 use graphics::draw_state::Blend;
 
 fn main() {
@@ -18,9 +18,10 @@ fn main() {
 
     let opengl = OpenGL::V3_2;
     let (w, h) = (640, 480);
-    let mut window: Sdl2Window =
-        WindowSettings::new("opengl_graphics: draw_state", [w, h])
-        .exit_on_esc(true).build().unwrap();
+    let mut window: Sdl2Window = WindowSettings::new("opengl_graphics: draw_state", [w, h])
+        .exit_on_esc(true)
+        .build()
+        .unwrap();
 
     let mut clip_inside = true;
     let blends = [Blend::Alpha, Blend::Add, Blend::Invert, Blend::Multiply];
@@ -54,9 +55,13 @@ fn main() {
                 Ellipse::new([1.0, 0.0, 0.0, 1.0])
                     .draw([0.0, 0.0, 50.0, 50.0], &DrawState::new_clip(), transform, g);
                 Image::new().draw(&rust_logo,
-                    &if clip_inside { DrawState::new_inside() }
-                    else { DrawState::new_outside() },
-                    transform, g);
+                                  &if clip_inside {
+                                      DrawState::new_inside()
+                                  } else {
+                                      DrawState::new_outside()
+                                  },
+                                  transform,
+                                  g);
             });
         }
 

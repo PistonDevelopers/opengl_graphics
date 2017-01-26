@@ -15,15 +15,13 @@ pub fn bind_state(old_state: &DrawState, new_state: &DrawState) {
 
 pub fn bind_scissor(rect: Option<[u32; 4]>) {
     match rect {
-        Some(r) => { unsafe {
+        Some(r) => unsafe {
             gl::Enable(gl::SCISSOR_TEST);
-            gl::Scissor(
-                r[0] as gl::types::GLint,
-                r[1] as gl::types::GLint,
-                r[2] as gl::types::GLint,
-                r[3] as gl::types::GLint
-            );
-        }},
+            gl::Scissor(r[0] as gl::types::GLint,
+                        r[1] as gl::types::GLint,
+                        r[2] as gl::types::GLint,
+                        r[3] as gl::types::GLint);
+        },
         None => unsafe { gl::Disable(gl::SCISSOR_TEST) },
     }
 }
@@ -97,42 +95,25 @@ pub fn bind_blend(blend: Option<Blend>) {
                 match b {
                     Blend::Alpha => {
                         gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
-                        gl::BlendFuncSeparate(
-                            gl::SRC_ALPHA,
-                            gl::ONE_MINUS_SRC_ALPHA,
-                            gl::ONE,
-                            gl::ONE
-                        );
+                        gl::BlendFuncSeparate(gl::SRC_ALPHA,
+                                              gl::ONE_MINUS_SRC_ALPHA,
+                                              gl::ONE,
+                                              gl::ONE);
                     }
                     Blend::Add => {
                         gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
-                        gl::BlendFuncSeparate(
-                            gl::ONE,
-                            gl::ONE,
-                            gl::ONE,
-                            gl::ONE
-                        );
+                        gl::BlendFuncSeparate(gl::ONE, gl::ONE, gl::ONE, gl::ONE);
                     }
                     Blend::Multiply => {
                         gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
-                        gl::BlendFuncSeparate(
-                            gl::DST_COLOR,
-                            gl::ZERO,
-                            gl::DST_ALPHA,
-                            gl::ZERO
-                        );
+                        gl::BlendFuncSeparate(gl::DST_COLOR, gl::ZERO, gl::DST_ALPHA, gl::ZERO);
                     }
                     Blend::Invert => {
                         gl::BlendEquationSeparate(gl::FUNC_SUBTRACT, gl::FUNC_ADD);
-                        gl::BlendFuncSeparate(
-                            gl::CONSTANT_COLOR,
-                            gl::SRC_COLOR,
-                            gl::ZERO,
-                            gl::ONE
-                        );
+                        gl::BlendFuncSeparate(gl::CONSTANT_COLOR, gl::SRC_COLOR, gl::ZERO, gl::ONE);
                     }
                 }
-            },
+            }
             None => gl::Disable(gl::BLEND),
         }
     }
