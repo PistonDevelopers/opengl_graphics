@@ -49,21 +49,37 @@ impl Colored {
 
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
 
-        let vertex_shader = match compile_shader(
-            gl::VERTEX_SHADER,                  // shader type
-            Shaders::new().set(GLSL::V1_20, src(colored::VERTEX_GLSL_120))
-                          .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE))
-                          .get(glsl).unwrap()
-        ) {
+        let vertex_shader = match if cfg!(target_os = "emscripten") {
+                compile_shader(gl::VERTEX_SHADER,
+                    Shaders::new()
+                        .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120_WEBGL))
+                        .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE_WEBGL))
+                        .get(glsl).unwrap())
+            } else {
+                compile_shader(gl::VERTEX_SHADER,
+                    Shaders::new()
+                        .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120))
+                        .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE))
+                        .get(glsl).unwrap())
+            }
+        {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
         };
-        let fragment_shader = match compile_shader(
-            gl::FRAGMENT_SHADER,                // shader type
-            Shaders::new().set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120))
-                          .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE))
-                          .get(glsl).unwrap()
-        ) {
+        let fragment_shader = match if cfg!(target_os = "emscripten") {
+                compile_shader(gl::FRAGMENT_SHADER,
+                    Shaders::new()
+                        .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120_WEBGL))
+                        .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE_WEBGL))
+                        .get(glsl).unwrap())
+            } else {
+                compile_shader(gl::FRAGMENT_SHADER,
+                    Shaders::new()
+                        .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120))
+                        .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE))
+                        .get(glsl).unwrap())
+            }
+        {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
         };
@@ -135,21 +151,37 @@ impl Textured {
 
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
 
-        let vertex_shader = match compile_shader(
-            gl::VERTEX_SHADER,                  // shader type
-            Shaders::new().set(GLSL::V1_20, src(textured::VERTEX_GLSL_120))
-                          .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE))
-                          .get(glsl).unwrap()
-        ) {
+        let vertex_shader = match if cfg!(target_os = "emscripten") {
+                compile_shader(gl::VERTEX_SHADER,
+                    Shaders::new()
+                        .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120_WEBGL))
+                        .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE_WEBGL))
+                        .get(glsl).unwrap())
+            } else {
+                compile_shader(gl::VERTEX_SHADER,
+                    Shaders::new()
+                        .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120))
+                        .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE))
+                        .get(glsl).unwrap())
+            }
+        {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
         };
-        let fragment_shader = match compile_shader(
-            gl::FRAGMENT_SHADER,                // shader type
-            Shaders::new().set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120))
-                          .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE))
-                          .get(glsl).unwrap()
-        ) {
+        let fragment_shader = match if cfg!(target_os = "emscripten") {
+                compile_shader(gl::FRAGMENT_SHADER,
+                    Shaders::new()
+                        .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120_WEBGL))
+                        .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE_WEBGL))
+                        .get(glsl).unwrap())
+            } else {
+                compile_shader(gl::FRAGMENT_SHADER,
+                    Shaders::new()
+                        .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120))
+                        .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE))
+                        .get(glsl).unwrap())
+            }
+        {
             Ok(id) => id,
             Err(s) => panic!("compile_shader: {}", s)
         };
