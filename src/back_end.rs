@@ -6,6 +6,7 @@ use shader_version::{ OpenGL, Shaders };
 use shader_version::glsl::GLSL;
 use graphics::{ Context, DrawState, Graphics, Viewport };
 use graphics::color::gamma_srgb_to_linear;
+use graphics::BACK_END_MAX_VERTEX_COUNT as BUFFER_SIZE;
 use gl;
 use gl::types::{
     GLint,
@@ -27,7 +28,8 @@ struct Colored {
     fragment_shader: GLuint,
     program: GLuint,
     pos: DynamicAttribute,
-    color: GLint,
+    color: DynamicAttribute,
+    color_buffer: [[f32; 4]; BUFFER_SIZE],
 }
 
 impl Drop for Colored {
@@ -89,14 +91,11 @@ impl Colored {
                 "pos",
                 vao
             ).unwrap();
-        let c_color = CString::new("color").unwrap();
-        let color = unsafe {
-                gl::GetUniformLocation(program, c_color.as_ptr())
-            };
-        drop(c_color);
-        if color == -1 {
-            panic!("Could not find uniform `color`");
-        }
+        let color = DynamicAttribute::rgba(
+                program,
+                "color",
+                vao
+            ).unwrap();
         Colored {
             vao: vao,
             vertex_shader: vertex_shader,
@@ -104,6 +103,7 @@ impl Colored {
             program: program,
             pos: pos,
             color: color,
+            color_buffer: [[0.0; 4]; BUFFER_SIZE],
         }
     }
 }
@@ -350,10 +350,11 @@ impl Graphics for GlGraphics {
 
         unsafe {
             gl::BindVertexArray(shader.vao);
-            gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
             // Render triangles whether they are facing
             // clockwise or counter clockwise.
             gl::Disable(gl::CULL_FACE);
+            shader.color_buffer = [color; BUFFER_SIZE];
+            shader.color.set(&shader.color_buffer);
         }
 
         f(&mut |vertices: &[f32]| {
