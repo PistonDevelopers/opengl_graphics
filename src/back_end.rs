@@ -15,6 +15,11 @@ use draw_state;
 use Texture;
 use shader_utils::{compile_shader, DynamicAttribute};
 
+// The number of chunks to fill up before rendering.
+// Amount of memory used: `BUFFER_SIZE * CHUNKS * 4 * (2 + 4)`
+// `4` for bytes per f32, and `2 + 4` for position and color.
+const CHUNKS: usize = 100;
+
 struct Colored {
     vao: GLuint,
     vertex_shader: GLuint,
@@ -22,7 +27,9 @@ struct Colored {
     program: GLuint,
     pos: DynamicAttribute,
     color: DynamicAttribute,
-    color_buffer: [[f32; 4]; BUFFER_SIZE],
+    pos_buffer: Vec<[f32; 2]>,
+    color_buffer: Vec<[f32; 4]>,
+    offset: usize,
 }
 
 impl Drop for Colored {
@@ -106,8 +113,25 @@ impl Colored {
             program: program,
             pos: pos,
             color: color,
-            color_buffer: [[0.0; 4]; BUFFER_SIZE],
+            pos_buffer: vec![[0.0; 2]; CHUNKS * BUFFER_SIZE],
+            color_buffer: vec![[0.0; 4]; CHUNKS * BUFFER_SIZE],
+            offset: 0,
         }
+    }
+
+    fn flush(&mut self) {
+        unsafe {
+            gl::BindVertexArray(self.vao);
+            // Render triangles whether they are facing
+            // clockwise or counter clockwise.
+            gl::Disable(gl::CULL_FACE);
+            self.color.set(&self.color_buffer[..self.offset]);
+            self.pos.set(&self.pos_buffer[..self.offset]);
+            gl::DrawArrays(gl::TRIANGLES, 0, self.offset as i32);
+            gl::BindVertexArray(0);
+        }
+
+        self.offset = 0;
     }
 }
 
@@ -314,7 +338,13 @@ impl<'a> GlGraphics {
             gl::Enable(gl::FRAMEBUFFER_SRGB);
         }
         let c = Context::new_viewport(viewport);
-        f(c, self)
+        let res = f(c, self);
+        if self.colored.offset > 0 {
+            let program = self.colored.program;
+            self.use_program(program);
+            self.colored.flush();
+        }
+        res
     }
 
     /// Assume all textures has alpha channel for now.
@@ -345,37 +375,38 @@ impl Graphics for GlGraphics {
         where F: FnMut(&mut FnMut(&[f32]))
     {
         let color = gamma_srgb_to_linear(*color);
-        {
-            // Set shader program and draw state.
-            let shader_program = self.colored.program;
-            self.use_program(shader_program);
+
+        // Flush when draw state changes.
+        if self.current_draw_state.is_none() ||
+           self.current_draw_state.as_ref().unwrap() != draw_state {
+            let program = self.colored.program;
+            self.use_program(program);
+            if self.current_draw_state.is_none() {
+                self.use_draw_state(&Default::default());
+            }
+            self.colored.flush();
             self.use_draw_state(draw_state);
         }
+
         let ref mut shader = self.colored;
-
-        unsafe {
-            gl::BindVertexArray(shader.vao);
-            // Render triangles whether they are facing
-            // clockwise or counter clockwise.
-            gl::Disable(gl::CULL_FACE);
-            shader.color_buffer = [color; BUFFER_SIZE];
-            shader.color.set(&shader.color_buffer);
-        }
-
         f(&mut |vertices: &[f32]| {
             // xy makes two floats.
-            let size_vertices: i32 = 2;
-            let items: i32 = vertices.len() as i32 / size_vertices;
+            let size_vertices = 2;
+            let items = vertices.len() / size_vertices;
 
-            unsafe {
-                shader.pos.set(vertices);
-                gl::DrawArrays(gl::TRIANGLES, 0, items);
+            // Render if there is not enough room.
+            if shader.offset + items > BUFFER_SIZE * CHUNKS {
+                shader.flush();
             }
-        });
 
-        unsafe {
-            gl::BindVertexArray(0);
-        }
+            for i in 0..items {
+                shader.color_buffer[shader.offset + i] = color;
+            }
+            for i in 0..items {
+                shader.pos_buffer[shader.offset + i] = [vertices[i*2], vertices[i*2+1]];
+            }
+            shader.offset += items;
+        });
     }
 
     fn tri_list_uv<F>(&mut self,
@@ -386,6 +417,13 @@ impl Graphics for GlGraphics {
         where F: FnMut(&mut FnMut(&[f32], &[f32]))
     {
         let color = gamma_srgb_to_linear(*color);
+
+        if self.colored.offset > 0 {
+            let program = self.colored.program;
+            self.use_program(program);
+            self.colored.flush();
+        }
+
         {
             // Set shader program and draw state.
             let shader_program = self.textured.program;
