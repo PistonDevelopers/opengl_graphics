@@ -25,7 +25,7 @@ fn main() {
     let mut glyph_cache = GlyphCache::new("assets/FiraSans-Regular.ttf").unwrap();
 
     let mut gl = GlGraphics::new(opengl);
-    let mut events = window.events();
+    let mut events = Events::new(EventSettings::new().lazy(true));
     while let Some(e) = events.next(window) {
         if let Some(args) = e.render_args() {
             gl.draw(args.viewport(), |c, g| {

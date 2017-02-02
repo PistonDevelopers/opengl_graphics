@@ -1,7 +1,7 @@
 [package]
 
 name = "piston2d-opengl_graphics"
-version = "0.39.1"
+version = "0.40.0"
 authors = [
     "bvssvni <bvssvni@gmail.com>",
     "Coeuvre <coeuvre@gmail.com>",
@@ -31,13 +31,14 @@ rusttype = "0.2.0"
 gl = "0.6.0"
 piston-shaders_graphics2d = "0.3.1"
 piston-texture = "0.5.0"
-piston2d-graphics = "0.20.1"
+piston2d-graphics = "0.21.0"
 shader_version = "0.2.0"
 fnv = "1.0.2"
 
 [dev-dependencies]
-piston = "0.28.0"
-pistoncore-sdl2_window = "0.39.0"
+piston = "0.31.3"
+pistoncore-sdl2_window = "0.40.0"
 
 [build-dependencies]
 khronos_api = "0.0.8"
+

@@ -28,7 +28,7 @@ fn main() {
     let mut blend = 0;
     let rust_logo = Texture::from_path(&Path::new("./assets/rust.png")).unwrap();
     let mut gl = GlGraphics::new(opengl);
-    let mut events = window.events();
+    let mut events = Events::new(EventSettings::new().lazy(true));
     while let Some(e) = events.next(&mut window) {
         if let Some(args) = e.render_args() {
             use graphics::*;
