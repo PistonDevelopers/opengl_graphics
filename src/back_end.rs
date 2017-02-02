@@ -372,7 +372,7 @@ impl Graphics for GlGraphics {
     }
 
     fn tri_list<F>(&mut self, draw_state: &DrawState, color: &[f32; 4], mut f: F)
-        where F: FnMut(&mut FnMut(&[f32]))
+        where F: FnMut(&mut FnMut(&[[f32; 2]]))
     {
         let color = gamma_srgb_to_linear(*color);
 
@@ -389,10 +389,8 @@ impl Graphics for GlGraphics {
         }
 
         let ref mut shader = self.colored;
-        f(&mut |vertices: &[f32]| {
-            // xy makes two floats.
-            let size_vertices = 2;
-            let items = vertices.len() / size_vertices;
+        f(&mut |vertices: &[[f32; 2]]| {
+            let items = vertices.len();
 
             // Render if there is not enough room.
             if shader.offset + items > BUFFER_SIZE * CHUNKS {
@@ -403,7 +401,7 @@ impl Graphics for GlGraphics {
                 shader.color_buffer[shader.offset + i] = color;
             }
             for i in 0..items {
-                shader.pos_buffer[shader.offset + i] = [vertices[i*2], vertices[i*2+1]];
+                shader.pos_buffer[shader.offset + i] = vertices[i];
             }
             shader.offset += items;
         });
@@ -414,7 +412,7 @@ impl Graphics for GlGraphics {
                       color: &[f32; 4],
                       texture: &Texture,
                       mut f: F)
-        where F: FnMut(&mut FnMut(&[f32], &[f32]))
+        where F: FnMut(&mut FnMut(&[[f32; 2]], &[[f32; 2]]))
     {
         let color = gamma_srgb_to_linear(*color);
 
@@ -442,14 +440,11 @@ impl Graphics for GlGraphics {
             gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
         }
 
-        f(&mut |vertices: &[f32], texture_coords: &[f32]| {
-            let size_vertices: i32 = 2;
-            let items: i32 = vertices.len() as i32 / size_vertices;
-
+        f(&mut |vertices: &[[f32; 2]], texture_coords: &[[f32; 2]]| {
             unsafe {
                 shader.pos.set(vertices);
                 shader.uv.set(texture_coords);
-                gl::DrawArrays(gl::TRIANGLES, 0, items);
+                gl::DrawArrays(gl::TRIANGLES, 0, vertices.len() as i32);
             }
         });
 

@@ -20,7 +20,7 @@ fn main() {
 
     let mut glyphs = GlyphCache::new("assets/FiraSans-Regular.ttf").unwrap();
     let mut gl = GlGraphics::new(opengl);
-    let mut events = window.events();
+    let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
         use graphics::*;
 
