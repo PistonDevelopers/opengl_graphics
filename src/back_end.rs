@@ -46,6 +46,9 @@ impl Drop for Colored {
 
 impl Colored {
     /// Generate using pass-through shaders.
+    ///
+    /// # Panics
+    /// If the default pass-through shaders fail to compile
     pub fn new(glsl: GLSL) -> Self {
         use shaders::colored;
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
@@ -81,25 +84,18 @@ impl Colored {
             -> Result<Self, String> {
 
         let v_shader = try!(vertex_shaders.get(glsl)
-            //.ok_or(format!("No compatible vertex shader for glsl version {:?}",glsl)));
             .ok_or(format!("No compatible vertex shader")));
 
-        let v_shader_compiled = try!(match
-            compile_shader((gl::VERTEX_SHADER), v_shader){
-            Ok(id) => Ok(id),
-            Err(s) => Err(format!("Error compiling vertex shader: {}", s)),
-        });
+        let v_shader_compiled = try!(
+            compile_shader((gl::VERTEX_SHADER), v_shader)
+            .map_err(|s| format!("Error compiling vertex shader: {}", s)));
 
         let f_shader = try!(fragment_shaders.get(glsl)
-            //.ok_or(format!("No compatible fragment shader for glsl version {:?}",glsl)));
             .ok_or(format!("No compatible fragment shader")));
 
-
-        let f_shader_compiled = try!(match
-            compile_shader((gl::FRAGMENT_SHADER), f_shader){
-            Ok(id) => Ok(id),
-            Err(s) => Err(format!("Error compiling vertex shader: {}", s)),
-        });
+        let f_shader_compiled = try!(
+            compile_shader((gl::FRAGMENT_SHADER), f_shader)
+            .map_err(|s| format!("Error compiling fragment shader: {}", s)));
 
         let program;
         unsafe {
@@ -175,6 +171,9 @@ impl Drop for Textured {
 
 impl Textured {
     /// Generate using pass-through shaders.
+    ///
+    /// # Panics
+    /// If the default pass-through shaders fail to compile
     pub fn new(glsl: GLSL) -> Self {
         use shaders::textured;
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
@@ -209,25 +208,18 @@ impl Textured {
                                   fragment_shaders : &Shaders<GLSL, str>) 
             -> Result<Self, String> {
         let v_shader = try!(vertex_shaders.get(glsl)
-            //.ok_or(format!("No compatible vertex shader for glsl version {:?}",glsl)));
             .ok_or(format!("No compatible vertex shader")));
 
-        let v_shader_compiled = try!(match
-            compile_shader((gl::VERTEX_SHADER), v_shader){
-            Ok(id) => Ok(id),
-            Err(s) => Err(format!("Error compiling vertex shader: {}", s)),
-        });
+        let v_shader_compiled = try!(
+            compile_shader((gl::VERTEX_SHADER), v_shader)
+            .map_err(|s| format!("Error compiling vertex shader: {}", s)));
 
         let f_shader = try!(fragment_shaders.get(glsl)
-            //.ok_or(format!("No compatible fragment shader for glsl version {:?}",glsl)));
             .ok_or(format!("No compatible fragment shader")));
 
-
-        let f_shader_compiled = try!(match
-            compile_shader((gl::FRAGMENT_SHADER), f_shader){
-            Ok(id) => Ok(id),
-            Err(s) => Err(format!("Error compiling vertex shader: {}", s)),
-        });
+        let f_shader_compiled = try!(
+            compile_shader((gl::FRAGMENT_SHADER), f_shader)
+            .map_err(|s| format!("Error compiling fragment shader: {}", s)));
 
         let program;
         unsafe {
