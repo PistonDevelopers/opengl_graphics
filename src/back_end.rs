@@ -79,8 +79,8 @@ impl Colored {
     }
 
     /// Generate using custom vertex and fragment shaders.
-    pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>, 
-                                  fragment_shaders : &Shaders<GLSL, str>) 
+    pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>,
+                                  fragment_shaders : &Shaders<GLSL, str>)
             -> Result<Self, String> {
 
         let v_shader = try!(vertex_shaders.get(glsl)
@@ -156,6 +156,11 @@ pub struct Textured {
     color: GLint,
     pos: DynamicAttribute,
     uv: DynamicAttribute,
+    pos_buffer: Vec<[f32; 2]>,
+    uv_buffer: Vec<[f32; 2]>,
+    offset: usize,
+    last_texture_id: GLuint,
+    last_color: [f32; 4],
 }
 
 impl Drop for Textured {
@@ -204,8 +209,8 @@ impl Textured {
     }
 
     /// Generate using custom vertex and fragment shaders.
-    pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>, 
-                                  fragment_shaders : &Shaders<GLSL, str>) 
+    pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>,
+                                  fragment_shaders : &Shaders<GLSL, str>)
             -> Result<Self, String> {
         let v_shader = try!(vertex_shaders.get(glsl)
             .ok_or(format!("No compatible vertex shader")));
@@ -255,7 +260,31 @@ impl Textured {
             pos: pos,
             color: color,
             uv: uv,
+            pos_buffer: vec![[0.0; 2]; CHUNKS * BUFFER_SIZE],
+            uv_buffer: vec![[0.0; 2]; CHUNKS * BUFFER_SIZE],
+            offset: 0,
+            last_texture_id: 0,
+            last_color: [0.0; 4],
         })
+    }
+
+    fn flush(&mut self) {
+        let texture_id = self.last_texture_id;
+        let color = self.last_color;
+        unsafe {
+            gl::BindVertexArray(self.vao);
+            gl::BindTexture(gl::TEXTURE_2D, texture_id);
+            gl::Uniform4f(self.color, color[0], color[1], color[2], color[3]);
+            // Render triangles whether they are facing
+            // clockwise or counter clockwise.
+            gl::Disable(gl::CULL_FACE);
+            self.pos.set(&self.pos_buffer[..self.offset]);
+            self.uv.set(&self.uv_buffer[..self.offset]);
+            gl::DrawArrays(gl::TRIANGLES, 0, self.offset as i32);
+            gl::BindVertexArray(0);
+        }
+
+        self.offset = 0;
     }
 }
 
@@ -384,6 +413,11 @@ impl<'a> GlGraphics {
             self.use_program(program);
             self.colored.flush();
         }
+        if self.textured.offset > 0 {
+            let program = self.textured.program;
+            self.use_program(program);
+            self.textured.flush();
+        }
         res
     }
 
@@ -416,6 +450,12 @@ impl Graphics for GlGraphics {
     {
         let color = gamma_srgb_to_linear(*color);
 
+        if self.textured.offset > 0 {
+            let program = self.textured.program;
+            self.use_program(program);
+            self.textured.flush();
+        }
+
         // Flush when draw state changes.
         if self.current_draw_state.is_none() ||
            self.current_draw_state.as_ref().unwrap() != draw_state {
@@ -440,9 +480,8 @@ impl Graphics for GlGraphics {
             for i in 0..items {
                 shader.color_buffer[shader.offset + i] = color;
             }
-            for i in 0..items {
-                shader.pos_buffer[shader.offset + i] = vertices[i];
-            }
+            shader.pos_buffer[shader.offset..shader.offset + items]
+                  .copy_from_slice(vertices);
             shader.offset += items;
         });
     }
@@ -462,6 +501,23 @@ impl Graphics for GlGraphics {
             self.colored.flush();
         }
 
+        // Flush when draw state changes.
+        if self.current_draw_state.is_none() ||
+           self.current_draw_state.as_ref().unwrap() != draw_state ||
+           self.textured.last_texture_id != texture.get_id() ||
+           self.textured.last_color != color
+        {
+            let program = self.textured.program;
+            if self.current_draw_state.is_none() {
+                self.use_draw_state(&Default::default());
+            }
+            if self.textured.offset > 0 {
+                self.use_program(program);
+                self.textured.flush();
+            }
+            self.use_draw_state(draw_state);
+        }
+
         {
             // Set shader program and draw state.
             let shader_program = self.textured.program;
@@ -469,28 +525,22 @@ impl Graphics for GlGraphics {
             self.use_draw_state(draw_state);
         }
         let ref mut shader = self.textured;
-
-        let texture = texture.get_id();
-        unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, texture);
-            // Render triangles whether they are facing
-            // clockwise or counter clockwise.
-            gl::Disable(gl::CULL_FACE);
-            gl::BindVertexArray(shader.vao);
-            gl::Uniform4f(shader.color, color[0], color[1], color[2], color[3]);
-        }
-
+        shader.last_texture_id = texture.get_id();
+        shader.last_color = color;
         f(&mut |vertices: &[[f32; 2]], texture_coords: &[[f32; 2]]| {
-            unsafe {
-                shader.pos.set(vertices);
-                shader.uv.set(texture_coords);
-                gl::DrawArrays(gl::TRIANGLES, 0, vertices.len() as i32);
-            }
-        });
+            let items = vertices.len();
 
-        unsafe {
-            gl::BindVertexArray(0);
-        }
+            // Render if there is not enough room.
+            if shader.offset + items > BUFFER_SIZE * CHUNKS {
+                shader.flush();
+            }
+
+            shader.pos_buffer[shader.offset..shader.offset + items]
+                  .copy_from_slice(vertices);
+            shader.uv_buffer[shader.offset..shader.offset + items]
+                  .copy_from_slice(texture_coords);
+            shader.offset += items;
+        });
     }
 }
 

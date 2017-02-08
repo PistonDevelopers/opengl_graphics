@@ -17,26 +17,33 @@ fn main() {
     let texture_count = 1024;
     let frames = 200;
     let size = 32.0;
+    let texture_width = 512;
+    let texture_height = 512;
 
-    let mut window: Sdl2Window = WindowSettings::new("texture_swap", [1024; 2])
+    let mut window: Sdl2Window = WindowSettings::new("texture_swap_draw_many", [1024; 2])
         .opengl(opengl).build().unwrap();
 
-    let textures = {
-        (0..texture_count).map(|_| {
-            let mut img = im::ImageBuffer::new(2, 2);
-            for y in 0..2 {
-                for x in 0..2 {
-                    img.put_pixel(x, y,
-                        im::Rgba([rand::random(), rand::random(), rand::random(), 255]));
-                }
+    let texture = {
+        let mut img = im::ImageBuffer::new(texture_width, texture_height);
+        for y in 0..texture_height {
+            for x in 0..texture_width {
+                img.put_pixel(x, y,
+                    im::Rgba([rand::random(), rand::random(), rand::random(), 255]));
             }
-            Texture::from_image(
-                &img,
-                &TextureSettings::new()
-            )
-        }).collect::<Vec<Texture>>()
+        }
+        Texture::from_image(
+            &img,
+            &TextureSettings::new()
+        )
     };
 
+    let src_rects = (0..texture_count)
+        .map(|_| [
+            (rand::random::<f64>() * (texture_width as f64 - 2.0)).floor(),
+            (rand::random::<f64>() * (texture_height as f64 - 2.0)).floor(),
+            2.0, 2.0
+        ])
+        .collect::<Vec<types::SourceRectangle>>();
     let mut positions = (0..texture_count)
         .map(|_| (rand::random(), rand::random()))
         .collect::<Vec<(f64, f64)>>();
@@ -59,8 +66,10 @@ fn main() {
                 }
                 for i in 0..texture_count {
                     let p = positions[i];
-                    image(&textures[i], c.transform
-                        .trans(p.0 * 1024.0, p.1 * 1024.0).zoom(size), g);
+                    image::Image::new()
+                        .src_rect(src_rects[i])
+                        .draw(&texture, &c.draw_state, c.transform
+                            .trans(p.0 * 1024.0, p.1 * 1024.0).zoom(size), g);
                 }
             });
         }
