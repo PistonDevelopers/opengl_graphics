@@ -20,7 +20,8 @@ use shader_utils::{compile_shader, DynamicAttribute};
 // `4` for bytes per f32, and `2 + 4` for position and color.
 const CHUNKS: usize = 100;
 
-struct Colored {
+/// Describes how to render colored objects.
+pub struct Colored {
     vao: GLuint,
     vertex_shader: GLuint,
     fragment_shader: GLuint,
@@ -44,53 +45,67 @@ impl Drop for Colored {
 }
 
 impl Colored {
-    fn new(glsl: GLSL) -> Self {
+    /// Generate using pass-through shaders.
+    pub fn new(glsl: GLSL) -> Self {
         use shaders::colored;
-
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
 
-        let vertex_shader = match if cfg!(target_os = "emscripten") {
-            compile_shader(gl::VERTEX_SHADER,
-                           Shaders::new()
-                               .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120_WEBGL))
-                               .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE_WEBGL))
-                               .get(glsl)
-                               .unwrap())
+        let mut vertex_shaders = Shaders::new();
+        if cfg!(target_os = "emscripten") {
+            vertex_shaders
+               .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120_WEBGL))
+               .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE_WEBGL))
         } else {
-            compile_shader(gl::VERTEX_SHADER,
-                           Shaders::new()
-                               .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120))
-                               .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE))
-                               .get(glsl)
-                               .unwrap())
-        } {
-            Ok(id) => id,
-            Err(s) => panic!("compile_shader: {}", s),
+            vertex_shaders
+               .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120))
+               .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE))
         };
-        let fragment_shader = match if cfg!(target_os = "emscripten") {
-            compile_shader(gl::FRAGMENT_SHADER,
-                           Shaders::new()
-                               .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120_WEBGL))
-                               .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE_WEBGL))
-                               .get(glsl)
-                               .unwrap())
+
+        let mut fragment_shaders = Shaders::new();
+        if cfg!(target_os = "emscripten") {
+            fragment_shaders
+               .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120_WEBGL))
+               .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE_WEBGL))
         } else {
-            compile_shader(gl::FRAGMENT_SHADER,
-                           Shaders::new()
-                               .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120))
-                               .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE))
-                               .get(glsl)
-                               .unwrap())
-        } {
-            Ok(id) => id,
-            Err(s) => panic!("compile_shader: {}", s),
+           fragment_shaders
+               .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120))
+               .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE))
         };
+
+        Colored::from_vs_fs(glsl, &vertex_shaders, &fragment_shaders).unwrap()
+    }
+
+    /// Generate using custom vertex and fragment shaders.
+    pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>, 
+                                  fragment_shaders : &Shaders<GLSL, str>) 
+            -> Result<Self, String> {
+
+        let v_shader = try!(vertex_shaders.get(glsl)
+            //.ok_or(format!("No compatible vertex shader for glsl version {:?}",glsl)));
+            .ok_or(format!("No compatible vertex shader")));
+
+        let v_shader_compiled = try!(match
+            compile_shader((gl::VERTEX_SHADER), v_shader){
+            Ok(id) => Ok(id),
+            Err(s) => Err(format!("Error compiling vertex shader: {}", s)),
+        });
+
+        let f_shader = try!(fragment_shaders.get(glsl)
+            //.ok_or(format!("No compatible fragment shader for glsl version {:?}",glsl)));
+            .ok_or(format!("No compatible fragment shader")));
+
+
+        let f_shader_compiled = try!(match
+            compile_shader((gl::FRAGMENT_SHADER), f_shader){
+            Ok(id) => Ok(id),
+            Err(s) => Err(format!("Error compiling vertex shader: {}", s)),
+        });
 
         let program;
         unsafe {
             program = gl::CreateProgram();
-            gl::AttachShader(program, vertex_shader);
-            gl::AttachShader(program, fragment_shader);
+            gl::AttachShader(program, v_shader_compiled);
+            gl::AttachShader(program, f_shader_compiled);
 
             let c_o_color = CString::new("o_Color").unwrap();
             if cfg!(not(target_os = "emscripten")) {
@@ -106,17 +121,18 @@ impl Colored {
         }
         let pos = DynamicAttribute::xy(program, "pos", vao).unwrap();
         let color = DynamicAttribute::rgba(program, "color", vao).unwrap();
-        Colored {
+        Ok(Colored {
             vao: vao,
-            vertex_shader: vertex_shader,
-            fragment_shader: fragment_shader,
+            vertex_shader: v_shader_compiled,
+            fragment_shader: f_shader_compiled,
             program: program,
             pos: pos,
             color: color,
             pos_buffer: vec![[0.0; 2]; CHUNKS * BUFFER_SIZE],
             color_buffer: vec![[0.0; 4]; CHUNKS * BUFFER_SIZE],
             offset: 0,
-        }
+        })
+
     }
 
     fn flush(&mut self) {
@@ -135,7 +151,8 @@ impl Colored {
     }
 }
 
-struct Textured {
+/// Describes how to render textured objects.
+pub struct Textured {
     vertex_shader: GLuint,
     fragment_shader: GLuint,
     program: GLuint,
@@ -157,53 +174,66 @@ impl Drop for Textured {
 }
 
 impl Textured {
-    fn new(glsl: GLSL) -> Self {
+    /// Generate using pass-through shaders.
+    pub fn new(glsl: GLSL) -> Self {
         use shaders::textured;
-
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
 
-        let vertex_shader = match if cfg!(target_os = "emscripten") {
-            compile_shader(gl::VERTEX_SHADER,
-                           Shaders::new()
-                               .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120_WEBGL))
-                               .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE_WEBGL))
-                               .get(glsl)
-                               .unwrap())
+        let mut vertex_shaders = Shaders::new();
+        if cfg!(target_os = "emscripten") {
+            vertex_shaders
+               .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120_WEBGL))
+               .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE_WEBGL))
         } else {
-            compile_shader(gl::VERTEX_SHADER,
-                           Shaders::new()
-                               .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120))
-                               .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE))
-                               .get(glsl)
-                               .unwrap())
-        } {
-            Ok(id) => id,
-            Err(s) => panic!("compile_shader: {}", s),
+            vertex_shaders
+               .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120))
+               .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE))
         };
-        let fragment_shader = match if cfg!(target_os = "emscripten") {
-            compile_shader(gl::FRAGMENT_SHADER,
-                           Shaders::new()
-                               .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120_WEBGL))
-                               .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE_WEBGL))
-                               .get(glsl)
-                               .unwrap())
+
+        let mut fragment_shaders = Shaders::new();
+        if cfg!(target_os = "emscripten") {
+            fragment_shaders
+               .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120_WEBGL))
+               .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE_WEBGL))
         } else {
-            compile_shader(gl::FRAGMENT_SHADER,
-                           Shaders::new()
-                               .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120))
-                               .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE))
-                               .get(glsl)
-                               .unwrap())
-        } {
-            Ok(id) => id,
-            Err(s) => panic!("compile_shader: {}", s),
+           fragment_shaders
+               .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120))
+               .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE))
         };
+
+        Textured::from_vs_fs(glsl, &vertex_shaders, &fragment_shaders).unwrap()
+    }
+
+    /// Generate using custom vertex and fragment shaders.
+    pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>, 
+                                  fragment_shaders : &Shaders<GLSL, str>) 
+            -> Result<Self, String> {
+        let v_shader = try!(vertex_shaders.get(glsl)
+            //.ok_or(format!("No compatible vertex shader for glsl version {:?}",glsl)));
+            .ok_or(format!("No compatible vertex shader")));
+
+        let v_shader_compiled = try!(match
+            compile_shader((gl::VERTEX_SHADER), v_shader){
+            Ok(id) => Ok(id),
+            Err(s) => Err(format!("Error compiling vertex shader: {}", s)),
+        });
+
+        let f_shader = try!(fragment_shaders.get(glsl)
+            //.ok_or(format!("No compatible fragment shader for glsl version {:?}",glsl)));
+            .ok_or(format!("No compatible fragment shader")));
+
+
+        let f_shader_compiled = try!(match
+            compile_shader((gl::FRAGMENT_SHADER), f_shader){
+            Ok(id) => Ok(id),
+            Err(s) => Err(format!("Error compiling vertex shader: {}", s)),
+        });
 
         let program;
         unsafe {
             program = gl::CreateProgram();
-            gl::AttachShader(program, vertex_shader);
-            gl::AttachShader(program, fragment_shader);
+            gl::AttachShader(program, v_shader_compiled);
+            gl::AttachShader(program, f_shader_compiled);
 
             let c_o_color = CString::new("o_Color").unwrap();
             if cfg!(not(target_os = "emscripten")) {
@@ -225,15 +255,15 @@ impl Textured {
             panic!("Could not find uniform `color`");
         }
         let uv = DynamicAttribute::uv(program, "uv", vao).unwrap();
-        Textured {
+        Ok(Textured {
             vao: vao,
-            vertex_shader: vertex_shader,
-            fragment_shader: fragment_shader,
+            vertex_shader: v_shader_compiled,
+            fragment_shader: f_shader_compiled,
             program: program,
             pos: pos,
             color: color,
             uv: uv,
-        }
+        })
     }
 }
 
@@ -268,6 +298,24 @@ impl<'a> GlGraphics {
         GlGraphics {
             colored: Colored::new(glsl),
             textured: Textured::new(glsl),
+            current_program: None,
+            current_draw_state: None,
+        }
+    }
+
+    /// Create a new OpenGL back-end with `Colored` and `Textured` structs to describe
+    /// how to render objects.
+    ///
+    /// # Panics
+    /// If the OpenGL function pointers have not been loaded yet.
+    /// See https://github.com/PistonDevelopers/opengl_graphics/issues/103 for more info.
+    pub fn from_colored_textured(colored : Colored, textured : Textured) -> Self {
+        assert!(gl::Enable::is_loaded(), GL_FUNC_NOT_LOADED);
+
+        // Load the vertices, color and texture coord buffers.
+        GlGraphics {
+            colored: colored,
+            textured: textured,
             current_program: None,
             current_draw_state: None,
         }
