@@ -20,6 +20,7 @@ use shader_utils::{compile_shader, DynamicAttribute};
 // `4` for bytes per f32, and `2 + 4` for position and color.
 const CHUNKS: usize = 100;
 
+
 /// Describes how to render colored objects.
 pub struct Colored {
     vao: GLuint,
@@ -84,14 +85,14 @@ impl Colored {
             -> Result<Self, String> {
 
         let v_shader = try!(vertex_shaders.get(glsl)
-            .ok_or(format!("No compatible vertex shader")));
+            .ok_or("No compatible vertex shader"));
 
         let v_shader_compiled = try!(
             compile_shader((gl::VERTEX_SHADER), v_shader)
             .map_err(|s| format!("Error compiling vertex shader: {}", s)));
 
         let f_shader = try!(fragment_shaders.get(glsl)
-            .ok_or(format!("No compatible fragment shader")));
+            .ok_or("No compatible fragment shader"));
 
         let f_shader_compiled = try!(
             compile_shader((gl::FRAGMENT_SHADER), f_shader)
@@ -213,14 +214,14 @@ impl Textured {
                                   fragment_shaders : &Shaders<GLSL, str>)
             -> Result<Self, String> {
         let v_shader = try!(vertex_shaders.get(glsl)
-            .ok_or(format!("No compatible vertex shader")));
+            .ok_or("No compatible vertex shader"));
 
         let v_shader_compiled = try!(
             compile_shader((gl::VERTEX_SHADER), v_shader)
             .map_err(|s| format!("Error compiling vertex shader: {}", s)));
 
         let f_shader = try!(fragment_shaders.get(glsl)
-            .ok_or(format!("No compatible fragment shader")));
+            .ok_or("No compatible fragment shader"));
 
         let f_shader_compiled = try!(
             compile_shader((gl::FRAGMENT_SHADER), f_shader)
@@ -347,6 +348,11 @@ impl<'a> GlGraphics {
         unsafe {
             gl::Viewport(x as GLint, y as GLint, w as GLsizei, h as GLsizei);
         }
+    }
+
+    /// Returns the current program
+    pub fn get_current_program(&self) -> Option<GLuint> {
+        self.current_program
     }
 
     /// Sets the current program only if the program is not in use.
