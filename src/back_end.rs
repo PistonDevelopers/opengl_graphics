@@ -20,7 +20,6 @@ use shader_utils::{compile_shader, DynamicAttribute};
 // `4` for bytes per f32, and `2 + 4` for position and color.
 const CHUNKS: usize = 100;
 
-
 /// Describes how to render colored objects.
 pub struct Colored {
     vao: GLuint,
