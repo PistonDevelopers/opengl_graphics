@@ -23,48 +23,70 @@ pub struct ShaderUniform<T : ?Sized>{
 pub trait UniformType {}
 
 /// Shader uniform float
-pub trait SUFloat : UniformType {}
+#[derive(Clone, Copy)]
+pub struct SUFloat {}
+impl UniformType for SUFloat {}
 
 /// Shader uniform integer
-pub trait SUInt : UniformType {}
+#[derive(Clone, Copy)]
+pub struct SUInt {}
+impl UniformType for SUInt {}
 
 /// Shader uniform vector of size 2
 /// Vector elements are floats
-pub trait SUVec2 : UniformType {}
+#[derive(Clone, Copy)]
+pub struct SUVec2 {}
+impl UniformType for SUVec2 {}
 
 /// Shader uniform vector of size 3
 /// Vector elements are floats
-pub trait SUVec3 : UniformType {}
+#[derive(Clone, Copy)]
+pub struct SUVec3 {}
+impl UniformType for SUVec3 {}
 
 /// Shader uniform vector of size 4
 /// Vector elements are floats
-pub trait SUVec4 : UniformType {}
+#[derive(Clone, Copy)]
+pub struct SUVec4 {}
+impl UniformType for SUVec4 {}
 
 /// Shader uniform 2x2 matrix
 /// Matrix elements are floats
-pub trait SUMat2x2 : UniformType {}
+#[derive(Clone, Copy)]
+pub struct SUMat2x2 {}
+impl UniformType for SUMat2x2 {}
 
 /// Shader uniform 3x3 matrix
 /// Matrix elements are floats
-pub trait SUMat3x3 : UniformType {}
+#[derive(Clone, Copy)]
+pub struct SUMat3x3 {}
+impl UniformType for SUMat3x3 {}
 
 /// Shader uniform 4x4 matrix
 /// Matrix elements are floats
-pub trait SUMat4x4 : UniformType {}
+#[derive(Clone, Copy)]
+pub struct SUMat4x4 {}
+impl UniformType for SUMat4x4 {}
 
 impl GlGraphics {
     /// Try to get uniform from the current shader of a given name.
     pub fn get_uniform<T : UniformType + ?Sized>(&self, name : &str) -> Option<ShaderUniform<T>> {
         self.get_current_program().and_then( |p| {
-            match unsafe {gl::GetUniformLocation(p, CString::new(name).unwrap().
-                                                  as_ptr())} {
-                -1 => None,
-                location => {
-                    Some(ShaderUniform{
-                        location : location,
-                        phantom : PhantomData,
-                    })
-                },
+            unsafe {
+                let c_source = CString::new(name).ok();
+                c_source.and_then(|name| {
+                    let uniform = match gl::GetUniformLocation(p, name.as_ptr()) {
+                        -1 => None,
+                        location => {
+                            Some(ShaderUniform{
+                                location : location,
+                                phantom : PhantomData,
+                            })
+                        },
+                    };
+                    drop(name);
+                    uniform
+                })
             }
         })
     }
