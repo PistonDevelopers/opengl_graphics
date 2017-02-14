@@ -20,6 +20,7 @@ pub use texture_lib::*;
 pub mod shader_utils;
 pub mod glyph_cache;
 pub mod error;
+pub mod shader_uniforms;
 
 mod back_end;
 mod texture;
