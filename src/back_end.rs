@@ -469,19 +469,23 @@ impl Graphics for GlGraphics {
             if self.current_draw_state.is_none() {
                 self.use_draw_state(&Default::default());
             }
-            self.colored.flush();
+            if self.colored.offset > 0 {
+                self.colored.flush();
+            }
             self.use_draw_state(draw_state);
         }
 
-        let ref mut shader = self.colored;
         f(&mut |vertices: &[[f32; 2]]| {
             let items = vertices.len();
 
             // Render if there is not enough room.
-            if shader.offset + items > BUFFER_SIZE * CHUNKS {
-                shader.flush();
+            if self.colored.offset + items > BUFFER_SIZE * CHUNKS {
+                let program = self.colored.program;
+                self.use_program(program);
+                self.colored.flush();
             }
 
+            let ref mut shader = self.colored;
             for i in 0..items {
                 shader.color_buffer[shader.offset + i] = color;
             }
@@ -523,23 +527,19 @@ impl Graphics for GlGraphics {
             self.use_draw_state(draw_state);
         }
 
-        {
-            // Set shader program and draw state.
-            let shader_program = self.textured.program;
-            self.use_program(shader_program);
-            self.use_draw_state(draw_state);
-        }
-        let ref mut shader = self.textured;
-        shader.last_texture_id = texture.get_id();
-        shader.last_color = color;
+        self.textured.last_texture_id = texture.get_id();
+        self.textured.last_color = color;
         f(&mut |vertices: &[[f32; 2]], texture_coords: &[[f32; 2]]| {
             let items = vertices.len();
 
             // Render if there is not enough room.
-            if shader.offset + items > BUFFER_SIZE * CHUNKS {
-                shader.flush();
+            if self.textured.offset + items > BUFFER_SIZE * CHUNKS {
+                let shader_program = self.textured.program;
+                self.use_program(shader_program);
+                self.textured.flush();
             }
 
+            let ref mut shader = self.textured;
             shader.pos_buffer[shader.offset..shader.offset + items]
                   .copy_from_slice(vertices);
             shader.uv_buffer[shader.offset..shader.offset + items]
