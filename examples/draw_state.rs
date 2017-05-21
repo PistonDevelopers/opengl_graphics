@@ -35,7 +35,6 @@ fn main() {
 
             gl.draw(args.viewport(), |c, g| {
                 clear([0.8, 0.8, 0.8, 1.0], g);
-                g.clear_stencil(0);
                 Rectangle::new([1.0, 0.0, 0.0, 1.0])
                     .draw([0.0, 0.0, 100.0, 100.0], &c.draw_state, c.transform, g);
 

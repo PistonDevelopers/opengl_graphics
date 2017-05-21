@@ -447,6 +447,7 @@ impl Graphics for GlGraphics {
     fn clear_stencil(&mut self, value: u8) {
         unsafe {
             gl::ClearStencil(value as i32);
+            gl::Clear(gl::STENCIL_BUFFER_BIT);
         }
     }
 
