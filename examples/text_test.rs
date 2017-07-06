@@ -22,7 +22,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut glyph_cache = GlyphCache::new("assets/FiraSans-Regular.ttf").unwrap();
+    let mut glyph_cache = GlyphCache::new("assets/FiraSans-Regular.ttf", TextureSettings::new()).unwrap();
 
     let mut gl = GlGraphics::new(opengl);
     let mut events = Events::new(EventSettings::new().lazy(true));
