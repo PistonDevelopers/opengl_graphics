@@ -23,6 +23,8 @@ pub type Character<'a> = graphics::character::Character<'a, Texture>;
 pub struct GlyphCache<'a> {
     /// The font.
     pub font: rusttype::Font<'a>,
+    /// The settings to render the font with.
+    settings: TextureSettings,
     // Maps from fontsize and character to offset, size and texture.
     data: HashMap<(FontSize, char),
                   ([Scalar; 2], [Scalar; 2], Texture),
@@ -31,16 +33,17 @@ pub struct GlyphCache<'a> {
 
 impl<'a> GlyphCache<'a> {
     /// Constructs a GlyphCache from a Font.
-    pub fn from_font(font: rusttype::Font<'a>) -> Self {
+    pub fn from_font(font: rusttype::Font<'a>, settings: TextureSettings) -> Self {
         let fnv = BuildHasherDefault::<FnvHasher>::default();
         GlyphCache {
             font: font,
+            settings: settings,
             data: HashMap::with_hasher(fnv),
         }
     }
 
     /// Constructor for a GlyphCache.
-    pub fn new<P>(font: P) -> Result<GlyphCache<'static>, Error>
+    pub fn new<P>(font: P, settings: TextureSettings) -> Result<GlyphCache<'static>, Error>
         where P: AsRef<Path>
     {
         let fnv = BuildHasherDefault::<FnvHasher>::default();
@@ -52,15 +55,16 @@ impl<'a> GlyphCache<'a> {
         let font = collection.into_font().unwrap();
         Ok(GlyphCache {
             font: font,
+            settings: settings,
             data: HashMap::with_hasher(fnv),
         })
     }
 
     /// Creates a GlyphCache for a font stored in memory.
-    pub fn from_bytes(font: &'a [u8]) -> Result<GlyphCache<'a>, Error> {
+    pub fn from_bytes(font: &'a [u8], settings: TextureSettings) -> Result<GlyphCache<'a>, Error> {
         let collection = rusttype::FontCollection::from_bytes(font);
         let font = collection.into_font().unwrap();
-        Ok(Self::from_font(font))
+        Ok(Self::from_font(font, settings))
     }
 
     /// Load all characters in the `chars` iterator for `size`
@@ -153,7 +157,7 @@ impl<'b> CharacterCache for GlyphCache<'b> {
                                       Texture::from_memory_alpha(&image_buffer,
                                                                  pixel_bb_width as u32,
                                                                  pixel_bb_height as u32,
-                                                                 &TextureSettings::new())
+                                                                 &self.settings)
                                           .unwrap()
                                   }
                               }));
