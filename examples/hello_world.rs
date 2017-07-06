@@ -18,7 +18,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut glyphs = GlyphCache::new("assets/FiraSans-Regular.ttf").unwrap();
+    let mut glyphs = GlyphCache::new("assets/FiraSans-Regular.ttf", TextureSettings::new()).unwrap();
     let mut gl = GlGraphics::new(opengl);
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
