@@ -20,6 +20,7 @@ fn main() {
     let (w, h) = (640, 480);
     let mut window: Sdl2Window = WindowSettings::new("opengl_graphics: draw_state", [w, h])
         .exit_on_esc(true)
+        .opengl(opengl)
         .build()
         .unwrap();
 
