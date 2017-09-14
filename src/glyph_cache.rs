@@ -152,7 +152,7 @@ impl<'b> CharacterCache for GlyphCache<'b> {
                               [h_metrics.advance_width as Scalar, 0 as Scalar],
                               {
                                   if pixel_bb_width == 0 || pixel_bb_height == 0 {
-                                      Texture::empty().unwrap()
+                                      Texture::empty(&self.settings).unwrap()
                                   } else {
                                       Texture::from_memory_alpha(&image_buffer,
                                                                  pixel_bb_width as u32,

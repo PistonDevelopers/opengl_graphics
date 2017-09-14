@@ -1,11 +1,10 @@
 extern crate graphics;
 extern crate opengl_graphics;
-extern crate image;
 extern crate piston;
 extern crate sdl2_window;
 
 use std::path::Path;
-use opengl_graphics::{GlGraphics, Texture};
+use opengl_graphics::{GlGraphics, Texture, TextureSettings};
 use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
@@ -27,7 +26,8 @@ fn main() {
     let mut clip_inside = true;
     let blends = [Blend::Alpha, Blend::Add, Blend::Invert, Blend::Multiply];
     let mut blend = 0;
-    let rust_logo = Texture::from_path(&Path::new("./assets/rust.png")).unwrap();
+    let rust_logo = Texture::from_path(&Path::new("./assets/rust.png"),
+                                       &TextureSettings::new()).unwrap();
     let mut gl = GlGraphics::new(opengl);
     let mut events = Events::new(EventSettings::new().lazy(true));
     while let Some(e) = events.next(&mut window) {
