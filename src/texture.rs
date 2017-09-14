@@ -82,12 +82,12 @@ impl Texture {
     }
 
     /// Returns empty texture.
-    pub fn empty() -> Result<Self, String> {
+    pub fn empty(settings: &TextureSettings) -> Result<Self, String> {
         CreateTexture::create(&mut (),
                               Format::Rgba8,
                               &[0u8; 4],
                               [1, 1],
-                              &TextureSettings::new())
+                              settings)
     }
 
     /// Loads image from memory, the format is 8-bit greyscale.
@@ -102,7 +102,7 @@ impl Texture {
     }
 
     /// Loads image by relative file name to the asset root.
-    pub fn from_path<P>(path: P) -> Result<Self, String>
+    pub fn from_path<P>(path: P, settings: &TextureSettings) -> Result<Self, String>
         where P: AsRef<Path>
     {
         let path = path.as_ref();
@@ -119,7 +119,7 @@ impl Texture {
             x => x.to_rgba(),
         };
 
-        Ok(Texture::from_image(&img, &TextureSettings::new()))
+        Ok(Texture::from_image(&img, settings))
     }
 
     /// Creates a texture from image.
