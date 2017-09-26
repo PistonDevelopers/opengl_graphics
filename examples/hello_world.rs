@@ -7,7 +7,7 @@ use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
 use opengl_graphics::*;
-use opengl_graphics::glyph_cache::GlyphCache;
+use opengl_graphics::GlyphCache;
 use sdl2_window::Sdl2Window;
 
 fn main() {
@@ -18,7 +18,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut glyphs = GlyphCache::new("assets/FiraSans-Regular.ttf", TextureSettings::new()).unwrap();
+    let mut glyphs = GlyphCache::new("assets/FiraSans-Regular.ttf", (), TextureSettings::new()).unwrap();
     let mut gl = GlGraphics::new(opengl);
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
@@ -30,7 +30,7 @@ fn main() {
 
                 clear([0.0, 0.0, 0.0, 1.0], g);
                 text::Text::new_color([0.0, 1.0, 0.0, 1.0], 32)
-                    .draw("Hello world!", &mut glyphs, &c.draw_state, transform, g);
+                    .draw("Hello world!", &mut glyphs, &c.draw_state, transform, g).unwrap();
             });
         }
     }
