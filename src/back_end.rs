@@ -87,14 +87,14 @@ impl Colored {
             .ok_or("No compatible vertex shader"));
 
         let v_shader_compiled = try!(
-            compile_shader((gl::VERTEX_SHADER), v_shader)
+            compile_shader(gl::VERTEX_SHADER, v_shader)
             .map_err(|s| format!("Error compiling vertex shader: {}", s)));
 
         let f_shader = try!(fragment_shaders.get(glsl)
             .ok_or("No compatible fragment shader"));
 
         let f_shader_compiled = try!(
-            compile_shader((gl::FRAGMENT_SHADER), f_shader)
+            compile_shader(gl::FRAGMENT_SHADER, f_shader)
             .map_err(|s| format!("Error compiling fragment shader: {}", s)));
 
         let program;
@@ -216,14 +216,14 @@ impl Textured {
             .ok_or("No compatible vertex shader"));
 
         let v_shader_compiled = try!(
-            compile_shader((gl::VERTEX_SHADER), v_shader)
+            compile_shader(gl::VERTEX_SHADER, v_shader)
             .map_err(|s| format!("Error compiling vertex shader: {}", s)));
 
         let f_shader = try!(fragment_shaders.get(glsl)
             .ok_or("No compatible fragment shader"));
 
         let f_shader_compiled = try!(
-            compile_shader((gl::FRAGMENT_SHADER), f_shader)
+            compile_shader(gl::FRAGMENT_SHADER, f_shader)
             .map_err(|s| format!("Error compiling fragment shader: {}", s)));
 
         let program;
