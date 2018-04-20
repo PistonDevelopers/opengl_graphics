@@ -400,10 +400,8 @@ impl<'a> GlGraphics {
         self.current_draw_state = None;
     }
 
-    /// Draws graphics.
-    pub fn draw<F, U>(&mut self, viewport: Viewport, f: F) -> U
-        where F: FnOnce(Context, &mut Self) -> U
-    {
+    /// Setup that should be called at the start of a frame's draw call.
+    pub fn draw_begin(&mut self, viewport: Viewport) -> Context {
         let rect = viewport.rect;
         let (x, y, w, h) = (rect[0], rect[1], rect[2], rect[3]);
         self.viewport(x, y, w, h);
@@ -411,8 +409,11 @@ impl<'a> GlGraphics {
         unsafe {
             gl::Enable(gl::FRAMEBUFFER_SRGB);
         }
-        let c = Context::new_viewport(viewport);
-        let res = f(c, self);
+        Context::new_viewport(viewport)
+    }
+
+    /// Finalize the frame's draw calls.
+    pub fn draw_end(&mut self) {
         if self.colored.offset > 0 {
             let program = self.colored.program;
             self.use_program(program);
@@ -423,6 +424,18 @@ impl<'a> GlGraphics {
             self.use_program(program);
             self.textured.flush();
         }
+    }
+
+    /// Convenience for wrapping draw calls with the begin and end methods.
+    ///
+    /// This is preferred over using the draw_begin & draw_end methods
+    /// explicitly but may be less flexible.
+    pub fn draw<F, U>(&mut self, viewport: Viewport, f: F) -> U
+        where F: FnOnce(Context, &mut Self) -> U
+    {
+        let c = self.draw_begin(viewport);
+        let res = f(c, self);
+        self.draw_end();
         res
     }
 
