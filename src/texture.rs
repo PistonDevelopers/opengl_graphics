@@ -163,6 +163,11 @@ impl CreateTexture<()> for Texture {
                                  -> Result<Self, Self::Error> {
         let size = size.into();
         let mut id: GLuint = 0;
+        let internal_format = if settings.get_convert_gamma() {
+            gl::RGBA
+        } else {
+            gl::SRGB_ALPHA
+        };
         unsafe {
             gl::GenTextures(1, &mut id);
             gl::BindTexture(gl::TEXTURE_2D, id);
@@ -179,7 +184,7 @@ impl CreateTexture<()> for Texture {
             }
             gl::TexImage2D(gl::TEXTURE_2D,
                            0,
-                           gl::RGBA as i32,
+                           internal_format as i32,
                            size[0] as i32,
                            size[1] as i32,
                            0,
