@@ -3,7 +3,7 @@ extern crate graphics;
 extern crate opengl_graphics;
 extern crate sdl2_window;
 
-use piston::window::{WindowSettings, Size};
+use piston::window::WindowSettings;
 use piston::event_loop::*;
 use piston::input::*;
 use opengl_graphics::*;
@@ -12,10 +12,7 @@ use sdl2_window::Sdl2Window;
 
 fn main() {
     let opengl = OpenGL::V3_2;
-    let size = Size {
-        width: 500,
-        height: 300,
-    };
+    let size = [500, 300];
     let ref mut window: Sdl2Window = WindowSettings::new("opengl_graphics: text_test", size)
         .exit_on_esc(true)
         .opengl(opengl)
