@@ -1,9 +1,10 @@
 use gl;
 use graphics::draw_state::*;
+use viewport::Viewport;
 
-pub fn bind_state(old_state: &DrawState, new_state: &DrawState) {
+pub fn bind_state(old_state: &DrawState, new_state: &DrawState, viewport: &Option<Viewport>) {
     if old_state.scissor != new_state.scissor {
-        bind_scissor(new_state.scissor);
+        bind_scissor(new_state.scissor, viewport);
     }
     if old_state.stencil != new_state.stencil {
         bind_stencil(new_state.stencil);
@@ -13,14 +14,28 @@ pub fn bind_state(old_state: &DrawState, new_state: &DrawState) {
     }
 }
 
-pub fn bind_scissor(rect: Option<[u32; 4]>) {
+pub fn bind_scissor(rect: Option<[u32; 4]>, viewport: &Option<Viewport>) {
     match rect {
-        Some(r) => unsafe {
-            gl::Enable(gl::SCISSOR_TEST);
-            gl::Scissor(r[0] as gl::types::GLint,
-                        r[1] as gl::types::GLint,
-                        r[2] as gl::types::GLint,
-                        r[3] as gl::types::GLint);
+        Some(r) => {
+            // https://www.khronos.org/opengl/wiki/Scissor_Test indicates that 
+            // gl::Scissor takes x,y defined as lower left,
+            // but piston passes rect with x,y defined as upper left.
+            // To fix this we need to know height of the viewport
+            // so that we can transform y as top measured from top (yt)
+            // into y as bottom measured from bottom (yb)
+            // using yb = viewport_height - (yt + rect_height)
+            let yb = if let Some(vp) = viewport {
+                vp.rect[3] - (r[1] + r[3]) as i32
+            } else {
+                r[1] as i32
+            };
+            unsafe {
+                gl::Enable(gl::SCISSOR_TEST);
+                gl::Scissor(r[0] as gl::types::GLint,
+                            yb as gl::types::GLint,
+                            r[2] as gl::types::GLint,
+                            r[3] as gl::types::GLint);
+            }
         },
         None => unsafe { gl::Disable(gl::SCISSOR_TEST) },
     }
