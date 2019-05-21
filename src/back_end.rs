@@ -303,6 +303,8 @@ pub struct GlGraphics {
     current_program: Option<GLuint>,
     // Keeps track of the current draw state.
     current_draw_state: Option<DrawState>,
+    // Keeps track of the current viewport
+    current_viewport: Option<Viewport>,
 }
 
 impl<'a> GlGraphics {
@@ -321,6 +323,7 @@ impl<'a> GlGraphics {
             textured: Textured::new(glsl),
             current_program: None,
             current_draw_state: None,
+            current_viewport: None,
         }
     }
 
@@ -339,11 +342,12 @@ impl<'a> GlGraphics {
             textured: textured,
             current_program: None,
             current_draw_state: None,
+            current_viewport: None,
         }
     }
 
     /// Sets viewport with normalized coordinates and center as origin.
-    pub fn viewport(&mut self, x: i32, y: i32, w: i32, h: i32) {
+    fn viewport(&mut self, x: i32, y: i32, w: i32, h: i32) {
         unsafe {
             gl::Viewport(x as GLint, y as GLint, w as GLsizei, h as GLsizei);
         }
@@ -382,12 +386,12 @@ impl<'a> GlGraphics {
     pub fn use_draw_state(&mut self, draw_state: &DrawState) {
         match self.current_draw_state {
             None => {
-                draw_state::bind_scissor(draw_state.scissor);
+                draw_state::bind_scissor(draw_state.scissor, &self.current_viewport);
                 draw_state::bind_stencil(draw_state.stencil);
                 draw_state::bind_blend(draw_state.blend);
             }
             Some(ref old_state) => {
-                draw_state::bind_state(old_state, draw_state);
+                draw_state::bind_state(old_state, draw_state, &self.current_viewport);
             }
         }
         self.current_draw_state = Some(*draw_state);
@@ -405,6 +409,7 @@ impl<'a> GlGraphics {
         let rect = viewport.rect;
         let (x, y, w, h) = (rect[0], rect[1], rect[2], rect[3]);
         self.viewport(x, y, w, h);
+        self.current_viewport = Some(viewport);
         self.clear_program();
         unsafe {
             gl::Enable(gl::FRAMEBUFFER_SRGB);

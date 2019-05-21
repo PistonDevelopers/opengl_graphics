@@ -9,6 +9,7 @@ extern crate image;
 extern crate gl;
 extern crate graphics;
 extern crate texture as texture_lib;
+extern crate viewport;
 
 pub use shader_version::{OpenGL, Shaders};
 pub use shader_version::glsl::{GLSL};
