@@ -15,7 +15,7 @@ fn main() {
     let size = [500, 300];
     let ref mut window: Sdl2Window = WindowSettings::new("opengl_graphics: text_test", size)
         .exit_on_esc(true)
-        .opengl(opengl)
+        .graphics_api(opengl)
         .build()
         .unwrap();
 

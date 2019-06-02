@@ -21,7 +21,7 @@ fn main() {
     let texture_height = 512;
 
     let mut window: Sdl2Window = WindowSettings::new("texture_swap_draw_many", [1024; 2])
-        .opengl(opengl).build().unwrap();
+        .graphics_api(opengl).build().unwrap();
 
     let texture = {
         let mut img = im::ImageBuffer::new(texture_width, texture_height);

@@ -19,7 +19,7 @@ fn main() {
     let size = 32.0;
 
     let mut window: Sdl2Window = WindowSettings::new("texture_swap", [1024; 2])
-        .opengl(opengl).build().unwrap();
+        .graphics_api(opengl).build().unwrap();
 
     let textures = {
         (0..texture_count).map(|_| {
