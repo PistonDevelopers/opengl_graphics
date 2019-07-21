@@ -119,6 +119,10 @@ pub fn bind_blend(blend: Option<Blend>) {
                         gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
                         gl::BlendFuncSeparate(gl::ONE, gl::ONE, gl::ONE, gl::ONE);
                     }
+                    Blend::Lighter => {
+                        gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
+                        gl::BlendFuncSeparate(gl::SRC_ALPHA, gl::ONE, gl::ZERO, gl::ONE);
+                    }
                     Blend::Multiply => {
                         gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
                         gl::BlendFuncSeparate(gl::DST_COLOR, gl::ZERO, gl::DST_ALPHA, gl::ZERO);
