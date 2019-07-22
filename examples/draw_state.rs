@@ -24,7 +24,7 @@ fn main() {
         .unwrap();
 
     let mut clip_inside = true;
-    let blends = [Blend::Alpha, Blend::Add, Blend::Invert, Blend::Multiply];
+    let blends = [Blend::Alpha, Blend::Add, Blend::Invert, Blend::Multiply, Blend::Lighter];
     let mut blend = 0;
     let rust_logo = Texture::from_path(&Path::new("./assets/rust.png"),
                                        &TextureSettings::new()).unwrap();
