@@ -4,7 +4,7 @@ use image::{self, DynamicImage, RgbaImage};
 
 use std::path::Path;
 
-use {ops, ImageSize, CreateTexture, UpdateTexture, TextureSettings, Format, Filter};
+use {ops, ImageSize, CreateTexture, UpdateTexture, TextureOp, TextureSettings, Format, Filter};
 
 trait GlSettings {
     fn get_gl_mag(&self) -> gl::types::GLenum;
@@ -152,9 +152,11 @@ impl ImageSize for Texture {
     }
 }
 
-impl CreateTexture<()> for Texture {
+impl TextureOp<()> for Texture {
     type Error = String;
+}
 
+impl CreateTexture<()> for Texture {
     fn create<S: Into<[u32; 2]>>(_factory: &mut (),
                                  _format: Format,
                                  memory: &[u8],
@@ -198,8 +200,6 @@ impl CreateTexture<()> for Texture {
 }
 
 impl UpdateTexture<()> for Texture {
-    type Error = String;
-
     fn update<O: Into<[u32; 2]>, S: Into<[u32; 2]>>(&mut self,
                                                     _factory: &mut (),
                                                     _format: Format,
