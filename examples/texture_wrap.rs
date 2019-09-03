@@ -12,8 +12,8 @@ use sdl2_window::{OpenGL, Sdl2Window};
 use std::path::Path;
 
 fn main() {
-    println!("Press S to change the texture wrap mode for the s coordinate");
-    println!("Press T to change the texture wrap mode for the t coordinate");
+    println!("Press U to change the texture wrap mode for the u coordinate");
+    println!("Press V to change the texture wrap mode for the v coordinate");
 
     let opengl = OpenGL::V3_2;
     let (w, h) = (640, 480);
@@ -30,8 +30,8 @@ fn main() {
         Wrap::Repeat,
         Wrap::MirroredRepeat,
     ];
-    let mut ix_s = 0;
-    let mut ix_t = 0;
+    let mut ix_u = 0;
+    let mut ix_v = 0;
     let mut texture_settings = TextureSettings::new();
     texture_settings.set_border_color([0.0, 0.0, 0.0, 1.0]);
 
@@ -77,23 +77,23 @@ fn main() {
             });
         }
 
-        if let Some(Button::Keyboard(Key::S)) = e.press_args() {
-            ix_s = (ix_s + 1) % wrap_modes.len();
-            texture_settings.set_wrap_s(wrap_modes[ix_s]);
+        if let Some(Button::Keyboard(Key::U)) = e.press_args() {
+            ix_u = (ix_u + 1) % wrap_modes.len();
+            texture_settings.set_wrap_u(wrap_modes[ix_u]);
             rust_logo = Texture::from_image(&img, &texture_settings);
             println!(
-                "Changed texture wrap mode for s coordinate to: {:?}",
-                wrap_modes[ix_s]
+                "Changed texture wrap mode for u coordinate to: {:?}",
+                wrap_modes[ix_u]
             );
         }
 
-        if let Some(Button::Keyboard(Key::T)) = e.press_args() {
-            ix_t = (ix_t + 1) % wrap_modes.len();
-            texture_settings.set_wrap_t(wrap_modes[ix_t]);
+        if let Some(Button::Keyboard(Key::V)) = e.press_args() {
+            ix_v = (ix_v + 1) % wrap_modes.len();
+            texture_settings.set_wrap_v(wrap_modes[ix_v]);
             rust_logo = Texture::from_image(&img, &texture_settings);
             println!(
-                "Changed texture wrap mode for t coordinate to: {:?}",
-                wrap_modes[ix_t]
+                "Changed texture wrap mode for v coordinate to: {:?}",
+                wrap_modes[ix_v]
             );
         }
     }
