@@ -4,12 +4,14 @@ use image::{self, DynamicImage, RgbaImage};
 
 use std::path::Path;
 
-use {ops, ImageSize, CreateTexture, UpdateTexture, TextureOp, TextureSettings, Format, Filter};
+use {ops, ImageSize, CreateTexture, UpdateTexture, TextureOp, TextureSettings, Format, Filter, Wrap};
 
 trait GlSettings {
     fn get_gl_mag(&self) -> gl::types::GLenum;
     fn get_gl_min(&self) -> gl::types::GLenum;
     fn get_gl_mipmap(&self) -> gl::types::GLenum;
+    fn get_gl_wrap_u(&self) -> gl::types::GLenum;
+    fn get_gl_wrap_v(&self) -> gl::types::GLenum;
 }
 
 impl GlSettings for TextureSettings {
@@ -51,6 +53,25 @@ impl GlSettings for TextureSettings {
             Filter::Nearest => gl::NEAREST,
         }
     }
+
+    fn get_gl_wrap_u(&self) -> gl::types::GLenum {
+        match self.get_wrap_u() {
+            Wrap::Repeat => gl::REPEAT,
+            Wrap::MirroredRepeat => gl::MIRRORED_REPEAT,
+            Wrap::ClampToEdge => gl::CLAMP_TO_EDGE,
+            Wrap::ClampToBorder => gl::CLAMP_TO_BORDER,
+        }
+    }
+
+    fn get_gl_wrap_v(&self) -> gl::types::GLenum {
+        match self.get_wrap_v() {
+            Wrap::Repeat => gl::REPEAT,
+            Wrap::MirroredRepeat => gl::MIRRORED_REPEAT,
+            Wrap::ClampToEdge => gl::CLAMP_TO_EDGE,
+            Wrap::ClampToBorder => gl::CLAMP_TO_BORDER,
+        }
+    }
+
 }
 
 /// Wraps OpenGL texture data.
@@ -179,8 +200,12 @@ impl CreateTexture<()> for Texture {
             gl::TexParameteri(gl::TEXTURE_2D,
                               gl::TEXTURE_MAG_FILTER,
                               settings.get_gl_mag() as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, settings.get_gl_wrap_u() as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, settings.get_gl_wrap_v() as i32);
+            if settings.get_wrap_u() == Wrap::ClampToBorder ||
+                settings.get_wrap_v() == Wrap::ClampToBorder {
+                gl::TexParameterfv(gl::TEXTURE_2D, gl::TEXTURE_BORDER_COLOR, settings.get_border_color().as_ptr());
+            }
             if settings.get_generate_mipmap() {
                 gl::GenerateMipmap(gl::TEXTURE_2D);
             }
