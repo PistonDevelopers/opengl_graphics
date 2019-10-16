@@ -20,6 +20,9 @@ use shader_utils::{compile_shader, DynamicAttribute};
 // `4` for bytes per f32, and `2 + 4` for position and color.
 const CHUNKS: usize = 100;
 
+// Whether to use WebGL-specific features; currently used to select appropriate shaders.
+const USE_WEBGL: bool = cfg!(target_os = "emscripten") || cfg!(feature = "webgl");
+
 /// Describes how to render colored objects.
 pub struct Colored {
     vao: GLuint,
@@ -54,7 +57,7 @@ impl Colored {
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
 
         let mut vertex_shaders = Shaders::new();
-        if cfg!(target_os = "emscripten") {
+        if USE_WEBGL {
             vertex_shaders
                .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120_WEBGL))
                .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE_WEBGL))
@@ -65,7 +68,7 @@ impl Colored {
         };
 
         let mut fragment_shaders = Shaders::new();
-        if cfg!(target_os = "emscripten") {
+        if USE_WEBGL {
             fragment_shaders
                .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120_WEBGL))
                .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE_WEBGL))
@@ -104,7 +107,7 @@ impl Colored {
             gl::AttachShader(program, f_shader_compiled);
 
             let c_o_color = CString::new("o_Color").unwrap();
-            if cfg!(not(target_os = "emscripten")) {
+            if !USE_WEBGL {
                 gl::BindFragDataLocation(program, 0, c_o_color.as_ptr());
             }
             drop(c_o_color);
@@ -184,7 +187,7 @@ impl Textured {
         let src = |bytes| unsafe { ::std::str::from_utf8_unchecked(bytes) };
 
         let mut vertex_shaders = Shaders::new();
-        if cfg!(target_os = "emscripten") {
+        if USE_WEBGL {
             vertex_shaders
                .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120_WEBGL))
                .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE_WEBGL))
@@ -195,7 +198,7 @@ impl Textured {
         };
 
         let mut fragment_shaders = Shaders::new();
-        if cfg!(target_os = "emscripten") {
+        if USE_WEBGL {
             fragment_shaders
                .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120_WEBGL))
                .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE_WEBGL))
@@ -233,7 +236,7 @@ impl Textured {
             gl::AttachShader(program, f_shader_compiled);
 
             let c_o_color = CString::new("o_Color").unwrap();
-            if cfg!(not(target_os = "emscripten")) {
+            if !USE_WEBGL {
                 gl::BindFragDataLocation(program, 0, c_o_color.as_ptr());
             }
             drop(c_o_color);

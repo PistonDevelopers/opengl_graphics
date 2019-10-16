@@ -26,6 +26,9 @@ documentation = "https://docs.rs/piston2d-opengl_graphics"
 name = "opengl_graphics"
 path = "src/lib.rs"
 
+[features]
+webgl = []
+
 [dependencies]
 image = "0.22.1"
 gl = "0.11.0"
