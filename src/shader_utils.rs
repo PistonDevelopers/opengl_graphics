@@ -53,7 +53,7 @@ impl DynamicAttribute {
            ty: GLenum,
            vao: GLuint)
            -> Result<Self, String> {
-        let location = try!(attribute_location(program, name));
+        let location = attribute_location(program, name)?;
         let mut vbo = 0;
         unsafe {
             gl::GenBuffers(1, &mut vbo);

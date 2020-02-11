@@ -68,7 +68,7 @@ fn main() {
                 ];
                 let mut verts = [[0.0, 0.0]; 6];
                 let indices_points: [usize; 6] = [0, 1, 2, 0, 2, 3];
-                for (ixv, &ixp) in (0..6).zip(indices_points.into_iter()) {
+                for (ixv, &ixp) in (0..6).zip((&indices_points).into_iter()) {
                     verts[ixv] = points[ixp];
                 }
                 g.tri_list_uv(&DrawState::new_alpha(), &[1.0; 4], &rust_logo, |f| {
