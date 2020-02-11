@@ -86,19 +86,19 @@ impl Colored {
                                   fragment_shaders : &Shaders<GLSL, str>)
             -> Result<Self, String> {
 
-        let v_shader = try!(vertex_shaders.get(glsl)
-            .ok_or("No compatible vertex shader"));
+        let v_shader = vertex_shaders.get(glsl)
+            .ok_or("No compatible vertex shader")?;
 
-        let v_shader_compiled = try!(
+        let v_shader_compiled =
             compile_shader(gl::VERTEX_SHADER, v_shader)
-            .map_err(|s| format!("Error compiling vertex shader: {}", s)));
+            .map_err(|s| format!("Error compiling vertex shader: {}", s))?;
 
-        let f_shader = try!(fragment_shaders.get(glsl)
-            .ok_or("No compatible fragment shader"));
+        let f_shader = fragment_shaders.get(glsl)
+            .ok_or("No compatible fragment shader")?;
 
-        let f_shader_compiled = try!(
+        let f_shader_compiled =
             compile_shader(gl::FRAGMENT_SHADER, f_shader)
-            .map_err(|s| format!("Error compiling fragment shader: {}", s)));
+            .map_err(|s| format!("Error compiling fragment shader: {}", s))?;
 
         let program;
         unsafe {
@@ -215,19 +215,19 @@ impl Textured {
     pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>,
                                   fragment_shaders : &Shaders<GLSL, str>)
             -> Result<Self, String> {
-        let v_shader = try!(vertex_shaders.get(glsl)
-            .ok_or("No compatible vertex shader"));
+        let v_shader = vertex_shaders.get(glsl)
+            .ok_or("No compatible vertex shader")?;
 
-        let v_shader_compiled = try!(
+        let v_shader_compiled =
             compile_shader(gl::VERTEX_SHADER, v_shader)
-            .map_err(|s| format!("Error compiling vertex shader: {}", s)));
+            .map_err(|s| format!("Error compiling vertex shader: {}", s))?;
 
-        let f_shader = try!(fragment_shaders.get(glsl)
-            .ok_or("No compatible fragment shader"));
+        let f_shader = fragment_shaders.get(glsl)
+            .ok_or("No compatible fragment shader")?;
 
-        let f_shader_compiled = try!(
+        let f_shader_compiled =
             compile_shader(gl::FRAGMENT_SHADER, f_shader)
-            .map_err(|s| format!("Error compiling fragment shader: {}", s)));
+            .map_err(|s| format!("Error compiling fragment shader: {}", s))?;
 
         let program;
         unsafe {
@@ -473,7 +473,7 @@ impl Graphics for GlGraphics {
     }
 
     fn tri_list<F>(&mut self, draw_state: &DrawState, color: &[f32; 4], mut f: F)
-        where F: FnMut(&mut FnMut(&[[f32; 2]]))
+        where F: FnMut(&mut dyn FnMut(&[[f32; 2]]))
     {
         let color = gamma_srgb_to_linear(*color);
 
@@ -522,7 +522,7 @@ impl Graphics for GlGraphics {
                       color: &[f32; 4],
                       texture: &Texture,
                       mut f: F)
-        where F: FnMut(&mut FnMut(&[[f32; 2]], &[[f32; 2]]))
+        where F: FnMut(&mut dyn FnMut(&[[f32; 2]], &[[f32; 2]]))
     {
         let color = gamma_srgb_to_linear(*color);
 
