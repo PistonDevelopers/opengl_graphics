@@ -17,7 +17,7 @@ pub fn bind_state(old_state: &DrawState, new_state: &DrawState, viewport: &Optio
 pub fn bind_scissor(rect: Option<[u32; 4]>, viewport: &Option<Viewport>) {
     match rect {
         Some(r) => {
-            // https://www.khronos.org/opengl/wiki/Scissor_Test indicates that 
+            // https://www.khronos.org/opengl/wiki/Scissor_Test indicates that
             // gl::Scissor takes x,y defined as lower left,
             // but piston passes rect with x,y defined as upper left.
             // To fix this we need to know height of the viewport
@@ -47,6 +47,11 @@ pub fn bind_stencil(stencil: Option<Stencil>) {
             Some(s) => {
                 gl::Enable(gl::STENCIL_TEST);
                 match s {
+                    Stencil::Increment => {
+                        gl::StencilFunc(gl::NEVER, 0 as gl::types::GLint, 255);
+                        gl::StencilMask(255);
+                        gl::StencilOp(gl::INCR, gl::KEEP, gl::KEEP);
+                    }
                     Stencil::Clip(val) => {
                         gl::StencilFunc(gl::NEVER, val as gl::types::GLint, 255);
                         gl::StencilMask(255);
