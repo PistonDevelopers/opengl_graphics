@@ -21,6 +21,7 @@ readme = "README.md"
 repository = "https://github.com/PistonDevelopers/opengl_graphics.git"
 homepage = "https://github.com/PistonDevelopers/opengl_graphics"
 documentation = "https://docs.rs/piston2d-opengl_graphics"
+exclude = ["assets/*", "Cargo.png"]
 
 [lib]
 name = "opengl_graphics"
