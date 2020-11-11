@@ -1,7 +1,7 @@
 [package]
 
 name = "piston2d-opengl_graphics"
-version = "0.74.0"
+version = "0.75.0"
 authors = [
     "bvssvni <bvssvni@gmail.com>",
     "Coeuvre <coeuvre@gmail.com>",
@@ -40,7 +40,7 @@ shader_version = "0.7.0"
 fnv = "1.0.2"
 
 [dependencies.piston2d-graphics]
-version = "0.37.0"
+version = "0.38.0"
 features = ["glyph_cache_rusttype"]
 
 [dev-dependencies]
