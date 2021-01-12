@@ -1,7 +1,7 @@
 [package]
 
 name = "piston2d-opengl_graphics"
-version = "0.76.0"
+version = "0.77.0"
 authors = [
     "bvssvni <bvssvni@gmail.com>",
     "Coeuvre <coeuvre@gmail.com>",
@@ -32,7 +32,7 @@ webgl = []
 
 [dependencies]
 image = "0.23.0"
-gl = "0.11.0"
+gl = "0.13.0"
 piston-shaders_graphics2d = "0.4.0"
 piston-texture = "0.8.0"
 piston-viewport = "1.0.0"
@@ -45,7 +45,7 @@ features = ["glyph_cache_rusttype"]
 
 [dev-dependencies]
 piston = "0.52.0"
-pistoncore-sdl2_window = "0.66.0"
+pistoncore-sdl2_window = "0.67.0"
 rand = "0.6.0"
 
 [build-dependencies]
