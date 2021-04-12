@@ -454,7 +454,7 @@ impl<'a> GlGraphics {
     /// If the OpenGL function pointers have not been loaded yet.
     /// See https://github.com/PistonDevelopers/opengl_graphics/issues/103 for more info.
     pub fn new(opengl: OpenGL) -> Self {
-        assert!(gl::Enable::is_loaded(), GL_FUNC_NOT_LOADED);
+        assert!(gl::Enable::is_loaded(), "{}", GL_FUNC_NOT_LOADED);
 
         let glsl = opengl.to_glsl();
         // Load the vertices, color and texture coord buffers.
@@ -479,7 +479,7 @@ impl<'a> GlGraphics {
         textured: Textured,
         textured_color: TexturedColor,
     ) -> Self {
-        assert!(gl::Enable::is_loaded(), GL_FUNC_NOT_LOADED);
+        assert!(gl::Enable::is_loaded(), "{}", GL_FUNC_NOT_LOADED);
 
         // Load the vertices, color and texture coord buffers.
         GlGraphics {
