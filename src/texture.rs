@@ -4,7 +4,7 @@ use image::{self, DynamicImage, RgbaImage};
 
 use std::path::Path;
 
-use {ops, ImageSize, CreateTexture, UpdateTexture, TextureOp, TextureSettings, Format, Filter, Wrap};
+use crate::{ops, ImageSize, CreateTexture, UpdateTexture, TextureOp, TextureSettings, Format, Filter, Wrap};
 
 trait GlSettings {
     fn get_gl_mag(&self) -> gl::types::GLenum;
