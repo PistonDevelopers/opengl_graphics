@@ -8,7 +8,7 @@ use gl::types::{GLboolean, GLint};
 use std::marker::PhantomData;
 
 // Local crate.
-use back_end::GlGraphics;
+use crate::back_end::GlGraphics;
 
 /// Describes a shader uniform of a given type.
 #[derive(Clone, Copy)]
