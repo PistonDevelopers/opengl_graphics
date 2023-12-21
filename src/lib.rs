@@ -6,7 +6,10 @@
 extern crate shader_version;
 extern crate shaders_graphics2d as shaders;
 extern crate image;
+#[cfg(not(feature = "glow"))]
 extern crate gl;
+#[cfg(feature = "glow")]
+pub extern crate glow_wrap as gl;
 extern crate graphics;
 extern crate texture as texture_lib;
 extern crate viewport;

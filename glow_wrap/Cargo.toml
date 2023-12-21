@@ -1,0 +1,7 @@
+[package]
+name = "glow_wrap"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+glow = "0.12.0"
