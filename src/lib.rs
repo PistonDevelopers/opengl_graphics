@@ -9,7 +9,7 @@ extern crate image;
 #[cfg(not(feature = "glow"))]
 extern crate gl;
 #[cfg(feature = "glow")]
-pub extern crate glow_wrap as gl;
+extern crate glow_wrap as gl;
 extern crate graphics;
 extern crate texture as texture_lib;
 extern crate viewport;
@@ -30,3 +30,6 @@ pub type GlyphCache<'a> = graphics::glyph_cache::rusttype::GlyphCache<'a, (), Te
 mod back_end;
 mod texture;
 mod draw_state;
+
+#[cfg(feature = "glow")]
+pub use gl::set_context;

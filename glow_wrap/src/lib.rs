@@ -1,19 +1,57 @@
 use std::ffi::CStr;
-use std::num::NonZeroU32;
 use std::sync::Arc;
 use std::sync::OnceLock;
+#[cfg(target_arch = "wasm32")]
+use std::{borrow::BorrowMut, cell::RefCell};
 
-use glow::HasContext;
-use glow::NativeBuffer;
-use glow::NativeProgram;
-use glow::NativeShader;
-use glow::NativeUniformLocation;
-use glow::NativeVertexArray;
+use glow::HasContext as _;
 
+mod key;
+use key::ConvertKey;
+
+struct Ref<T>(T);
+unsafe impl<T> Send for Ref<T> {}
+unsafe impl<T> Sync for Ref<T> {}
+
+#[cfg(not(target_arch = "wasm32"))]
 static CONTEXT: OnceLock<Arc<glow::Context>> = OnceLock::new();
+#[cfg(target_arch = "wasm32")]
+static CONTEXT: OnceLock<Ref<Arc<glow::Context>>> = OnceLock::new();
 
-pub fn init(ctx: Arc<glow::Context>) {
+#[cfg(target_arch = "wasm32")]
+slotmap::new_key_type! { pub struct WebGlUniformLocationKey; }
+#[cfg(target_arch = "wasm32")]
+unsafe impl Send for WebGlUniformLocationKey {}
+#[cfg(target_arch = "wasm32")]
+unsafe impl Sync for WebGlUniformLocationKey {}
+
+#[cfg(target_arch = "wasm32")]
+static LOCATION: OnceLock<
+    Ref<RefCell<slotmap::SlotMap<WebGlUniformLocationKey, web_sys::WebGlUniformLocation>>>,
+> = OnceLock::new();
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn set_context(ctx: Arc<glow::Context>) {
     let _ = CONTEXT.set(ctx);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[inline]
+fn gl() -> &'static glow::Context {
+    CONTEXT.get().unwrap().as_ref()
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn init(ctx: Arc<glow::Context>) {
+    use slotmap::SlotMap;
+    let _ = CONTEXT.set(Ref(ctx));
+    let _ = LOCATION.set(Ref(RefCell::new(SlotMap::with_key())));
+}
+
+#[cfg(target_arch = "wasm32")]
+#[inline]
+fn gl() -> &'static glow::Context {
+    CONTEXT.get().unwrap().0.as_ref()
 }
 
 pub mod types {
@@ -23,98 +61,42 @@ pub mod types {
     pub type GLenum = u32;
     pub type GLuint = u32;
     pub type GLsizei = i32;
-    pub type GLboolean = bool;
+    pub type GLboolean = u8;
     pub type GLint = i32;
     pub type GLchar = std::ffi::c_char;
     pub type GLsizeiptr = usize;
     pub type GLbitfield = u32;
 }
 
-pub const LINEAR: u32 = glow::LINEAR;
-pub const NEAREST: u32 = glow::NEAREST;
-pub const LINEAR_MIPMAP_LINEAR: u32 = glow::LINEAR_MIPMAP_LINEAR;
-pub const LINEAR_MIPMAP_NEAREST: u32 = glow::LINEAR_MIPMAP_NEAREST;
-pub const NEAREST_MIPMAP_LINEAR: u32 = glow::NEAREST_MIPMAP_LINEAR;
-pub const NEAREST_MIPMAP_NEAREST: u32 = glow::NEAREST_MIPMAP_NEAREST;
-pub const REPEAT: u32 = glow::REPEAT;
-pub const MIRRORED_REPEAT: u32 = glow::MIRRORED_REPEAT;
-pub const CLAMP_TO_EDGE: u32 = glow::CLAMP_TO_EDGE;
-pub const CLAMP_TO_BORDER: u32 = glow::CLAMP_TO_BORDER;
-pub const RGBA: u32 = glow::RGBA;
-pub const SRGB_ALPHA: u32 = glow::SRGB_ALPHA;
-
-pub const TEXTURE_2D: u32 = glow::TEXTURE_2D;
-pub const TEXTURE_MIN_FILTER: u32 = glow::TEXTURE_MIN_FILTER;
-pub const TEXTURE_MAG_FILTER: u32 = glow::TEXTURE_MAG_FILTER;
-pub const TEXTURE_WRAP_S: u32 = glow::TEXTURE_WRAP_S;
-pub const TEXTURE_WRAP_T: u32 = glow::TEXTURE_WRAP_T;
-pub const TEXTURE_BORDER_COLOR: u32 = glow::TEXTURE_BORDER_COLOR;
-
-pub const UNSIGNED_BYTE: u32 = glow::UNSIGNED_BYTE;
-pub const ARRAY_BUFFER: u32 = glow::ARRAY_BUFFER;
-pub const DYNAMIC_DRAW: u32 = glow::DYNAMIC_DRAW;
-pub const COMPILE_STATUS: u32 = glow::COMPILE_STATUS;
-pub const CULL_FACE: u32 = glow::CULL_FACE;
-pub const TRIANGLES: u32 = glow::TRIANGLES;
-pub const VERTEX_SHADER: u32 = glow::VERTEX_SHADER;
-pub const FRAGMENT_SHADER: u32 = glow::FRAGMENT_SHADER;
-pub const FRAMEBUFFER_SRGB: u32 = glow::FRAMEBUFFER_SRGB;
-pub const COLOR_BUFFER_BIT: u32 = glow::COLOR_BUFFER_BIT;
-pub const DEPTH_BUFFER_BIT: u32 = glow::DEPTH_BUFFER_BIT;
-pub const STENCIL_BUFFER_BIT: u32 = glow::STENCIL_BUFFER_BIT;
-pub const SCISSOR_TEST: u32 = glow::SCISSOR_TEST;
-pub const STENCIL_TEST: u32 = glow::STENCIL_TEST;
-
-pub const INCR: u32 = glow::INCR;
-pub const KEEP: u32 = glow::KEEP;
-pub const REPLACE: u32 = glow::REPLACE;
-pub const EQUAL: u32 = glow::EQUAL;
-pub const NOTEQUAL: u32 = glow::NOTEQUAL;
-
-pub const FUNC_ADD: u32 = glow::FUNC_ADD;
-pub const SRC_ALPHA: u32 = glow::SRC_ALPHA;
-pub const ONE_MINUS_SRC_ALPHA: u32 = glow::ONE_MINUS_SRC_ALPHA;
-pub const ONE: u32 = glow::ONE;
-pub const ZERO: u32 = glow::ZERO;
-pub const DST_COLOR: u32 = glow::DST_COLOR;
-pub const DST_ALPHA: u32 = glow::DST_ALPHA;
-pub const FUNC_SUBTRACT: u32 = glow::FUNC_SUBTRACT;
-pub const CONSTANT_COLOR: u32 = glow::CONSTANT_COLOR;
-pub const SRC_COLOR: u32 = glow::SRC_COLOR;
-
-pub const BLEND: u32 = glow::BLEND;
-
-pub const NEVER: u32 = glow::NEVER;
-pub const TRUE: bool = true;
-pub const FALSE: bool = false;
-pub const FLOAT: u32 = glow::FLOAT;
-
-#[inline]
-fn gl() -> &'static glow::Context {
-    CONTEXT.get().unwrap().as_ref()
-}
+pub use glow::{
+    ARRAY_BUFFER, BLEND, CLAMP_TO_BORDER, CLAMP_TO_EDGE, COLOR_BUFFER_BIT, COMPILE_STATUS,
+    CONSTANT_COLOR, CULL_FACE, DEPTH_BUFFER_BIT, DST_ALPHA, DST_COLOR, DYNAMIC_DRAW, EQUAL, FALSE,
+    FLOAT, FRAGMENT_SHADER, FRAMEBUFFER_SRGB, FUNC_ADD, FUNC_SUBTRACT, INCR, KEEP, LINEAR,
+    LINEAR_MIPMAP_LINEAR, LINEAR_MIPMAP_NEAREST, MIRRORED_REPEAT, NEAREST, NEAREST_MIPMAP_LINEAR,
+    NEAREST_MIPMAP_NEAREST, NEVER, NOTEQUAL, ONE, ONE_MINUS_SRC_ALPHA, REPEAT, REPLACE, RGBA,
+    SCISSOR_TEST, SRC_ALPHA, SRC_COLOR, SRGB_ALPHA, STENCIL_BUFFER_BIT, STENCIL_TEST, TEXTURE_2D,
+    TEXTURE_BORDER_COLOR, TEXTURE_MAG_FILTER, TEXTURE_MIN_FILTER, TEXTURE_WRAP_S, TEXTURE_WRAP_T,
+    TRIANGLES, TRUE, UNSIGNED_BYTE, VERTEX_SHADER, ZERO,
+};
 
 #[allow(non_snake_case)]
 pub unsafe fn DeleteTextures(n: types::GLsizei, textures: *const types::GLuint) {
     let textures = std::slice::from_raw_parts(textures, n as usize);
     for texture in textures {
-        gl().delete_texture(glow::NativeTexture(NonZeroU32::new_unchecked(*texture)));
+        gl().delete_texture(glow::Texture::from_key(*texture));
     }
 }
 
 #[allow(non_snake_case)]
-pub unsafe fn GenTextures(n: types::GLsizei, textures: *mut types::GLuint) {
+pub unsafe fn GenTextures(_: types::GLsizei, textures: *mut types::GLuint) {
     if let Ok(id) = gl().create_texture() {
-        *textures = id.0.get();
+        *textures = glow::Texture::to_key(&id);
     }
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn BindTexture(target: u32, texture: types::GLuint) {
-    gl().bind_texture(
-        target,
-        Some(glow::NativeTexture(NonZeroU32::new_unchecked(texture))),
-    );
+    gl().bind_texture(target, Some(glow::Texture::from_key(texture)));
 }
 
 #[allow(non_snake_case)]
@@ -145,7 +127,8 @@ pub unsafe fn TexImage2D(
     ty: u32,
     pixels: *const u8,
 ) {
-    let pixels = std::slice::from_raw_parts(pixels, 4);
+    debug_assert!(format == glow::SRGB_ALPHA || format == glow::RGBA);
+    let pixels = std::slice::from_raw_parts(pixels, (width * height * 4) as usize);
     gl().tex_image_2d(
         target,
         level,
@@ -163,22 +146,23 @@ pub unsafe fn TexImage2D(
 pub unsafe fn TexSubImage2D(
     target: u32,
     level: i32,
-    internal_format: i32,
+    x_offset: i32,
+    y_offset: i32,
     width: i32,
     height: i32,
-    border: i32,
     format: u32,
     ty: u32,
     pixels: *const u8,
 ) {
-    let pixels = std::slice::from_raw_parts(pixels, 4);
+    debug_assert!(format == glow::SRGB_ALPHA || format == glow::RGBA);
+    let pixels = std::slice::from_raw_parts(pixels, (width * height * 4) as usize);
     gl().tex_sub_image_2d(
         target,
         level,
-        internal_format,
+        x_offset,
+        y_offset,
         width,
         height,
-        border,
         format,
         ty,
         glow::PixelUnpackData::Slice(pixels),
@@ -191,18 +175,51 @@ pub unsafe fn GetUniformLocation(
     name: *const types::GLchar,
 ) -> types::GLint {
     let name = char_ptr_to_str(name);
-    let location =
-        gl().get_uniform_location(NativeProgram(NonZeroU32::new_unchecked(program)), name);
+    let location = gl().get_uniform_location(glow::Program::from_key(program), name);
+
     if let Some(location) = location {
-        return location.0 as types::GLint;
+        #[cfg(target_arch = "wasm32")]
+        {
+            if let Some(Ref(slot)) = LOCATION.get().borrow_mut().as_mut() {
+                let key = slot.borrow_mut().insert(location);
+                return WebGlUniformLocationKey::to_key(&key) as types::GLint;
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            return glow::UniformLocation::to_key(&location) as types::GLint;
+        }
     }
+
     return 0;
+}
+
+#[cfg(target_arch = "wasm32")]
+unsafe fn get_uniform<F>(location: types::GLuint, f: F)
+where
+    F: FnOnce(&web_sys::WebGlUniformLocation),
+{
+    let key = WebGlUniformLocationKey::from_key(location);
+    if let Some(Ref(slot)) = LOCATION.get().borrow_mut().as_mut() {
+        if let Some(location) = slot.borrow_mut().get(key) {
+            f(&location);
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+unsafe fn get_uniform<F>(location: types::GLuint, f: F)
+where
+    F: FnOnce(&glow::UniformLocation),
+{
+    let location = glow::UniformLocation::from_key(location);
+    f(&location);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn CreateProgram() -> types::GLuint {
     match gl().create_program() {
-        Ok(program) => return program.0.get(),
+        Ok(program) => return glow::Program::to_key(&program),
         Err(_) => {}
     };
     return 0;
@@ -210,44 +227,48 @@ pub unsafe fn CreateProgram() -> types::GLuint {
 
 #[allow(non_snake_case)]
 pub unsafe fn LinkProgram(program: types::GLuint) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
+    let program = glow::Program::from_key(program);
     gl().link_program(program);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn UseProgram(program: types::GLuint) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
+    let program = glow::Program::from_key(program);
     gl().use_program(Some(program));
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn DeleteProgram(program: types::GLuint) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
+    let program = glow::Program::from_key(program);
     gl().delete_program(program);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn ProgramUniform1f(program: types::GLuint, location: types::GLint, value: f32) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
-    let location = NativeUniformLocation(location as u32);
+    let program = glow::Program::from_key(program);
     gl().use_program(Some(program));
-    gl().uniform_1_f32(Some(&location), value);
+
+    get_uniform(location as u32, |location| {
+        gl().uniform_1_f32(Some(&location), value);
+    });
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn ProgramUniform1i(program: types::GLuint, location: types::GLint, value: i32) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
-    let location = NativeUniformLocation(location as u32);
+    let program = glow::Program::from_key(program);
     gl().use_program(Some(program));
-    gl().uniform_1_i32(Some(&location), value);
+    get_uniform(location as u32, |location| {
+        gl().uniform_1_i32(Some(&location), value);
+    });
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn ProgramUniform2f(program: types::GLuint, location: types::GLint, x: f32, y: f32) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
-    let location = NativeUniformLocation(location as u32);
+    let program = glow::Program::from_key(program);
     gl().use_program(Some(program));
-    gl().uniform_2_f32(Some(&location), x, y);
+    get_uniform(location as u32, |location| {
+        gl().uniform_2_f32(Some(&location), x, y);
+    });
 }
 
 #[allow(non_snake_case)]
@@ -258,10 +279,12 @@ pub unsafe fn ProgramUniform3f(
     y: f32,
     z: f32,
 ) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
-    let location = NativeUniformLocation(location as u32);
+    let program = glow::Program::from_key(program);
     gl().use_program(Some(program));
-    gl().uniform_3_f32(Some(&location), x, y, z);
+
+    get_uniform(location as u32, |location| {
+        gl().uniform_3_f32(Some(&location), x, y, z);
+    });
 }
 
 #[allow(non_snake_case)]
@@ -273,16 +296,18 @@ pub unsafe fn ProgramUniform4f(
     z: f32,
     w: f32,
 ) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
-    let location = NativeUniformLocation(location as u32);
+    let program = glow::Program::from_key(program);
     gl().use_program(Some(program));
-    gl().uniform_4_f32(Some(&location), x, y, z, w);
+    get_uniform(location as u32, |location| {
+        gl().uniform_4_f32(Some(&location), x, y, z, w);
+    });
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn Uniform4f(location: types::GLint, x: f32, y: f32, z: f32, w: f32) {
-    let location = NativeUniformLocation(location as u32);
-    gl().uniform_4_f32(Some(&location), x, y, z, w);
+    get_uniform(location as u32, |location| {
+        gl().uniform_4_f32(Some(&location), x, y, z, w);
+    });
 }
 
 #[allow(non_snake_case)]
@@ -293,11 +318,13 @@ pub unsafe fn ProgramUniformMatrix2fv(
     transpose: types::GLboolean,
     value: *const f32,
 ) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
-    let location = NativeUniformLocation(location as u32);
+    let program = glow::Program::from_key(program);
     gl().use_program(Some(program));
     let value = std::slice::from_raw_parts(value, count as usize * 4);
-    gl().uniform_matrix_2_f32_slice(Some(&location), transpose, value);
+
+    get_uniform(location as u32, |location| {
+        gl().uniform_matrix_2_f32_slice(Some(&location), transpose == TRUE, value);
+    });
 }
 
 #[allow(non_snake_case)]
@@ -308,11 +335,13 @@ pub unsafe fn ProgramUniformMatrix3fv(
     transpose: types::GLboolean,
     value: *const f32,
 ) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
-    let location = NativeUniformLocation(location as u32);
+    let program = glow::Program::from_key(program);
     gl().use_program(Some(program));
     let value = std::slice::from_raw_parts(value, count as usize * 9);
-    gl().uniform_matrix_3_f32_slice(Some(&location), transpose, value);
+
+    get_uniform(location as u32, |location| {
+        gl().uniform_matrix_3_f32_slice(Some(&location), transpose == TRUE, value);
+    });
 }
 
 #[allow(non_snake_case)]
@@ -323,42 +352,46 @@ pub unsafe fn ProgramUniformMatrix4fv(
     transpose: types::GLboolean,
     value: *const f32,
 ) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
-    let location = NativeUniformLocation(location as u32);
+    let program = glow::Program::from_key(program);
     gl().use_program(Some(program));
     let value = std::slice::from_raw_parts(value, count as usize * 16);
-    gl().uniform_matrix_4_f32_slice(Some(&location), transpose, value);
+
+    get_uniform(location as u32, |location| {
+        gl().uniform_matrix_4_f32_slice(Some(&location), transpose == TRUE, value);
+    });
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn DeleteBuffers(_: types::GLsizei, buffer: &types::GLuint) {
-    let buffer = NativeBuffer(NonZeroU32::new_unchecked(*buffer));
+    let buffer = glow::Buffer::from_key(*buffer);
     gl().delete_buffer(buffer)
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn BindVertexArray(array: types::GLuint) {
-    let array = NativeVertexArray(NonZeroU32::new_unchecked(array));
-    gl().bind_vertex_array(Some(array));
+    if array > 0 {
+        let array = glow::VertexArray::from_key(array);
+        gl().bind_vertex_array(Some(array));
+    }
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn GenVertexArrays(_: types::GLsizei, arrays: *mut types::GLuint) {
     match gl().create_vertex_array() {
-        Ok(array) => *arrays = array.0.get(),
+        Ok(array) => *arrays = glow::VertexArray::to_key(&array),
         Err(_) => {}
     };
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn DeleteVertexArrays(_: types::GLsizei, array: *const types::GLuint) {
-    let array = NativeVertexArray(NonZeroU32::new_unchecked(*array));
+    let array = glow::VertexArray::from_key(*array);
     gl().delete_vertex_array(array);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn BindBuffer(target: types::GLenum, buffer: types::GLuint) {
-    let buffer = NativeBuffer(NonZeroU32::new_unchecked(buffer));
+    let buffer = glow::Buffer::from_key(buffer);
     gl().bind_buffer(target, Some(buffer));
 }
 
@@ -376,13 +409,20 @@ pub unsafe fn VertexAttribPointer(
     } else {
         *offset
     };
-    gl().vertex_attrib_pointer_f32(index, size as i32, data_type, normalized, stride, offset);
+    gl().vertex_attrib_pointer_f32(
+        index,
+        size as i32,
+        data_type,
+        normalized == TRUE,
+        stride,
+        offset,
+    );
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn GenBuffers(_: types::GLsizei, buffer: &mut types::GLuint) {
     if let Ok(buf) = gl().create_buffer() {
-        *buffer = buf.0.get();
+        *buffer = glow::Buffer::to_key(&buf);
     }
 }
 
@@ -406,7 +446,7 @@ pub unsafe fn BufferData(
 #[allow(non_snake_case)]
 pub unsafe fn CreateShader(shader_type: types::GLenum) -> types::GLuint {
     if let Ok(shader) = gl().create_shader(shader_type) {
-        return shader.0.get();
+        return glow::Shader::to_key(&shader);
     }
     return 0;
 }
@@ -418,41 +458,41 @@ pub unsafe fn ShaderSource(
     source: *const *const types::GLchar,
     _length: *const types::GLint,
 ) {
-    let shader = NativeShader(NonZeroU32::new_unchecked(shader));
+    let shader = glow::Shader::from_key(shader);
     let source = char_ptr_to_str(*source);
     gl().shader_source(shader, source);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn CompileShader(shader: types::GLuint) {
-    let shader = NativeShader(NonZeroU32::new_unchecked(shader));
+    let shader = glow::Shader::from_key(shader);
     gl().compile_shader(shader);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn GetCompleStatus(shader: types::GLuint, params: *mut types::GLint) {
-    let shader = NativeShader(NonZeroU32::new_unchecked(shader));
+    let shader = glow::Shader::from_key(shader);
     let status = gl().get_shader_compile_status(shader);
     *params = status as types::GLint;
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn GetShaderInfoLog(shader: types::GLuint) -> String {
-    let shader = NativeShader(NonZeroU32::new_unchecked(shader));
+    let shader = glow::Shader::from_key(shader);
     let log = gl().get_shader_info_log(shader);
     log
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn AttachShader(program: types::GLuint, shader: types::GLuint) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
-    let shader = NativeShader(NonZeroU32::new_unchecked(shader));
+    let program = glow::Program::from_key(program);
+    let shader = glow::Shader::from_key(shader);
     gl().attach_shader(program, shader);
 }
 
 #[allow(non_snake_case)]
 pub unsafe fn DeleteShader(shader: types::GLuint) {
-    let shader = NativeShader(NonZeroU32::new_unchecked(shader));
+    let shader = glow::Shader::from_key(shader);
     gl().delete_shader(shader);
 }
 
@@ -460,10 +500,11 @@ pub unsafe fn DeleteShader(shader: types::GLuint) {
 pub unsafe fn GetAttribLocation(
     program: types::GLuint,
     name: *const types::GLchar,
-) -> types::GLuint {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
+) -> types::GLint {
+    let program = glow::Program::from_key(program);
     gl().get_attrib_location(program, char_ptr_to_str(name))
-        .unwrap_or(0)
+        .map(|l| l as i32)
+        .unwrap_or(-1)
 }
 
 #[allow(non_snake_case)]
@@ -487,7 +528,7 @@ pub unsafe fn BindFragDataLocation(
     color: types::GLuint,
     name: *const types::GLchar,
 ) {
-    let program = NativeProgram(NonZeroU32::new_unchecked(program));
+    let program = glow::Program::from_key(program);
     gl().bind_frag_data_location(program, color, char_ptr_to_str(name))
 }
 

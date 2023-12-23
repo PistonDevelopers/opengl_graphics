@@ -2,9 +2,12 @@
 
 // External crates.
 use gl;
-use gl::types::{GLboolean, GLchar, GLenum, GLint, GLsizeiptr, GLuint};
+use gl::types::{GLboolean, GLenum, GLint, GLsizeiptr, GLuint};
 use std::ffi::CString;
 use std::{ptr, mem};
+
+#[cfg(not(feature = "glow"))]
+use gl::types::GLchar;
 
 /// Describes a shader attribute.
 pub struct DynamicAttribute {

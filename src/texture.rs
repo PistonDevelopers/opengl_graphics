@@ -143,6 +143,23 @@ impl Texture {
         Ok(Texture::from_image(&img, settings))
     }
 
+    /// Load iamge from bytes.
+    pub fn from_bytes(bytes:&[u8], settings: &TextureSettings) -> Result<Self, String> {
+        let img = match image::load_from_memory(bytes) {
+            Ok(img) => img,
+            Err(e) => {
+                return Err(format!("Could not load image from bytes. {:?}", e))
+            }
+        };
+
+        let img = match img {
+            DynamicImage::ImageRgba8(img) => img,
+            x => x.to_rgba8(),
+        };
+
+        Ok(Texture::from_image(&img, settings))
+    }
+
     /// Creates a texture from image.
     pub fn from_image(img: &RgbaImage, settings: &TextureSettings) -> Self {
         let (width, height) = img.dimensions();

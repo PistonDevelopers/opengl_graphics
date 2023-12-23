@@ -21,7 +21,7 @@ use crate::shader_utils::{compile_shader, DynamicAttribute};
 const CHUNKS: usize = 100;
 
 // Whether to use WebGL-specific features; currently used to select appropriate shaders.
-const USE_WEBGL: bool = cfg!(target_os = "emscripten") || cfg!(feature = "webgl");
+const USE_WEBGL: bool = cfg!(all(target_arch = "wasm32",target_os = "unknown")) || cfg!(target_os = "emscripten") || cfg!(feature = "webgl");
 
 /// Describes how to render colored objects.
 pub struct Colored {
