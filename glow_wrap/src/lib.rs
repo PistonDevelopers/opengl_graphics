@@ -42,7 +42,7 @@ fn gl() -> &'static glow::Context {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn init(ctx: Arc<glow::Context>) {
+pub fn set_context(ctx: Arc<glow::Context>) {
     use slotmap::SlotMap;
     let _ = CONTEXT.set(Ref(ctx));
     let _ = LOCATION.set(Ref(RefCell::new(SlotMap::with_key())));
