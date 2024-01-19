@@ -42,7 +42,7 @@ piston-viewport = "1.0.0"
 shader_version = "0.7.0"
 fnv = "1.0.2"
 
-piston2d-glow_wrap = { path = "glow_wrap", optional = true}
+piston2d-glow_wrap = { path = "glow_wrap", version = "0.1.0", optional = true}
 gl = { version = "0.13.0", optional = true}
 
 
