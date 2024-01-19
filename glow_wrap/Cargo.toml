@@ -2,6 +2,12 @@
 name = "piston2d-glow_wrap"
 version = "0.1.0"
 edition = "2021"
+description = "Glow wrapping code for Piston OpenGL backend"
+license = "MIT"
+keywords = ["glow", "graphics", "2d", "piston"]
+repository = "https://github.com/PistonDevelopers/opengl_graphics.git"
+homepage = "https://github.com/PistonDevelopers/opengl_graphics"
+documentation = "https://docs.rs/piston2d-glow_wrap"
 
 [lib]
 name = "glow_wrap"
