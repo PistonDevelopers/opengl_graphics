@@ -2,9 +2,12 @@
 
 // External crates.
 use gl;
-use gl::types::{GLboolean, GLchar, GLenum, GLint, GLsizeiptr, GLuint};
+use gl::types::{GLboolean, GLenum, GLint, GLsizeiptr, GLuint};
 use std::ffi::CString;
 use std::{ptr, mem};
+
+#[cfg(not(feature = "glow"))]
+use gl::types::GLchar;
 
 /// Describes a shader attribute.
 pub struct DynamicAttribute {
@@ -119,29 +122,49 @@ pub fn compile_shader(shader_type: GLenum, source: &str) -> Result<GLuint, Strin
         drop(source);
         gl::CompileShader(shader);
         let mut status = gl::FALSE as GLint;
-        gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
+
+        #[cfg(feature = "glow")]
+        {
+            gl::GetCompleStatus(shader, &mut status);
+        }
+        #[cfg(not(feature = "glow"))]
+        {
+            gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
+        }
+
         if status == (gl::TRUE as GLint) {
             Ok(shader)
         } else {
-            let mut len = 0;
-            gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
+            #[cfg(feature = "glow")]
+            {
+                Err(gl::GetShaderInfoLog(shader))
+            }
+            #[cfg(not(feature = "glow"))]
+            {
+                let mut len = 0;
+                gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
 
-            if len == 0 {
-                Err("Compilation failed with no log. \
-                     The OpenGL context might have been created on another thread, \
-                     or not have been created."
-                    .to_string())
-            } else {
-                // Subtract 1 to skip the trailing null character.
-                let mut buf = vec![0; len as usize - 1];
-                gl::GetShaderInfoLog(shader,
-                                     len,
-                                     ptr::null_mut(),
-                                     buf.as_mut_ptr() as *mut GLchar);
+                if len == 0 {
+                    Err("Compilation failed with no log. \
+                       The OpenGL context might have been created on another thread, \
+                       or not have been created."
+                        .to_string())
+                } else {
+                    // Subtract 1 to skip the trailing null character.
+                    let mut buf = vec![0; len as usize - 1];
+                    gl::GetShaderInfoLog(
+                        shader,
+                        len,
+                        ptr::null_mut(),
+                        buf.as_mut_ptr() as *mut GLchar,
+                    );
 
-                gl::DeleteShader(shader);
+                    gl::DeleteShader(shader);
 
-                Err(String::from_utf8(buf).ok().expect("ShaderInfoLog not valid utf8"))
+                    Err(String::from_utf8(buf)
+                        .ok()
+                        .expect("ShaderInfoLog not valid utf8"))
+                }
             }
         }
     }
