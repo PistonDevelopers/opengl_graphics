@@ -1,9 +1,14 @@
+#[cfg(feature = "glow")]
 use graphics::{clear, Graphics, Rectangle, Transformed as _};
+#[cfg(feature = "glow")]
 use graphics::{image, text, DrawState};
 
+#[cfg(feature = "glow")]
 use opengl_graphics::*;
 
+#[cfg(feature = "glow")]
 use std::sync::Arc;
+#[cfg(feature = "glow")]
 use viewport::Viewport;
 
 #[cfg(not(feature = "glow"))]

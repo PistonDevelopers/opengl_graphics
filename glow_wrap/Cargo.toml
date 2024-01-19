@@ -1,7 +1,10 @@
 [package]
-name = "glow_wrap"
+name = "piston2d-glow_wrap"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "glow_wrap"
 
 [dependencies]
 glow = "0.12.0"

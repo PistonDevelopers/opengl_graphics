@@ -143,7 +143,7 @@ impl Texture {
         Ok(Texture::from_image(&img, settings))
     }
 
-    /// Load iamge from bytes.
+    /// Load image from bytes.
     pub fn from_bytes(bytes:&[u8], settings: &TextureSettings) -> Result<Self, String> {
         let img = match image::load_from_memory(bytes) {
             Ok(img) => img,
