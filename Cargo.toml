@@ -1,7 +1,7 @@
 [package]
 
 name = "piston2d-opengl_graphics"
-version = "0.84.0"
+version = "0.85.0"
 edition = "2018"
 authors = [
     "bvssvni <bvssvni@gmail.com>",
@@ -34,7 +34,7 @@ webgl = ["gl"]
 glow = ["piston2d-glow_wrap"]
 
 [dependencies]
-image = "0.24.1"
+image = "0.25.1"
 
 piston-shaders_graphics2d = "0.4.0"
 piston-texture = "0.9.0"
