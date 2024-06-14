@@ -16,8 +16,8 @@ extern crate viewport;
 
 pub use shader_version::{OpenGL, Shaders};
 pub use shader_version::glsl::{GLSL};
-pub use back_end::{Colored, Textured, GlGraphics};
-pub use texture::Texture;
+pub use crate::back_end::{Colored, Textured, GlGraphics};
+pub use crate::texture::Texture;
 pub use texture_lib::*;
 
 pub mod shader_utils;
