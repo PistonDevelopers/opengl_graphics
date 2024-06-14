@@ -9,6 +9,7 @@ use crate::{ops, ImageSize, CreateTexture, UpdateTexture, TextureOp, TextureSett
 trait GlSettings {
     fn get_gl_mag(&self) -> gl::types::GLenum;
     fn get_gl_min(&self) -> gl::types::GLenum;
+    #[allow(dead_code)]
     fn get_gl_mipmap(&self) -> gl::types::GLenum;
     fn get_gl_wrap_u(&self) -> gl::types::GLenum;
     fn get_gl_wrap_v(&self) -> gl::types::GLenum;
@@ -179,7 +180,6 @@ impl Drop for Texture {
         unsafe {
             let ids = [self.id];
             gl::DeleteTextures(1, ids.as_ptr());
-            drop(ids);
         }
     }
 }

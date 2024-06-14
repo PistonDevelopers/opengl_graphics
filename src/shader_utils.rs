@@ -119,7 +119,7 @@ pub fn compile_shader(shader_type: GLenum, source: &str) -> Result<GLuint, Strin
             Err(err) => return Err(format!("compile_shader: {}", err)),
         };
         gl::ShaderSource(shader, 1, &c_source.as_ptr(), ptr::null());
-        drop(source);
+        drop(c_source);
         gl::CompileShader(shader);
         let mut status = gl::FALSE as GLint;
 
