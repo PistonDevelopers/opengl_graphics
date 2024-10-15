@@ -52,7 +52,7 @@ features = ["glyph_cache_rusttype"]
 
 [target.'cfg(not(any(target_arch = "wasm32")))'.dev-dependencies]
 piston = {version = "1.0.0", features = ["async"]}
-pistoncore-sdl2_window = "0.69.0"
+pistoncore-sdl2_window = "0.70.0"
 rand = "0.8.5"
 tokio = {version = "1.40.0", features = ["full"]}
 futures = "0.3.31"
