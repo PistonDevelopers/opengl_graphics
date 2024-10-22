@@ -3,13 +3,13 @@ extern crate opengl_graphics;
 extern crate piston;
 extern crate sdl2_window;
 
-use opengl_graphics::{GlGraphics};
+use graphics::draw_state::{Blend, Stencil};
+use graphics::DrawState;
+use opengl_graphics::GlGraphics;
 use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
-use sdl2_window::{Sdl2Window, OpenGL};
-use graphics::draw_state::{Blend, Stencil};
-use graphics::DrawState;
+use sdl2_window::{OpenGL, Sdl2Window};
 
 fn main() {
     let opengl = OpenGL::V3_2;
@@ -48,38 +48,65 @@ fn main() {
                 clear([0.8, 0.8, 0.8, 1.0], g);
 
                 if clip {
-                    Rectangle::new([1.0; 4])
-                        .draw([10.0, 10.0, 200.0, 200.0],
-                        &increment, c.transform, g);
-                    Rectangle::new([1.0, 0.0, 0.0, 1.0])
-                        .draw([10.0, 10.0, 200.0, 200.0],
-                        &inside_level1, c.transform, g);
+                    Rectangle::new([1.0; 4]).draw(
+                        [10.0, 10.0, 200.0, 200.0],
+                        &increment,
+                        c.transform,
+                        g,
+                    );
+                    Rectangle::new([1.0, 0.0, 0.0, 1.0]).draw(
+                        [10.0, 10.0, 200.0, 200.0],
+                        &inside_level1,
+                        c.transform,
+                        g,
+                    );
 
-                    Rectangle::new([1.0; 4])
-                        .draw([100.0, 100.0, 200.0, 200.0],
-                        &increment, c.transform, g);
-                    Rectangle::new([0.0, 0.0, 1.0, 1.0])
-                        .draw([100.0, 100.0, 200.0, 200.0],
-                        &inside_level2, c.transform, g);
+                    Rectangle::new([1.0; 4]).draw(
+                        [100.0, 100.0, 200.0, 200.0],
+                        &increment,
+                        c.transform,
+                        g,
+                    );
+                    Rectangle::new([0.0, 0.0, 1.0, 1.0]).draw(
+                        [100.0, 100.0, 200.0, 200.0],
+                        &inside_level2,
+                        c.transform,
+                        g,
+                    );
 
-                    Rectangle::new([1.0; 4])
-                        .draw([100.0, 100.0, 200.0, 200.0],
-                        &increment, c.transform, g);
-                    Rectangle::new([0.0, 1.0, 0.0, 1.0])
-                        .draw([50.0, 50.0, 200.0, 100.0],
-                        &inside_level3, c.transform, g);
+                    Rectangle::new([1.0; 4]).draw(
+                        [100.0, 100.0, 200.0, 200.0],
+                        &increment,
+                        c.transform,
+                        g,
+                    );
+                    Rectangle::new([0.0, 1.0, 0.0, 1.0]).draw(
+                        [50.0, 50.0, 200.0, 100.0],
+                        &inside_level3,
+                        c.transform,
+                        g,
+                    );
                 } else {
-                    Rectangle::new([1.0, 0.0, 0.0, 1.0])
-                        .draw([10.0, 10.0, 200.0, 200.0],
-                        &c.draw_state, c.transform, g);
+                    Rectangle::new([1.0, 0.0, 0.0, 1.0]).draw(
+                        [10.0, 10.0, 200.0, 200.0],
+                        &c.draw_state,
+                        c.transform,
+                        g,
+                    );
 
-                    Rectangle::new([0.0, 0.0, 1.0, 1.0])
-                        .draw([100.0, 100.0, 200.0, 200.0],
-                        &c.draw_state, c.transform, g);
+                    Rectangle::new([0.0, 0.0, 1.0, 1.0]).draw(
+                        [100.0, 100.0, 200.0, 200.0],
+                        &c.draw_state,
+                        c.transform,
+                        g,
+                    );
 
-                    Rectangle::new([0.0, 1.0, 0.0, 1.0])
-                        .draw([50.0, 50.0, 200.0, 100.0],
-                        &c.draw_state, c.transform, g);
+                    Rectangle::new([0.0, 1.0, 0.0, 1.0]).draw(
+                        [50.0, 50.0, 200.0, 100.0],
+                        &c.draw_state,
+                        c.transform,
+                        g,
+                    );
                 }
             });
         }
