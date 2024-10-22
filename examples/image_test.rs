@@ -19,7 +19,7 @@ fn main() {
         .unwrap();
 
     let rust_logo =
-        Texture::from_path(&Path::new("./assets/rust.png"), &TextureSettings::new()).unwrap();
+        Texture::from_path(Path::new("./assets/rust.png"), &TextureSettings::new()).unwrap();
     let mut gl = GlGraphics::new(opengl);
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {

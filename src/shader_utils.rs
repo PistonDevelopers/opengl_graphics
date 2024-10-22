@@ -166,9 +166,7 @@ pub fn compile_shader(shader_type: GLenum, source: &str) -> Result<GLuint, Strin
 
                     gl::DeleteShader(shader);
 
-                    Err(String::from_utf8(buf)
-                        .ok()
-                        .expect("ShaderInfoLog not valid utf8"))
+                    Err(String::from_utf8(buf).expect("ShaderInfoLog not valid utf8"))
                 }
             }
         }

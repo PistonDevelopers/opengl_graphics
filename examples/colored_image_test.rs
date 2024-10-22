@@ -20,7 +20,7 @@ fn main() {
             .unwrap();
 
     let rust_logo = Texture::from_path(
-        &Path::new("./assets/rust-white.png"),
+        Path::new("./assets/rust-white.png"),
         &TextureSettings::new(),
     )
     .unwrap();

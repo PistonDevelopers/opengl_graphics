@@ -49,7 +49,7 @@ fn main() {
     let mut gl = GlGraphics::new(opengl);
     let mut events = Events::new(EventSettings::new().bench_mode(true));
     while let Some(e) = events.next(&mut window) {
-        if let Some(_) = e.render_args() {
+        if e.render_args().is_some() {
             counter += 1;
             if counter > frames {
                 break;

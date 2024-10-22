@@ -154,29 +154,33 @@ impl ShaderUniform<SUMat2x2> {
 impl ShaderUniform<SUMat3x3> {
     /// Set the value of the 3x3 matrix uniform.
     pub fn set(&self, gl: &GlGraphics, values: &[f32; 9]) {
-        gl.get_current_program().map(|p| unsafe {
-            gl::ProgramUniformMatrix3fv(
-                p,
-                self.location,
-                1 as GLint,
-                false as GLboolean,
-                values.as_ptr(),
-            )
-        });
+        if let Some(p) = gl.get_current_program() {
+            unsafe {
+                gl::ProgramUniformMatrix3fv(
+                    p,
+                    self.location,
+                    1 as GLint,
+                    false as GLboolean,
+                    values.as_ptr(),
+                )
+            }
+        }
     }
 }
 
 impl ShaderUniform<SUMat4x4> {
     /// Set the value of the 4x4 matrix uniform.
     pub fn set(&self, gl: &GlGraphics, values: &[f32; 16]) {
-        gl.get_current_program().map(|p| unsafe {
-            gl::ProgramUniformMatrix4fv(
-                p,
-                self.location,
-                1 as GLint,
-                false as GLboolean,
-                values.as_ptr(),
-            )
-        });
+        if let Some(p) = gl.get_current_program() {
+            unsafe {
+                gl::ProgramUniformMatrix4fv(
+                    p,
+                    self.location,
+                    1 as GLint,
+                    false as GLboolean,
+                    values.as_ptr(),
+                )
+            }
+        }
     }
 }

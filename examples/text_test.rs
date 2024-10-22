@@ -13,7 +13,7 @@ use sdl2_window::Sdl2Window;
 fn main() {
     let opengl = OpenGL::V3_2;
     let size = [500, 300];
-    let ref mut window: Sdl2Window = WindowSettings::new("opengl_graphics: text_test", size)
+    let window: &mut Sdl2Window = &mut WindowSettings::new("opengl_graphics: text_test", size)
         .exit_on_esc(true)
         .graphics_api(opengl)
         .build()

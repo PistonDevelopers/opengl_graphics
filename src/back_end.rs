@@ -454,7 +454,7 @@ pub struct GlGraphics {
     current_viewport: Option<Viewport>,
 }
 
-impl<'a> GlGraphics {
+impl GlGraphics {
     /// Creates a new OpenGL back-end.
     ///
     /// # Panics
@@ -670,7 +670,7 @@ impl Graphics for GlGraphics {
                 self.colored.flush();
             }
 
-            let ref mut shader = self.colored;
+            let shader = &mut self.colored;
             for i in 0..items {
                 shader.color_buffer[shader.offset + i] = color;
             }
@@ -719,7 +719,7 @@ impl Graphics for GlGraphics {
                 self.colored.flush();
             }
 
-            let ref mut shader = self.colored;
+            let shader = &mut self.colored;
             for (i, color) in colors.iter().enumerate() {
                 shader.color_buffer[shader.offset + i] = gamma_srgb_to_linear(*color);
             }
@@ -779,7 +779,7 @@ impl Graphics for GlGraphics {
                 self.textured.flush();
             }
 
-            let ref mut shader = self.textured;
+            let shader = &mut self.textured;
             shader.pos_buffer[shader.offset..shader.offset + items].copy_from_slice(vertices);
             shader.uv_buffer[shader.offset..shader.offset + items].copy_from_slice(texture_coords);
             shader.offset += items;
@@ -829,7 +829,7 @@ impl Graphics for GlGraphics {
                     self.textured_color.flush();
                 }
 
-                let ref mut shader = self.textured_color;
+                let shader = &mut self.textured_color;
                 for (i, color) in colors.iter().enumerate() {
                     shader.color_buffer[shader.offset + i] = gamma_srgb_to_linear(*color);
                 }
