@@ -31,12 +31,14 @@ pub fn bind_scissor(rect: Option<[u32; 4]>, viewport: &Option<Viewport>) {
             };
             unsafe {
                 gl::Enable(gl::SCISSOR_TEST);
-                gl::Scissor(r[0] as gl::types::GLint,
-                            yb as gl::types::GLint,
-                            r[2] as gl::types::GLint,
-                            r[3] as gl::types::GLint);
+                gl::Scissor(
+                    r[0] as gl::types::GLint,
+                    yb as gl::types::GLint,
+                    r[2] as gl::types::GLint,
+                    r[3] as gl::types::GLint,
+                );
             }
-        },
+        }
         None => unsafe { gl::Disable(gl::SCISSOR_TEST) },
     }
 }
@@ -115,10 +117,12 @@ pub fn bind_blend(blend: Option<Blend>) {
                 match b {
                     Blend::Alpha => {
                         gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);
-                        gl::BlendFuncSeparate(gl::SRC_ALPHA,
-                                              gl::ONE_MINUS_SRC_ALPHA,
-                                              gl::ONE,
-                                              gl::ONE);
+                        gl::BlendFuncSeparate(
+                            gl::SRC_ALPHA,
+                            gl::ONE_MINUS_SRC_ALPHA,
+                            gl::ONE,
+                            gl::ONE,
+                        );
                     }
                     Blend::Add => {
                         gl::BlendEquationSeparate(gl::FUNC_ADD, gl::FUNC_ADD);

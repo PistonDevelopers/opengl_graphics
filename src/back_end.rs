@@ -1,19 +1,19 @@
 //! OpenGL back-end for Piston-Graphics.
 
 // External crates.
-use std::ffi::CString;
-use shader_version::{OpenGL, Shaders};
-use shader_version::glsl::GLSL;
-use graphics::{Context, DrawState, Graphics, Viewport};
-use graphics::color::gamma_srgb_to_linear;
-use graphics::BACK_END_MAX_VERTEX_COUNT as BUFFER_SIZE;
 use gl;
 use gl::types::{GLint, GLsizei, GLuint};
+use graphics::color::gamma_srgb_to_linear;
+use graphics::BACK_END_MAX_VERTEX_COUNT as BUFFER_SIZE;
+use graphics::{Context, DrawState, Graphics, Viewport};
+use shader_version::glsl::GLSL;
+use shader_version::{OpenGL, Shaders};
+use std::ffi::CString;
 
 // Local crate.
 use crate::draw_state;
-use crate::Texture;
 use crate::shader_utils::{compile_shader, DynamicAttribute};
+use crate::Texture;
 
 // The number of chunks to fill up before rendering.
 // Amount of memory used: `BUFFER_SIZE * CHUNKS * 4 * (2 + 4)`
@@ -21,7 +21,9 @@ use crate::shader_utils::{compile_shader, DynamicAttribute};
 const CHUNKS: usize = 100;
 
 // Whether to use WebGL-specific features; currently used to select appropriate shaders.
-const USE_WEBGL: bool = cfg!(all(target_arch = "wasm32",target_os = "unknown")) || cfg!(target_os = "emscripten") || cfg!(feature = "webgl");
+const USE_WEBGL: bool = cfg!(all(target_arch = "wasm32", target_os = "unknown"))
+    || cfg!(target_os = "emscripten")
+    || cfg!(feature = "webgl");
 
 /// Describes how to render colored objects.
 pub struct Colored {
@@ -59,45 +61,46 @@ impl Colored {
         let mut vertex_shaders = Shaders::new();
         if USE_WEBGL {
             vertex_shaders
-               .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120_WEBGL))
-               .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE_WEBGL))
+                .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120_WEBGL))
+                .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE_WEBGL))
         } else {
             vertex_shaders
-               .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120))
-               .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE))
+                .set(GLSL::V1_20, src(colored::VERTEX_GLSL_120))
+                .set(GLSL::V1_50, src(colored::VERTEX_GLSL_150_CORE))
         };
 
         let mut fragment_shaders = Shaders::new();
         if USE_WEBGL {
             fragment_shaders
-               .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120_WEBGL))
-               .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE_WEBGL))
+                .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120_WEBGL))
+                .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE_WEBGL))
         } else {
-           fragment_shaders
-               .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120))
-               .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE))
+            fragment_shaders
+                .set(GLSL::V1_20, src(colored::FRAGMENT_GLSL_120))
+                .set(GLSL::V1_50, src(colored::FRAGMENT_GLSL_150_CORE))
         };
 
         Colored::from_vs_fs(glsl, &vertex_shaders, &fragment_shaders).unwrap()
     }
 
     /// Generate using custom vertex and fragment shaders.
-    pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>,
-                                  fragment_shaders : &Shaders<GLSL, str>)
-            -> Result<Self, String> {
-
-        let v_shader = vertex_shaders.get(glsl)
+    pub fn from_vs_fs(
+        glsl: GLSL,
+        vertex_shaders: &Shaders<GLSL, str>,
+        fragment_shaders: &Shaders<GLSL, str>,
+    ) -> Result<Self, String> {
+        let v_shader = vertex_shaders
+            .get(glsl)
             .ok_or("No compatible vertex shader")?;
 
-        let v_shader_compiled =
-            compile_shader(gl::VERTEX_SHADER, v_shader)
+        let v_shader_compiled = compile_shader(gl::VERTEX_SHADER, v_shader)
             .map_err(|s| format!("Error compiling vertex shader: {}", s))?;
 
-        let f_shader = fragment_shaders.get(glsl)
+        let f_shader = fragment_shaders
+            .get(glsl)
             .ok_or("No compatible fragment shader")?;
 
-        let f_shader_compiled =
-            compile_shader(gl::FRAGMENT_SHADER, f_shader)
+        let f_shader_compiled = compile_shader(gl::FRAGMENT_SHADER, f_shader)
             .map_err(|s| format!("Error compiling fragment shader: {}", s))?;
 
         let program;
@@ -131,7 +134,6 @@ impl Colored {
             color_buffer: vec![[0.0; 4]; CHUNKS * BUFFER_SIZE],
             offset: 0,
         })
-
     }
 
     fn flush(&mut self) {
@@ -189,44 +191,46 @@ impl Textured {
         let mut vertex_shaders = Shaders::new();
         if USE_WEBGL {
             vertex_shaders
-               .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120_WEBGL))
-               .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE_WEBGL))
+                .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120_WEBGL))
+                .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE_WEBGL))
         } else {
             vertex_shaders
-               .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120))
-               .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE))
+                .set(GLSL::V1_20, src(textured::VERTEX_GLSL_120))
+                .set(GLSL::V1_50, src(textured::VERTEX_GLSL_150_CORE))
         };
 
         let mut fragment_shaders = Shaders::new();
         if USE_WEBGL {
             fragment_shaders
-               .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120_WEBGL))
-               .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE_WEBGL))
+                .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120_WEBGL))
+                .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE_WEBGL))
         } else {
-           fragment_shaders
-               .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120))
-               .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE))
+            fragment_shaders
+                .set(GLSL::V1_20, src(textured::FRAGMENT_GLSL_120))
+                .set(GLSL::V1_50, src(textured::FRAGMENT_GLSL_150_CORE))
         };
 
         Textured::from_vs_fs(glsl, &vertex_shaders, &fragment_shaders).unwrap()
     }
 
     /// Generate using custom vertex and fragment shaders.
-    pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>,
-                                  fragment_shaders : &Shaders<GLSL, str>)
-            -> Result<Self, String> {
-        let v_shader = vertex_shaders.get(glsl)
+    pub fn from_vs_fs(
+        glsl: GLSL,
+        vertex_shaders: &Shaders<GLSL, str>,
+        fragment_shaders: &Shaders<GLSL, str>,
+    ) -> Result<Self, String> {
+        let v_shader = vertex_shaders
+            .get(glsl)
             .ok_or("No compatible vertex shader")?;
 
-        let v_shader_compiled =
-            compile_shader(gl::VERTEX_SHADER, v_shader)
+        let v_shader_compiled = compile_shader(gl::VERTEX_SHADER, v_shader)
             .map_err(|s| format!("Error compiling vertex shader: {}", s))?;
 
-        let f_shader = fragment_shaders.get(glsl)
+        let f_shader = fragment_shaders
+            .get(glsl)
             .ok_or("No compatible fragment shader")?;
 
-        let f_shader_compiled =
-            compile_shader(gl::FRAGMENT_SHADER, f_shader)
+        let f_shader_compiled = compile_shader(gl::FRAGMENT_SHADER, f_shader)
             .map_err(|s| format!("Error compiling fragment shader: {}", s))?;
 
         let program;
@@ -291,7 +295,6 @@ impl Textured {
     }
 }
 
-
 /// Describes how to render textured objects with individual vertex colors.
 pub struct TexturedColor {
     vertex_shader: GLuint,
@@ -331,44 +334,49 @@ impl TexturedColor {
         let mut vertex_shaders = Shaders::new();
         if USE_WEBGL {
             vertex_shaders
-               .set(GLSL::V1_20, src(textured_color::VERTEX_GLSL_120_WEBGL))
-               .set(GLSL::V1_50, src(textured_color::VERTEX_GLSL_150_CORE_WEBGL))
+                .set(GLSL::V1_20, src(textured_color::VERTEX_GLSL_120_WEBGL))
+                .set(GLSL::V1_50, src(textured_color::VERTEX_GLSL_150_CORE_WEBGL))
         } else {
             vertex_shaders
-               .set(GLSL::V1_20, src(textured_color::VERTEX_GLSL_120))
-               .set(GLSL::V1_50, src(textured_color::VERTEX_GLSL_150_CORE))
+                .set(GLSL::V1_20, src(textured_color::VERTEX_GLSL_120))
+                .set(GLSL::V1_50, src(textured_color::VERTEX_GLSL_150_CORE))
         };
 
         let mut fragment_shaders = Shaders::new();
         if USE_WEBGL {
             fragment_shaders
-               .set(GLSL::V1_20, src(textured_color::FRAGMENT_GLSL_120_WEBGL))
-               .set(GLSL::V1_50, src(textured_color::FRAGMENT_GLSL_150_CORE_WEBGL))
+                .set(GLSL::V1_20, src(textured_color::FRAGMENT_GLSL_120_WEBGL))
+                .set(
+                    GLSL::V1_50,
+                    src(textured_color::FRAGMENT_GLSL_150_CORE_WEBGL),
+                )
         } else {
-           fragment_shaders
-               .set(GLSL::V1_20, src(textured_color::FRAGMENT_GLSL_120))
-               .set(GLSL::V1_50, src(textured_color::FRAGMENT_GLSL_150_CORE))
+            fragment_shaders
+                .set(GLSL::V1_20, src(textured_color::FRAGMENT_GLSL_120))
+                .set(GLSL::V1_50, src(textured_color::FRAGMENT_GLSL_150_CORE))
         };
 
         TexturedColor::from_vs_fs(glsl, &vertex_shaders, &fragment_shaders).unwrap()
     }
 
     /// Generate using custom vertex and fragment shaders.
-    pub fn from_vs_fs(glsl: GLSL, vertex_shaders   : &Shaders<GLSL, str>,
-                                  fragment_shaders : &Shaders<GLSL, str>)
-            -> Result<Self, String> {
-        let v_shader = vertex_shaders.get(glsl)
+    pub fn from_vs_fs(
+        glsl: GLSL,
+        vertex_shaders: &Shaders<GLSL, str>,
+        fragment_shaders: &Shaders<GLSL, str>,
+    ) -> Result<Self, String> {
+        let v_shader = vertex_shaders
+            .get(glsl)
             .ok_or("No compatible vertex shader")?;
 
-        let v_shader_compiled =
-            compile_shader(gl::VERTEX_SHADER, v_shader)
+        let v_shader_compiled = compile_shader(gl::VERTEX_SHADER, v_shader)
             .map_err(|s| format!("Error compiling vertex shader: {}", s))?;
 
-        let f_shader = fragment_shaders.get(glsl)
+        let f_shader = fragment_shaders
+            .get(glsl)
             .ok_or("No compatible fragment shader")?;
 
-        let f_shader_compiled =
-            compile_shader(gl::FRAGMENT_SHADER, f_shader)
+        let f_shader_compiled = compile_shader(gl::FRAGMENT_SHADER, f_shader)
             .map_err(|s| format!("Error compiling fragment shader: {}", s))?;
 
         let program;
@@ -587,7 +595,8 @@ impl<'a> GlGraphics {
     /// This is preferred over using the draw_begin & draw_end methods
     /// explicitly but may be less flexible.
     pub fn draw<F, U>(&mut self, viewport: Viewport, f: F) -> U
-        where F: FnOnce(Context, &mut Self) -> U
+    where
+        F: FnOnce(Context, &mut Self) -> U,
     {
         let c = self.draw_begin(viewport);
         let res = f(c, self);
@@ -621,7 +630,8 @@ impl Graphics for GlGraphics {
     }
 
     fn tri_list<F>(&mut self, draw_state: &DrawState, color: &[f32; 4], mut f: F)
-        where F: FnMut(&mut dyn FnMut(&[[f32; 2]]))
+    where
+        F: FnMut(&mut dyn FnMut(&[[f32; 2]])),
     {
         let color = gamma_srgb_to_linear(*color);
 
@@ -637,8 +647,9 @@ impl Graphics for GlGraphics {
         }
 
         // Flush when draw state changes.
-        if self.current_draw_state.is_none() ||
-           self.current_draw_state.as_ref().unwrap() != draw_state {
+        if self.current_draw_state.is_none()
+            || self.current_draw_state.as_ref().unwrap() != draw_state
+        {
             let program = self.colored.program;
             self.use_program(program);
             if self.current_draw_state.is_none() {
@@ -664,14 +675,14 @@ impl Graphics for GlGraphics {
             for i in 0..items {
                 shader.color_buffer[shader.offset + i] = color;
             }
-            shader.pos_buffer[shader.offset..shader.offset + items]
-                  .copy_from_slice(vertices);
+            shader.pos_buffer[shader.offset..shader.offset + items].copy_from_slice(vertices);
             shader.offset += items;
         });
     }
 
     fn tri_list_c<F>(&mut self, draw_state: &DrawState, mut f: F)
-        where F: FnMut(&mut dyn FnMut(&[[f32; 2]], &[[f32; 4]]))
+    where
+        F: FnMut(&mut dyn FnMut(&[[f32; 2]], &[[f32; 4]])),
     {
         if self.textured.offset > 0 {
             let program = self.textured.program;
@@ -685,8 +696,9 @@ impl Graphics for GlGraphics {
         }
 
         // Flush when draw state changes.
-        if self.current_draw_state.is_none() ||
-           self.current_draw_state.as_ref().unwrap() != draw_state {
+        if self.current_draw_state.is_none()
+            || self.current_draw_state.as_ref().unwrap() != draw_state
+        {
             let program = self.colored.program;
             self.use_program(program);
             if self.current_draw_state.is_none() {
@@ -712,18 +724,19 @@ impl Graphics for GlGraphics {
             for (i, color) in colors.iter().enumerate() {
                 shader.color_buffer[shader.offset + i] = gamma_srgb_to_linear(*color);
             }
-            shader.pos_buffer[shader.offset..shader.offset + items]
-                  .copy_from_slice(vertices);
+            shader.pos_buffer[shader.offset..shader.offset + items].copy_from_slice(vertices);
             shader.offset += items;
         });
     }
 
-    fn tri_list_uv<F>(&mut self,
-                      draw_state: &DrawState,
-                      color: &[f32; 4],
-                      texture: &Texture,
-                      mut f: F)
-        where F: FnMut(&mut dyn FnMut(&[[f32; 2]], &[[f32; 2]]))
+    fn tri_list_uv<F>(
+        &mut self,
+        draw_state: &DrawState,
+        color: &[f32; 4],
+        texture: &Texture,
+        mut f: F,
+    ) where
+        F: FnMut(&mut dyn FnMut(&[[f32; 2]], &[[f32; 2]])),
     {
         let color = gamma_srgb_to_linear(*color);
 
@@ -739,10 +752,10 @@ impl Graphics for GlGraphics {
         }
 
         // Flush when draw state changes.
-        if self.current_draw_state.is_none() ||
-           self.current_draw_state.as_ref().unwrap() != draw_state ||
-           self.textured.last_texture_id != texture.get_id() ||
-           self.textured.last_color != color
+        if self.current_draw_state.is_none()
+            || self.current_draw_state.as_ref().unwrap() != draw_state
+            || self.textured.last_texture_id != texture.get_id()
+            || self.textured.last_color != color
         {
             let program = self.textured.program;
             if self.current_draw_state.is_none() {
@@ -768,19 +781,15 @@ impl Graphics for GlGraphics {
             }
 
             let ref mut shader = self.textured;
-            shader.pos_buffer[shader.offset..shader.offset + items]
-                  .copy_from_slice(vertices);
-            shader.uv_buffer[shader.offset..shader.offset + items]
-                  .copy_from_slice(texture_coords);
+            shader.pos_buffer[shader.offset..shader.offset + items].copy_from_slice(vertices);
+            shader.uv_buffer[shader.offset..shader.offset + items].copy_from_slice(texture_coords);
             shader.offset += items;
         });
     }
 
-    fn tri_list_uv_c<F>(&mut self,
-                      draw_state: &DrawState,
-                      texture: &Texture,
-                      mut f: F)
-        where F: FnMut(&mut dyn FnMut(&[[f32; 2]], &[[f32; 2]], &[[f32; 4]]))
+    fn tri_list_uv_c<F>(&mut self, draw_state: &DrawState, texture: &Texture, mut f: F)
+    where
+        F: FnMut(&mut dyn FnMut(&[[f32; 2]], &[[f32; 2]], &[[f32; 4]])),
     {
         if self.colored.offset > 0 {
             let program = self.colored.program;
@@ -794,9 +803,9 @@ impl Graphics for GlGraphics {
         }
 
         // Flush when draw state changes.
-        if self.current_draw_state.is_none() ||
-           self.current_draw_state.as_ref().unwrap() != draw_state ||
-           self.textured_color.last_texture_id != texture.get_id()
+        if self.current_draw_state.is_none()
+            || self.current_draw_state.as_ref().unwrap() != draw_state
+            || self.textured_color.last_texture_id != texture.get_id()
         {
             let program = self.textured_color.program;
             if self.current_draw_state.is_none() {
@@ -810,26 +819,27 @@ impl Graphics for GlGraphics {
         }
 
         self.textured_color.last_texture_id = texture.get_id();
-        f(&mut |vertices: &[[f32; 2]], texture_coords: &[[f32; 2]], colors: &[[f32; 4]]| {
-            let items = vertices.len();
+        f(
+            &mut |vertices: &[[f32; 2]], texture_coords: &[[f32; 2]], colors: &[[f32; 4]]| {
+                let items = vertices.len();
 
-            // Render if there is not enough room.
-            if self.textured_color.offset + items > BUFFER_SIZE * CHUNKS {
-                let shader_program = self.textured_color.program;
-                self.use_program(shader_program);
-                self.textured_color.flush();
-            }
+                // Render if there is not enough room.
+                if self.textured_color.offset + items > BUFFER_SIZE * CHUNKS {
+                    let shader_program = self.textured_color.program;
+                    self.use_program(shader_program);
+                    self.textured_color.flush();
+                }
 
-            let ref mut shader = self.textured_color;
-            for (i, color) in colors.iter().enumerate() {
-                shader.color_buffer[shader.offset + i] = gamma_srgb_to_linear(*color);
-            }
-            shader.pos_buffer[shader.offset..shader.offset + items]
-                  .copy_from_slice(vertices);
-            shader.uv_buffer[shader.offset..shader.offset + items]
-                  .copy_from_slice(texture_coords);
-            shader.offset += items;
-        });
+                let ref mut shader = self.textured_color;
+                for (i, color) in colors.iter().enumerate() {
+                    shader.color_buffer[shader.offset + i] = gamma_srgb_to_linear(*color);
+                }
+                shader.pos_buffer[shader.offset..shader.offset + items].copy_from_slice(vertices);
+                shader.uv_buffer[shader.offset..shader.offset + items]
+                    .copy_from_slice(texture_coords);
+                shader.offset += items;
+            },
+        );
     }
 }
 

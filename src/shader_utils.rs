@@ -4,7 +4,7 @@
 use gl;
 use gl::types::{GLboolean, GLenum, GLint, GLsizeiptr, GLuint};
 use std::ffi::CString;
-use std::{ptr, mem};
+use std::{mem, ptr};
 
 #[cfg(not(feature = "glow"))]
 use gl::types::GLchar;
@@ -40,22 +40,25 @@ impl DynamicAttribute {
         unsafe {
             gl::BindVertexArray(vao);
             gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
-            gl::VertexAttribPointer(self.location,
-                                    self.size,
-                                    self.ty,
-                                    self.normalize,
-                                    stride,
-                                    ptr::null());
+            gl::VertexAttribPointer(
+                self.location,
+                self.size,
+                self.ty,
+                self.normalize,
+                stride,
+                ptr::null(),
+            );
         }
     }
 
-    fn new(program: GLuint,
-           name: &str,
-           size: i32,
-           normalize: GLboolean,
-           ty: GLenum,
-           vao: GLuint)
-           -> Result<Self, String> {
+    fn new(
+        program: GLuint,
+        name: &str,
+        size: i32,
+        normalize: GLboolean,
+        ty: GLenum,
+        vao: GLuint,
+    ) -> Result<Self, String> {
         let location = attribute_location(program, name)?;
         let mut vbo = 0;
         unsafe {
@@ -101,10 +104,12 @@ impl DynamicAttribute {
     pub unsafe fn set<T>(&self, data: &[T]) {
         gl::EnableVertexAttribArray(self.location);
         gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
-        gl::BufferData(gl::ARRAY_BUFFER,
-                       data.len() as GLsizeiptr * mem::size_of::<T>() as GLsizeiptr,
-                       mem::transmute(data.as_ptr()),
-                       gl::DYNAMIC_DRAW);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            data.len() as GLsizeiptr * mem::size_of::<T>() as GLsizeiptr,
+            mem::transmute(data.as_ptr()),
+            gl::DYNAMIC_DRAW,
+        );
     }
 }
 

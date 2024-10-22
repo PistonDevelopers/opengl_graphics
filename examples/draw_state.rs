@@ -3,13 +3,13 @@ extern crate opengl_graphics;
 extern crate piston;
 extern crate sdl2_window;
 
-use std::path::Path;
+use graphics::draw_state::Blend;
 use opengl_graphics::{GlGraphics, Texture, TextureSettings};
 use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
-use sdl2_window::{Sdl2Window, OpenGL};
-use graphics::draw_state::Blend;
+use sdl2_window::{OpenGL, Sdl2Window};
+use std::path::Path;
 
 fn main() {
     println!("Press A to change blending");
@@ -24,10 +24,16 @@ fn main() {
         .unwrap();
 
     let mut clip_inside = true;
-    let blends = [Blend::Alpha, Blend::Add, Blend::Invert, Blend::Multiply, Blend::Lighter];
+    let blends = [
+        Blend::Alpha,
+        Blend::Add,
+        Blend::Invert,
+        Blend::Multiply,
+        Blend::Lighter,
+    ];
     let mut blend = 0;
-    let rust_logo = Texture::from_path(&Path::new("./assets/rust.png"),
-                                       &TextureSettings::new()).unwrap();
+    let rust_logo =
+        Texture::from_path(&Path::new("./assets/rust.png"), &TextureSettings::new()).unwrap();
     let mut gl = GlGraphics::new(opengl);
     let mut events = Events::new(EventSettings::new().lazy(true));
     while let Some(e) = events.next(&mut window) {
@@ -36,12 +42,20 @@ fn main() {
 
             gl.draw(args.viewport(), |c, g| {
                 clear([0.8, 0.8, 0.8, 1.0], g);
-                Rectangle::new([1.0, 0.0, 0.0, 1.0])
-                    .draw([0.0, 0.0, 100.0, 100.0], &c.draw_state, c.transform, g);
+                Rectangle::new([1.0, 0.0, 0.0, 1.0]).draw(
+                    [0.0, 0.0, 100.0, 100.0],
+                    &c.draw_state,
+                    c.transform,
+                    g,
+                );
 
                 let draw_state = c.draw_state.blend(blends[blend]);
-                Rectangle::new([0.5, 1.0, 0.0, 0.3])
-                    .draw([50.0, 50.0, 100.0, 100.0], &draw_state, c.transform, g);
+                Rectangle::new([0.5, 1.0, 0.0, 0.3]).draw(
+                    [50.0, 50.0, 100.0, 100.0],
+                    &draw_state,
+                    c.transform,
+                    g,
+                );
 
                 let transform = c.transform.trans(100.0, 100.0);
                 // Clip rectangle from upper left corner.
@@ -49,16 +63,22 @@ fn main() {
                 Image::new().draw(&rust_logo, &clipped, transform, g);
 
                 let transform = c.transform.trans(200.0, 200.0);
-                Ellipse::new([1.0, 0.0, 0.0, 1.0])
-                    .draw([0.0, 0.0, 50.0, 50.0], &DrawState::new_clip(), transform, g);
-                Image::new().draw(&rust_logo,
-                                  &if clip_inside {
-                                      DrawState::new_inside()
-                                  } else {
-                                      DrawState::new_outside()
-                                  },
-                                  transform,
-                                  g);
+                Ellipse::new([1.0, 0.0, 0.0, 1.0]).draw(
+                    [0.0, 0.0, 50.0, 50.0],
+                    &DrawState::new_clip(),
+                    transform,
+                    g,
+                );
+                Image::new().draw(
+                    &rust_logo,
+                    &if clip_inside {
+                        DrawState::new_inside()
+                    } else {
+                        DrawState::new_outside()
+                    },
+                    transform,
+                    g,
+                );
             });
         }
 
