@@ -1,7 +1,6 @@
 //! OpenGL back-end for Piston-Graphics.
 
 // External crates.
-use gl;
 use gl::types::{GLint, GLsizei, GLuint};
 use graphics::color::gamma_srgb_to_linear;
 use graphics::BACK_END_MAX_VERTEX_COUNT as BUFFER_SIZE;
@@ -124,12 +123,12 @@ impl Colored {
         let pos = DynamicAttribute::xy(program, "pos", vao).unwrap();
         let color = DynamicAttribute::rgba(program, "color", vao).unwrap();
         Ok(Colored {
-            vao: vao,
+            vao,
             vertex_shader: v_shader_compiled,
             fragment_shader: f_shader_compiled,
-            program: program,
-            pos: pos,
-            color: color,
+            program,
+            pos,
+            color,
             pos_buffer: vec![[0.0; 2]; CHUNKS * BUFFER_SIZE],
             color_buffer: vec![[0.0; 4]; CHUNKS * BUFFER_SIZE],
             offset: 0,
@@ -260,13 +259,13 @@ impl Textured {
         }
         let uv = DynamicAttribute::uv(program, "uv", vao).unwrap();
         Ok(Textured {
-            vao: vao,
+            vao,
             vertex_shader: v_shader_compiled,
             fragment_shader: f_shader_compiled,
-            program: program,
-            pos: pos,
-            color: color,
-            uv: uv,
+            program,
+            pos,
+            color,
+            uv,
             pos_buffer: vec![[0.0; 2]; CHUNKS * BUFFER_SIZE],
             uv_buffer: vec![[0.0; 2]; CHUNKS * BUFFER_SIZE],
             offset: 0,
@@ -401,13 +400,13 @@ impl TexturedColor {
         let color = DynamicAttribute::rgba(program, "color", vao).unwrap();
         let uv = DynamicAttribute::uv(program, "uv", vao).unwrap();
         Ok(TexturedColor {
-            vao: vao,
+            vao,
             vertex_shader: v_shader_compiled,
             fragment_shader: f_shader_compiled,
-            program: program,
-            pos: pos,
-            color: color,
-            uv: uv,
+            program,
+            pos,
+            color,
+            uv,
             pos_buffer: vec![[0.0; 2]; CHUNKS * BUFFER_SIZE],
             uv_buffer: vec![[0.0; 2]; CHUNKS * BUFFER_SIZE],
             color_buffer: vec![[0.0; 4]; CHUNKS * BUFFER_SIZE],
@@ -436,7 +435,7 @@ impl TexturedColor {
 }
 
 // Newlines and indents for cleaner panic message.
-const GL_FUNC_NOT_LOADED: &'static str = "
+const GL_FUNC_NOT_LOADED: &str = "
     OpenGL function pointers must be loaded before creating the `Gl` backend!
     For more info, see the following issue on GitHub:
     https://github.com/PistonDevelopers/opengl_graphics/issues/103
@@ -491,9 +490,9 @@ impl<'a> GlGraphics {
 
         // Load the vertices, color and texture coord buffers.
         GlGraphics {
-            colored: colored,
-            textured: textured,
-            textured_color: textured_color,
+            colored,
+            textured,
+            textured_color,
             current_program: None,
             current_draw_state: None,
             current_viewport: None,

@@ -65,11 +65,11 @@ impl DynamicAttribute {
             gl::GenBuffers(1, &mut vbo);
         }
         let res = DynamicAttribute {
-            vbo: vbo,
-            size: size,
-            location: location,
-            normalize: normalize,
-            ty: ty,
+            vbo,
+            size,
+            location,
+            normalize,
+            ty,
         };
         res.bind_vao(vao);
         Ok(res)

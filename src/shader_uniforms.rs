@@ -76,7 +76,7 @@ impl GlGraphics {
                 let uniform = match gl::GetUniformLocation(p, name.as_ptr()) {
                     -1 => None,
                     location => Some(ShaderUniform {
-                        location: location,
+                        location,
                         phantom: PhantomData,
                     }),
                 };
@@ -90,57 +90,64 @@ impl GlGraphics {
 impl ShaderUniform<SUFloat> {
     /// Set the value of the float uniform.
     pub fn set(&self, gl: &GlGraphics, value: f32) {
-        gl.get_current_program()
-            .map(|p| unsafe { gl::ProgramUniform1f(p, self.location, value) });
+        if let Some(p) = gl.get_current_program() {
+            unsafe { gl::ProgramUniform1f(p, self.location, value) };
+        }
     }
 }
 
 impl ShaderUniform<SUInt> {
     /// Set the value of the integer uniform.
     pub fn set(&self, gl: &GlGraphics, value: i32) {
-        gl.get_current_program()
-            .map(|p| unsafe { gl::ProgramUniform1i(p, self.location, value) });
+        if let Some(p) = gl.get_current_program() {
+            unsafe { gl::ProgramUniform1i(p, self.location, value) };
+        }
     }
 }
 
 impl ShaderUniform<SUVec2> {
     /// Set the value of the vector 2 uniform.
     pub fn set(&self, gl: &GlGraphics, value: &[f32; 2]) {
-        gl.get_current_program()
-            .map(|p| unsafe { gl::ProgramUniform2f(p, self.location, value[0], value[1]) });
+        if let Some(p) = gl.get_current_program() {
+            unsafe { gl::ProgramUniform2f(p, self.location, value[0], value[1]) };
+        }
     }
 }
 
 impl ShaderUniform<SUVec3> {
     /// Set the value of the vector 3 uniform.
     pub fn set(&self, gl: &GlGraphics, value: &[f32; 3]) {
-        gl.get_current_program().map(|p| unsafe {
-            gl::ProgramUniform3f(p, self.location, value[0], value[1], value[2])
-        });
+        if let Some(p) = gl.get_current_program() {
+            unsafe { gl::ProgramUniform3f(p, self.location, value[0], value[1], value[2]) }
+        }
     }
 }
 
 impl ShaderUniform<SUVec4> {
     /// Set the value of the vector 4 uniform.
     pub fn set(&self, gl: &GlGraphics, value: &[f32; 4]) {
-        gl.get_current_program().map(|p| unsafe {
-            gl::ProgramUniform4f(p, self.location, value[0], value[1], value[2], value[3])
-        });
+        if let Some(p) = gl.get_current_program() {
+            unsafe {
+                gl::ProgramUniform4f(p, self.location, value[0], value[1], value[2], value[3])
+            }
+        }
     }
 }
 
 impl ShaderUniform<SUMat2x2> {
     /// Set the value of the 2x2 matrix uniform.
     pub fn set(&self, gl: &GlGraphics, values: &[f32; 4]) {
-        gl.get_current_program().map(|p| unsafe {
-            gl::ProgramUniformMatrix2fv(
-                p,
-                self.location,
-                1 as GLint,
-                false as GLboolean,
-                values.as_ptr(),
-            )
-        });
+        if let Some(p) = gl.get_current_program() {
+            unsafe {
+                gl::ProgramUniformMatrix2fv(
+                    p,
+                    self.location,
+                    1 as GLint,
+                    false as GLboolean,
+                    values.as_ptr(),
+                )
+            }
+        }
     }
 }
 

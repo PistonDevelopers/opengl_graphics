@@ -1,4 +1,3 @@
-use gl;
 use graphics::draw_state::*;
 use viewport::Viewport;
 

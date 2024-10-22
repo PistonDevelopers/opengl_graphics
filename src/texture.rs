@@ -1,4 +1,3 @@
-use gl;
 use gl::types::GLuint;
 use image::{self, DynamicImage, RgbaImage};
 
@@ -91,11 +90,7 @@ impl Texture {
     /// Creates a new texture.
     #[inline(always)]
     pub fn new(id: GLuint, width: u32, height: u32) -> Self {
-        Texture {
-            id: id,
-            width: width,
-            height: height,
-        }
+        Texture { id, width, height }
     }
 
     /// Gets the OpenGL id of the texture.
