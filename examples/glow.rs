@@ -32,8 +32,6 @@ fn main() {}
 /// ```
 #[cfg(feature = "glow")]
 fn main() {
-
-
     #[cfg(not(target_arch = "wasm32"))]
     let (gl, window, event_loop) = {
         unsafe {
