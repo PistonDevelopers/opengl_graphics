@@ -1,6 +1,6 @@
 [package]
 name = "piston2d-glow_wrap"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Glow wrapping code for Piston OpenGL backend"
 license = "MIT"
@@ -13,7 +13,7 @@ documentation = "https://docs.rs/piston2d-glow_wrap"
 name = "glow_wrap"
 
 [dependencies]
-glow = "0.12.0"
+glow = "0.16.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 slotmap = "1.0.7"
