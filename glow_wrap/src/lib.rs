@@ -9,8 +9,11 @@ use glow::HasContext as _;
 mod key;
 use key::ConvertKey;
 
+#[cfg(target_arch = "wasm32")]
 struct Ref<T>(T);
+#[cfg(target_arch = "wasm32")]
 unsafe impl<T> Send for Ref<T> {}
+#[cfg(target_arch = "wasm32")]
 unsafe impl<T> Sync for Ref<T> {}
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -138,7 +141,7 @@ pub unsafe fn TexImage2D(
         border,
         format,
         ty,
-        Some(pixels),
+        glow::PixelUnpackData::Slice(Some(pixels)),
     );
 }
 
@@ -165,7 +168,7 @@ pub unsafe fn TexSubImage2D(
         height,
         format,
         ty,
-        glow::PixelUnpackData::Slice(pixels),
+        glow::PixelUnpackData::Slice(Some(pixels)),
     );
 }
 
