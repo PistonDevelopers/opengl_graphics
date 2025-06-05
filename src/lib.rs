@@ -14,7 +14,7 @@ extern crate shaders_graphics2d as shaders;
 extern crate texture as texture_lib;
 extern crate viewport;
 
-pub use crate::back_end::{Colored, GlGraphics, Textured};
+pub use crate::back_end::{Colored, GlGraphics, Textured, TexturedColor};
 pub use crate::texture::Texture;
 pub use shader_version::glsl::GLSL;
 pub use shader_version::{OpenGL, Shaders};
